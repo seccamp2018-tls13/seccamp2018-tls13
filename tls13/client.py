@@ -1,8 +1,8 @@
 
 import socket
 
-def clientCmd(argv):
-    print("clientCmd({})".format(", ".join(argv)))
+def client_cmd(argv):
+    print("client_cmd({})".format(", ".join(argv)))
 
     # ClientHello
 
