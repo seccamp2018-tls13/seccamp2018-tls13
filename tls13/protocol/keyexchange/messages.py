@@ -2,6 +2,8 @@
 # B.3.1.  Key Exchange Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1
 
+import secrets
+
 class ClientHello:
     """
     struct {
@@ -15,12 +17,15 @@ class ClientHello:
     """
     def __init__(self):
         self.legacy_version = b'\x03\x03'
-        # TODO:
-        self.random
-        self.legacy_session_id
+        self.random = secrets.token_bytes(32)
+        self.legacy_session_id = secrets.token_bytes(32)
         self.cipher_suites = []
-        self.legacy_compression_methods = 0
+        self.legacy_compression_methods = [0]
         self.extensions = []
+
+    def __len__(self):
+        # TODO: バイト列にしたときの長さを求める
+        return 0
 
 
 class ServerHello:

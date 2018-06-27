@@ -45,7 +45,11 @@ class Handshake:
       };
     } Handshake;
     """
-    def __init__(self, msg_type, length):
+    def __init__(self, msg_type, length, msg):
         self.msg_type = msg_type # HandshakeType
         self.length = length
-        self._msg = None # TODO:
+        self.msg = msg
+
+    def __len__(self):
+        # TODO: バイト列にしたときの長さを求める
+        return 0
