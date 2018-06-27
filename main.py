@@ -2,8 +2,8 @@
 
 import sys
 
-from tls13.client import clientCmd
-from tls13.server import serverCmd
+from tls13.client import client_cmd
+from tls13.server import server_cmd
 
 def usage():
     print("Usage: {} <client|server> ...".format(sys.argv[0]))
@@ -11,9 +11,9 @@ def usage():
 if len(sys.argv) < 2:
     usage()
 elif sys.argv[1] == "client":
-    clientCmd(sys.argv[2:])
+    client_cmd(sys.argv[2:])
 elif sys.argv[1] == "server":
-    serverCmd(sys.argv[2:])
+    server_cmd(sys.argv[2:])
 else:
     print("Unknown command: {}".format(sys.argv[1]))
     usage()
