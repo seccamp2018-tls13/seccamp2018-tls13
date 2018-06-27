@@ -1,7 +1,7 @@
 
 import socket
-from .protocol import recordlayer
-from .protocol import handshake
+from .protocol.recordlayer import TLSPlaintext, ContentType
+from .protocol.handshake import Handshake, HandshakeType
 from .protocol.ciphersuit import CipherSuite
 from .protocol.keyexchange.messages import ClientHello
 
@@ -20,14 +20,14 @@ def client_cmd(argv):
     ch.cipher_suites.append(CipherSuite.TLS_AES_128_GCM_SHA256)
     ch.extensions.append(0xbeef) # TODO: 拡張（Extension）の追加
 
-    ch_handshake = handshake.Handshake(
-        msg_type=handshake.HandshakeType.client_hello,
+    ch_handshake = Handshake(
+        msg_type=HandshakeType.client_hello,
         length=len(ch),
         msg=ch
     )
 
-    ch_plain = recordlayer.TLSPlaintext(
-        _type=recordlayer.ContentType.handshake,
+    ch_plain = TLSPlaintext(
+        _type=ContentType.handshake,
         length=len(ch_handshake),
         fragment=ch_handshake
     )
