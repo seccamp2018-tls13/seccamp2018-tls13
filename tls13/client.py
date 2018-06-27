@@ -2,6 +2,7 @@
 import socket
 from .protocol import recordlayer
 from .protocol import handshake
+from .protocol.ciphersuit import CipherSuite
 from .protocol.keyexchange.messages import ClientHello
 
 def client_cmd(argv):
@@ -16,7 +17,7 @@ def client_cmd(argv):
     #       └─ Extension (supported_groups, signature_algorithms, ...)
 
     ch = ClientHello()
-    ch.cipher_suites.append(0xdead) # TODO: 暗号スイートの追加
+    ch.cipher_suites.append(CipherSuite.TLS_AES_128_GCM_SHA256)
     ch.extensions.append(0xbeef) # TODO: 拡張（Extension）の追加
 
     ch_handshake = handshake.Handshake(
