@@ -15,7 +15,7 @@ class NamedGroup:
     x25519 = 0x001D
     x448 = 0x001E
 
-    # Finite Field Groups  = DHE)
+    # Finite Field Groups (DHE)
     ffdhe2048 = 0x0100
     ffdhe3072 = 0x0101
     ffdhe4096 = 0x0102
@@ -36,5 +36,5 @@ class NamedGroupList:
       NamedGroup named_group_list<2..2^16-1>;
     } NamedGroupList;
     """
-    def __init__(self):
-        self.named_group_list = []
+    def __init__(self, named_group_list=[]):
+        self.named_group_list = named_group_list

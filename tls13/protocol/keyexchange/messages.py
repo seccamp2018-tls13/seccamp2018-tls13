@@ -56,7 +56,7 @@ class Extension:
       opaque extension_data<0..2^16-1>;
     } Extension;
     """
-    def __init__(self, extension_type):
+    def __init__(self, extension_type, extension_data):
         self.extension_type = extension_type
         self.extension_data = extension_data
 
@@ -99,12 +99,20 @@ class KeyShareEntry:
       opaque key_exchange<1..2^16-1>;
     } KeyShareEntry;
     """
-    def __init__(self):
-        self.group
-        self.key_exchange
+    def __init__(self, group, key_exchange):
+        self.group = group
+        self.key_exchange = key_exchange
 
 
-# class KeyShareClientHello:
+class KeyShareClientHello:
+    """
+    struct {
+      KeyShareEntry client_shares<0..2^16-1>;
+    } KeyShareClientHello;
+    """
+    def __init__(self, client_shares=[]):
+        self.client_shares = client_shares
+
 # class KeyShareHelloRetryRequest
 # class KeyShareServerHello:
 # class UncompressedPointRepresentation

@@ -1,9 +1,16 @@
 
 import socket
+
 from .protocol.recordlayer import TLSPlaintext, ContentType
 from .protocol.handshake import Handshake, HandshakeType
-from .protocol.ciphersuit import CipherSuite
-from .protocol.keyexchange.messages import ClientHello
+from .protocol.ciphersuite import CipherSuite
+from .protocol.keyexchange.messages import ClientHello, Extension, ExtensionType, \
+    KeyShareEntry, KeyShareClientHello
+
+# Extensions
+from .protocol.keyexchange.version import SupportedVersions
+from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
+from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
@@ -16,9 +23,39 @@ def client_cmd(argv):
     #    └─ ClientHello
     #       └─ Extension (supported_groups, signature_algorithms, ...)
 
+    supported_versions = Extension(
+        extension_type=ExtensionType.supported_versions,
+        extension_data=SupportedVersions(
+            msg_type=HandshakeType.client_hello,
+            versions=[b'0x0304'] ))
+
+    supported_groups = Extension(
+        extension_type=ExtensionType.supported_groups,
+        extension_data=NamedGroupList(
+            named_group_list=[
+                NamedGroup.ffdhe2048 ] ))
+
+    signature_algorithms = Extension(
+        extension_type=ExtensionType.signature_algorithms,
+        extension_data=SignatureSchemeList(
+            supported_signature_algorithms=[
+                SignatureScheme.rsa_pkcs1_sha256 ] ))
+
+    key_share = Extension(
+        extension_type=ExtensionType.key_share,
+        extension_data=KeyShareClientHello(
+            client_shares=[
+                KeyShareEntry(
+                    group=NamedGroup.ffdhe2048,
+                    key_exchange=b'public-key...') ] ))
+
+
     ch = ClientHello()
     ch.cipher_suites.append(CipherSuite.TLS_AES_128_GCM_SHA256)
-    ch.extensions.append(0xbeef) # TODO: 拡張（Extension）の追加
+    ch.extensions.append(supported_versions)
+    ch.extensions.append(supported_groups)
+    ch.extensions.append(signature_algorithms)
+    ch.extensions.append(key_share)
 
     ch_handshake = Handshake(
         msg_type=HandshakeType.client_hello,
@@ -31,6 +68,13 @@ def client_cmd(argv):
         length=len(ch_handshake),
         fragment=ch_handshake
     )
+
+    # TODO: ch_plain の内容を pretty-print で出力したい（デバッグ用）
+    # TODO: それぞれのクラスに .to_bytes() みたいなメソッドを作って再帰的に呼び出して
+    #       送信用のバイト列を作る
+    # TODO: .to_bytes() ができたら，その逆関数として TLSPlaintext.from_bytes() みたいな
+    #       送られてきたバイト列から構造体を組み立てるメソッドをそれぞれのクラスに作る．
+    #       .from_bytes() も再帰的に呼び出してインスタンスを再構築する．
 
     # send(ch_plain.to_bytes(), to=server) # TODO: socketを使ってサーバに送る処理
 

@@ -55,5 +55,5 @@ class SignatureSchemeList:
       SignatureScheme supported_signature_algorithms<2..2^16-2>;
     } SignatureSchemeList;
     """
-    def __init__(self):
-        self.supported_signature_algorithms = []
+    def __init__(self, supported_signature_algorithms=[]):
+        self.supported_signature_algorithms = supported_signature_algorithms
