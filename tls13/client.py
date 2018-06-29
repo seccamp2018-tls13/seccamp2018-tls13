@@ -69,14 +69,17 @@ def client_cmd(argv):
         fragment=ch_handshake
     )
 
-    # TODO: ch_plain の内容を pretty-print で出力したい（デバッグ用）
+    # TODO: バイト列に変換したときの長さを求めるメソッド __len__ を実装する
+    #       可変長のデータがある場合は，先頭の2byteにデータ長，続くNbyteにデータが入るので，
+    #       可変長のデータ長は合計 2 + N になることに注意
     # TODO: それぞれのクラスに .to_bytes() みたいなメソッドを作って再帰的に呼び出して
     #       送信用のバイト列を作る
+    # TODO: socketを使ってバイト列をサーバに送る処理の実装
+    #       send(ch_plain.to_bytes(), to=server)
     # TODO: .to_bytes() ができたら，その逆関数として TLSPlaintext.from_bytes() みたいな
     #       送られてきたバイト列から構造体を組み立てるメソッドをそれぞれのクラスに作る．
     #       .from_bytes() も再帰的に呼び出してインスタンスを再構築する．
-
-    # send(ch_plain.to_bytes(), to=server) # TODO: socketを使ってサーバに送る処理
+    # TODO: 再構築した ch_plain の内容を pretty-print で出力したい（デバッグ用）
 
 
     # Finished
