@@ -6,7 +6,7 @@ import secrets
 import textwrap
 import pprint
 
-from ...utils import Uint8, Uint16
+from ...utils.type import Uint8, Uint16
 
 class ClientHello:
     """

@@ -2,7 +2,7 @@
 # B.2.  Alert Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.2
 
-from ..utils import Uint8
+from ..utils.type import Uint8
 
 class AlertLevel:
     """

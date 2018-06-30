@@ -13,7 +13,8 @@ from .protocol.keyexchange.version import SupportedVersions
 from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
-from .utils import Uint8, Uint16, Uint24, Uint32, hexdump
+from .utils import hexdump
+from .utils.type import Uint8, Uint16, Uint24, Uint32
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))

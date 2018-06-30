@@ -3,7 +3,7 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3
 
 import textwrap
-from ..utils import Uint8, Uint16, Uint24, Uint32
+from ..utils.type import Uint8, Uint16, Uint24, Uint32
 
 class HandshakeType:
     """

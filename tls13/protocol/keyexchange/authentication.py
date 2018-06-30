@@ -2,6 +2,8 @@
 # B.3.3.  Authentication Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.3
 
+from ...utils.type import Uint8
+
 class CertificateType:
     """
     enum { ... } CertificateType

@@ -3,7 +3,7 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.3
 
 import textwrap
-from ...utils import Uint16
+from ...utils.type import Uint16
 
 class SignatureScheme:
     """

@@ -4,7 +4,7 @@
 
 import textwrap
 from ..handshake import HandshakeType
-from ...utils import Uint8
+from ...utils.type import Uint8
 
 class SupportedVersions:
     """
