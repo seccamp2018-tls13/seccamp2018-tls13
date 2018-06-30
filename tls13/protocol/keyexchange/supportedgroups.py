@@ -18,6 +18,7 @@ class NamedGroup:
     x448 = Uint16(0x001E)
 
     # Finite Field Groups (DHE)
+    # https://tools.ietf.org/html/rfc7919#appendix-A
     ffdhe2048 = Uint16(0x0100)
     ffdhe3072 = Uint16(0x0101)
     ffdhe4096 = Uint16(0x0102)

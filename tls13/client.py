@@ -1,5 +1,6 @@
 
 import socket
+import secrets
 
 from .protocol.recordlayer import TLSPlaintext, ContentType
 from .protocol.handshake import Handshake, HandshakeType
@@ -49,7 +50,7 @@ def client_cmd(argv):
             client_shares=[
                 KeyShareEntry(
                     group=NamedGroup.ffdhe2048,
-                    key_exchange=b'public-key...') ] ))
+                    key_exchange=secrets.token_bytes(2048 // 8)) ] ))
 
 
     ch = ClientHello()
