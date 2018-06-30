@@ -13,7 +13,7 @@ from .protocol.keyexchange.version import SupportedVersions
 from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
-from .utils import Uint8, Uint16, Uint24, Uint32
+from .utils import Uint8, Uint16, Uint24, Uint32, hexdump
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
@@ -30,7 +30,7 @@ def client_cmd(argv):
         extension_type=ExtensionType.supported_versions,
         extension_data=SupportedVersions(
             msg_type=HandshakeType.client_hello,
-            versions=[b'\x03\x04'] ))
+            versions=[ Uint16(0x0304) ] ))
 
     supported_groups = Extension(
         extension_type=ExtensionType.supported_groups,
@@ -73,6 +73,9 @@ def client_cmd(argv):
     )
 
     print(ch_plain)
+
+    print("ClientHello bytes:")
+    print(hexdump(ch_plain.to_bytes()))
 
     # TODO: バイト列に変換したときの長さを求めるメソッド __len__ を実装する．
     #       可変長のデータがある場合は，先頭の1~3byteにデータ長，続くNbyteにデータが入るので，

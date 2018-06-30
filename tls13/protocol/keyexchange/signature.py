@@ -69,3 +69,9 @@ class SignatureSchemeList:
 
     def __len__(self):
         return 2 + sum(map(len, self.supported_signature_algorithms))
+
+    def to_bytes(self):
+        byte_str = bytearray(0)
+        byte_str += Uint16(sum(map(len, self.supported_signature_algorithms))).to_bytes()
+        byte_str += b''.join(x.to_bytes() for x in self.supported_signature_algorithms)
+        return byte_str

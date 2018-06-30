@@ -6,7 +6,7 @@ import secrets
 import textwrap
 import pprint
 
-from ...utils import Uint16
+from ...utils import Uint8, Uint16
 
 class ClientHello:
     """
@@ -20,11 +20,11 @@ class ClientHello:
     } ClientHello;
     """
     def __init__(self):
-        self.legacy_version = b'\x03\x03'
+        self.legacy_version = Uint16(0x0303)
         self.random = secrets.token_bytes(32)
         self.legacy_session_id = secrets.token_bytes(32)
         self.cipher_suites = []
-        self.legacy_compression_methods = [b'\x00']
+        self.legacy_compression_methods = [ Uint8(0x00) ]
         self.extensions = []
 
     def __repr__(self):
@@ -51,6 +51,24 @@ class ClientHello:
                1 + sum(map(len, self.legacy_compression_methods)) + \
                2 + sum(map(len, self.extensions))
 
+    def to_bytes(self):
+        byte_str = bytearray(0)
+        byte_str += self.legacy_version.to_bytes()
+        byte_str += self.random
+        # legacy_session_id
+        byte_str += Uint8(len(self.legacy_session_id)).to_bytes()
+        byte_str += self.legacy_session_id
+        # cipher_suites
+        byte_str += Uint16(sum(map(len, self.cipher_suites))).to_bytes()
+        byte_str += b''.join(x.to_bytes() for x in self.cipher_suites)
+        # legacy_compression_methods
+        byte_str += Uint8(sum(map(len, self.legacy_compression_methods))).to_bytes()
+        byte_str += b''.join(x.to_bytes() for x in self.legacy_compression_methods)
+        # extensions
+        byte_str += sum(map(len, self.extensions)).to_bytes(2, byteorder='big')
+        byte_str += b''.join([ x.to_bytes() for x in self.extensions ])
+        return byte_str
+
 
 class ServerHello:
     """
@@ -64,7 +82,7 @@ class ServerHello:
     } ServerHello;
     """
     def __init__(self):
-        self.legacy_version = b'\x03\x03'
+        self.legacy_version = Uint16(0x0303)
         # TODO:
         self.random
         self.legacy_session_id_echo
@@ -94,6 +112,14 @@ class Extension:
 
     def __len__(self):
         return len(self.extension_type) + 2 + len(self.extension_data)
+
+    def to_bytes(self):
+        byte_str = bytearray(0)
+        byte_str += self.extension_type.to_bytes()
+        # extension_data
+        byte_str += Uint16(len(self.extension_data)).to_bytes()
+        byte_str += self.extension_data.to_bytes()
+        return byte_str
 
 
 class ExtensionType:
@@ -149,6 +175,13 @@ class KeyShareEntry:
     def __len__(self):
         return len(self.group) + 2 + len(self.key_exchange)
 
+    def to_bytes(self):
+        byte_str = bytearray(0)
+        byte_str += self.group.to_bytes()
+        byte_str += Uint16(len(self.key_exchange)).to_bytes()
+        byte_str += self.key_exchange
+        return byte_str
+
 
 class KeyShareClientHello:
     """
@@ -168,6 +201,12 @@ class KeyShareClientHello:
 
     def __len__(self):
         return 2 + sum(map(len, self.client_shares))
+
+    def to_bytes(self):
+        byte_str = bytearray(0)
+        byte_str += Uint16(len(self.client_shares)).to_bytes()
+        byte_str += b''.join(x.to_bytes() for x in self.client_shares)
+        return byte_str
 
 # class KeyShareHelloRetryRequest
 # class KeyShareServerHello:

@@ -51,3 +51,9 @@ class NamedGroupList:
 
     def __len__(self):
         return 2 + sum(map(len, self.named_group_list))
+
+    def to_bytes(self):
+        byte_str = bytearray(0)
+        byte_str += Uint16(sum(map(len, self.named_group_list))).to_bytes()
+        byte_str += b''.join(x.to_bytes() for x in self.named_group_list)
+        return byte_str

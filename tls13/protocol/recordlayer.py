@@ -28,7 +28,7 @@ class TLSPlaintext:
     """
     def __init__(self, _type, length, fragment):
         self.type = _type
-        self.legacy_record_version = b'\x03\x03'
+        self.legacy_record_version = Uint16(0x0303)
         self.length = Uint16(length)
         self.fragment = fragment
 
@@ -47,6 +47,14 @@ class TLSPlaintext:
     def __len__(self):
         return len(self.type) + len(self.legacy_record_version) + \
                len(self.length) + len(self.fragment)
+
+    def to_bytes(self):
+        byte_str = bytearray(0)
+        byte_str += self.type.to_bytes()
+        byte_str += self.legacy_record_version.to_bytes()
+        byte_str += self.length.to_bytes()
+        byte_str += self.fragment.to_bytes()
+        return byte_str
 
 
 class TLSInnerPlaintext:
@@ -75,6 +83,6 @@ class TLSCiphertext:
     """
     def __init__(self, length, encrypted_record):
         self.opaque_type = 23
-        self.legacy_record_version = b'\x03\x03'
+        self.legacy_record_version = Uint16(0x0303)
         self.length = length
         self.encrypted_record = encrypted_record

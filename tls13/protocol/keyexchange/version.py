@@ -4,6 +4,7 @@
 
 import textwrap
 from ..handshake import HandshakeType
+from ...utils import Uint8
 
 class SupportedVersions:
     """
@@ -42,3 +43,12 @@ class SupportedVersions:
             return 1 + sum(map(len, self.versions))
         elif self.msg_type == HandshakeType.server_hello:
             return len(self.selected_version)
+
+    def to_bytes(self):
+        if self.msg_type == HandshakeType.client_hello:
+            byte_str = bytearray(0)
+            byte_str += Uint8(sum(map(len, self.versions))).to_bytes()
+            byte_str += b''.join(x.to_bytes() for x in self.versions)
+            return byte_str
+        else:
+            return self.selected_version.to_bytes()
