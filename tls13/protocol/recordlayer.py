@@ -16,6 +16,10 @@ class ContentType:
     application_data = Uint8(23)
     _size = 1 # byte
 
+# inverted dict
+# usage: ContentType.labels[Uint8(22)] # => 'handshake'
+ContentType.labels = dict( (v,k) for k,v in ContentType.__dict__.items() )
+
 
 class TLSPlaintext:
     """
@@ -35,12 +39,14 @@ class TLSPlaintext:
     def __repr__(self):
         return textwrap.dedent("""\
             %s:
-            |type: %s
+            |type: %s == %s
             |legacy_record_version: %s
             |length: %s
             |fragment:
             """ % (
-            self.__class__.__name__, self.type, self.legacy_record_version, \
+            self.__class__.__name__,
+            self.type, ContentType.labels[self.type],
+            self.legacy_record_version,
             self.length)) \
             + textwrap.indent(repr(self.fragment), prefix="    ")
 

@@ -29,7 +29,7 @@ class HandshakeType:
     _size = 1 # byte
 
 # inverted dict
-# usage: HandshakeType.labels[Uint(1)] # => 'client_hello'
+# usage: HandshakeType.labels[Uint8(1)] # => 'client_hello'
 HandshakeType.labels = dict( (v,k) for k,v in HandshakeType.__dict__.items() )
 
 
@@ -60,11 +60,13 @@ class Handshake:
     def __repr__(self):
         return textwrap.dedent("""\
             %s:
-            |msg_type: %s
+            |msg_type: %s == %s
             |length: %s
             |%s:
             """ % (
-            self.__class__.__name__, self.msg_type, self.length,
+            self.__class__.__name__,
+            self.msg_type, HandshakeType.labels[self.msg_type],
+            self.length,
             HandshakeType.labels[self.msg_type])) \
             + textwrap.indent(repr(self.msg), prefix="    ")
 

@@ -7,6 +7,7 @@ import textwrap
 import pprint
 from binascii import hexlify
 
+from .supportedgroups import NamedGroup
 from ...utils.type import Uint8, Uint16
 
 class ClientHello:
@@ -106,9 +107,11 @@ class Extension:
     def __repr__(self):
         return textwrap.dedent("""\
             %s:
-            |extension_type: %s
+            |extension_type: %s == %s
             |extension_data:
-            """ % (self.__class__.__name__, self.extension_type)) \
+            """ % (
+            self.__class__.__name__,
+            self.extension_type, ExtensionType.labels[self.extension_type])) \
             + textwrap.indent(repr(self.extension_data), prefix="    ")
 
     def __len__(self):
@@ -153,6 +156,10 @@ class ExtensionType:
     key_share = Uint16(51)
     _size = 2 # byte
 
+# inverted dict
+# usage: ExtensionType.labels[Uint16(43)] # => 'supported_versions'
+ExtensionType.labels = dict( (v,k) for k,v in ExtensionType.__dict__.items() )
+
 
 class KeyShareEntry:
     """
@@ -168,9 +175,10 @@ class KeyShareEntry:
     def __repr__(self):
         return textwrap.dedent("""\
             %s:
-            |group: %s
+            |group: %s == %s
             |key_exchange: %s (len=%d)""" % ( \
-            self.__class__.__name__, self.group,
+            self.__class__.__name__,
+            self.group, NamedGroup.labels[self.group],
             hexlify(self.key_exchange[0:10]) + b'...', len(self.key_exchange) ))
 
     def __len__(self):

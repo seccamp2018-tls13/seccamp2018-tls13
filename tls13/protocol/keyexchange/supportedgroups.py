@@ -33,6 +33,10 @@ class NamedGroup:
 
     _size = 2 # byte
 
+# inverted dict
+# usage: NamedGroup.labels[Uint16(0x0100)] # => 'ffdhe2048'
+NamedGroup.labels = dict( (v,k) for k,v in NamedGroup.__dict__.items() )
+
 
 class NamedGroupList:
     """
