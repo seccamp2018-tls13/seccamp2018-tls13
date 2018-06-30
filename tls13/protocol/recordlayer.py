@@ -2,6 +2,7 @@
 # B.1.  Record Layer
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.1
 
+import textwrap
 from ..utils import Uint8, Uint16, Uint24, Uint32
 
 class ContentType:
@@ -30,6 +31,18 @@ class TLSPlaintext:
         self.legacy_record_version = b'\x03\x03'
         self.length = Uint16(length)
         self.fragment = fragment
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |type: %s
+            |legacy_record_version: %s
+            |length: %s
+            |fragment:
+            """ % (
+            self.__class__.__name__, self.type, self.legacy_record_version, \
+            self.length)) \
+            + textwrap.indent(repr(self.fragment), prefix="    ")
 
     def __len__(self):
         return len(self.type) + len(self.legacy_record_version) + \

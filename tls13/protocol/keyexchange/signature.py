@@ -2,6 +2,7 @@
 # B.3.1.3.  Signature Algorithm Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.3
 
+import textwrap
 from ...utils import Uint16
 
 class SignatureScheme:
@@ -59,6 +60,12 @@ class SignatureSchemeList:
     """
     def __init__(self, supported_signature_algorithms=[]):
         self.supported_signature_algorithms = supported_signature_algorithms
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |supported_signature_algorithms: %s""" % \
+            (self.__class__.__name__, self.supported_signature_algorithms))
 
     def __len__(self):
         return 2 + sum(map(len, self.supported_signature_algorithms))

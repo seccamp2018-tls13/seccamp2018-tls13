@@ -2,6 +2,7 @@
 # B.3.1.4.  Supported Groups Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.4
 
+import textwrap
 from ...utils import Uint16
 
 class NamedGroup:
@@ -41,6 +42,12 @@ class NamedGroupList:
     """
     def __init__(self, named_group_list=[]):
         self.named_group_list = named_group_list
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |named_group_list: %s""" % \
+            (self.__class__.__name__, self.named_group_list))
 
     def __len__(self):
         return 2 + sum(map(len, self.named_group_list))

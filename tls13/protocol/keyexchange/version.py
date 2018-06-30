@@ -2,6 +2,7 @@
 # B.3.1.1.  Version Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.1
 
+import textwrap
 from ..handshake import HandshakeType
 
 class SupportedVersions:
@@ -23,6 +24,18 @@ class SupportedVersions:
             self.selected_version = selected_version
         else:
             raise RuntimeError("Unkown message type: %s" % msg_type)
+
+    def __repr__(self):
+        if self.msg_type == HandshakeType.client_hello:
+            versions = self.versions
+        else:
+            versions = self.selected_version
+
+        return textwrap.dedent("""\
+            %s:
+            |%s: %s""" % \
+            (self.__class__.__name__,
+            HandshakeType.labels[self.msg_type], self.versions))
 
     def __len__(self):
         if self.msg_type == HandshakeType.client_hello:

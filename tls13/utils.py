@@ -8,6 +8,10 @@ class Uint8:
     def __init__(self, value):
         self.value = value
 
+    def __repr__(self):
+        return "{}(0x{:0{width}x})" \
+               .format(self.__class__.__name__, self.value, width=len(self)*2)
+
     def __len__(self):
         return 1
 

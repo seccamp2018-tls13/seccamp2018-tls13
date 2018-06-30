@@ -72,6 +72,8 @@ def client_cmd(argv):
         fragment=ch_handshake
     )
 
+    print(ch_plain)
+
     # TODO: バイト列に変換したときの長さを求めるメソッド __len__ を実装する．
     #       可変長のデータがある場合は，先頭の1~3byteにデータ長，続くNbyteにデータが入るので，
     #       可変長のデータ長は合計 1~3 + N になることに注意．

@@ -3,6 +3,8 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1
 
 import secrets
+import textwrap
+import pprint
 
 from ...utils import Uint16
 
@@ -24,6 +26,23 @@ class ClientHello:
         self.cipher_suites = []
         self.legacy_compression_methods = [b'\x00']
         self.extensions = []
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |legacy_version: %s
+            |random: %s
+            |legacy_session_id: %s
+            |cipher_suites: %s
+            |legacy_compression_methods: %s
+            |extensions:
+            """ % (
+            self.__class__.__name__, self.legacy_version,
+            self.random[0:10] + b'...',
+            self.legacy_session_id[0:10] + b'...',
+            self.cipher_suites,
+            self.legacy_compression_methods)) \
+            + textwrap.indent(pprint.pformat(self.extensions), prefix="    ")
 
     def __len__(self):
         return len(self.legacy_version) + len(self.random) + \
@@ -64,6 +83,14 @@ class Extension:
     def __init__(self, extension_type, extension_data):
         self.extension_type = extension_type
         self.extension_data = extension_data
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |extension_type: %s
+            |extension_data:
+            """ % (self.__class__.__name__, self.extension_type)) \
+            + textwrap.indent(repr(self.extension_data), prefix="    ")
 
     def __len__(self):
         return len(self.extension_type) + 2 + len(self.extension_data)
@@ -111,6 +138,14 @@ class KeyShareEntry:
         self.group = group
         self.key_exchange = key_exchange
 
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |group: %s
+            |key_exchange: %s""" % \
+            (self.__class__.__name__, self.group,
+             self.key_exchange[0:10] + b'...'))
+
     def __len__(self):
         return len(self.group) + 2 + len(self.key_exchange)
 
@@ -123,6 +158,13 @@ class KeyShareClientHello:
     """
     def __init__(self, client_shares=[]):
         self.client_shares = client_shares
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |client_shares:
+            """ % (self.__class__.__name__)) \
+            + textwrap.indent(repr(self.client_shares), prefix="    ")
 
     def __len__(self):
         return 2 + sum(map(len, self.client_shares))
