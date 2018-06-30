@@ -4,6 +4,8 @@
 
 import secrets
 
+from ...utils import Uint16
+
 class ClientHello:
     """
     struct {
@@ -20,12 +22,15 @@ class ClientHello:
         self.random = secrets.token_bytes(32)
         self.legacy_session_id = secrets.token_bytes(32)
         self.cipher_suites = []
-        self.legacy_compression_methods = [0]
+        self.legacy_compression_methods = [b'\x00']
         self.extensions = []
 
     def __len__(self):
-        # TODO: バイト列にしたときの長さを求める
-        return 0
+        return len(self.legacy_version) + len(self.random) + \
+               1 + len(self.legacy_session_id) + \
+               2 + sum(map(len, self.cipher_suites)) + \
+               1 + sum(map(len, self.legacy_compression_methods)) + \
+               2 + sum(map(len, self.extensions))
 
 
 class ServerHello:
@@ -60,35 +65,38 @@ class Extension:
         self.extension_type = extension_type
         self.extension_data = extension_data
 
+    def __len__(self):
+        return len(self.extension_type) + 2 + len(self.extension_data)
+
 
 class ExtensionType:
     """
     enum { ... } ExtensionType
     """
-    server_name = 0
-    max_fragment_length = 1
-    status_request = 5
-    supported_groups = 10
-    signature_algorithms = 13
-    use_srtp = 14
-    heartbeat = 15
-    application_layer_protocol_negotiation = 16
-    signed_certificate_timestamp = 18
-    client_certificate_type = 19
-    server_certificate_type = 20
-    padding = 21
-    RESERVED = 40
-    pre_shared_key = 41
-    early_data = 42
-    supported_versions = 43
-    cookie = 44
-    psk_key_exchange_modes = 45
-    RESERVED = 46
-    certificate_authorities = 47
-    oid_filters = 48
-    post_handshake_auth = 49
-    signature_algorithms_cert = 50
-    key_share = 51
+    server_name = Uint16(0)
+    max_fragment_length = Uint16(1)
+    status_request = Uint16(5)
+    supported_groups = Uint16(10)
+    signature_algorithms = Uint16(13)
+    use_srtp = Uint16(14)
+    heartbeat = Uint16(15)
+    application_layer_protocol_negotiation = Uint16(16)
+    signed_certificate_timestamp = Uint16(18)
+    client_certificate_type = Uint16(19)
+    server_certificate_type = Uint16(20)
+    padding = Uint16(21)
+    RESERVED = Uint16(40)
+    pre_shared_key = Uint16(41)
+    early_data = Uint16(42)
+    supported_versions = Uint16(43)
+    cookie = Uint16(44)
+    psk_key_exchange_modes = Uint16(45)
+    RESERVED = Uint16(46)
+    certificate_authorities = Uint16(47)
+    oid_filters = Uint16(48)
+    post_handshake_auth = Uint16(49)
+    signature_algorithms_cert = Uint16(50)
+    key_share = Uint16(51)
     _size = 2 # byte
 
 
@@ -103,6 +111,9 @@ class KeyShareEntry:
         self.group = group
         self.key_exchange = key_exchange
 
+    def __len__(self):
+        return len(self.group) + 2 + len(self.key_exchange)
+
 
 class KeyShareClientHello:
     """
@@ -112,6 +123,9 @@ class KeyShareClientHello:
     """
     def __init__(self, client_shares=[]):
         self.client_shares = client_shares
+
+    def __len__(self):
+        return 2 + sum(map(len, self.client_shares))
 
 # class KeyShareHelloRetryRequest
 # class KeyShareServerHello:

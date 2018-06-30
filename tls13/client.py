@@ -12,6 +12,8 @@ from .protocol.keyexchange.version import SupportedVersions
 from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
+from .utils import Uint8, Uint16, Uint24, Uint32
+
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
 
@@ -27,7 +29,7 @@ def client_cmd(argv):
         extension_type=ExtensionType.supported_versions,
         extension_data=SupportedVersions(
             msg_type=HandshakeType.client_hello,
-            versions=[b'0x0304'] ))
+            versions=[b'\x03\x04'] ))
 
     supported_groups = Extension(
         extension_type=ExtensionType.supported_groups,

@@ -6,9 +6,9 @@ class CertificateType:
     """
     enum { ... } CertificateType
     """
-    X509 = 0
-    OpenPGP_RESERVED = 1
-    RawPublicKey = 2
+    X509 = Uint8(0)
+    OpenPGP_RESERVED = Uint8(1)
+    RawPublicKey = Uint8(2)
     _size = 1 # byte
 
 

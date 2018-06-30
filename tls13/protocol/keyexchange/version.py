@@ -23,3 +23,9 @@ class SupportedVersions:
             self.selected_version = selected_version
         else:
             raise RuntimeError("Unkown message type: %s" % msg_type)
+
+    def __len__(self):
+        if self.msg_type == HandshakeType.client_hello:
+            return 1 + sum(map(len, self.versions))
+        elif self.msg_type == HandshakeType.server_hello:
+            return len(self.selected_version)
