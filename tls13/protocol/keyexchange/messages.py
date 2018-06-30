@@ -5,6 +5,7 @@
 import secrets
 import textwrap
 import pprint
+from binascii import hexlify
 
 from ...utils.type import Uint8, Uint16
 
@@ -31,15 +32,15 @@ class ClientHello:
         return textwrap.dedent("""\
             %s:
             |legacy_version: %s
-            |random: %s
-            |legacy_session_id: %s
+            |random: %s (len=%d)
+            |legacy_session_id: %s (len=%d)
             |cipher_suites: %s
             |legacy_compression_methods: %s
             |extensions:
             """ % (
             self.__class__.__name__, self.legacy_version,
-            self.random[0:10] + b'...',
-            self.legacy_session_id[0:10] + b'...',
+            hexlify(self.random[0:10]) + b'...', len(self.random),
+            hexlify(self.legacy_session_id[0:10]) + b'...', len(self.legacy_session_id),
             self.cipher_suites,
             self.legacy_compression_methods)) \
             + textwrap.indent(pprint.pformat(self.extensions), prefix="    ")
@@ -168,9 +169,9 @@ class KeyShareEntry:
         return textwrap.dedent("""\
             %s:
             |group: %s
-            |key_exchange: %s""" % \
-            (self.__class__.__name__, self.group,
-             self.key_exchange[0:10] + b'...'))
+            |key_exchange: %s (len=%d)""" % ( \
+            self.__class__.__name__, self.group,
+            hexlify(self.key_exchange[0:10]) + b'...', len(self.key_exchange) ))
 
     def __len__(self):
         return len(self.group) + 2 + len(self.key_exchange)
