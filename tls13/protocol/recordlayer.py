@@ -4,6 +4,8 @@
 
 import textwrap
 from ..utils.type import Uint8, Uint16, Uint24, Uint32
+from ..utils.codec import Reader
+from ..utils import hexstr
 
 class ContentType:
     """
@@ -33,7 +35,7 @@ class TLSPlaintext:
     def __init__(self, _type, length, fragment):
         self.type = _type
         self.legacy_record_version = Uint16(0x0303)
-        self.length = Uint16(length)
+        self.length = length
         self.fragment = fragment
 
     def __repr__(self):
@@ -61,6 +63,22 @@ class TLSPlaintext:
         byte_str += self.length.to_bytes()
         byte_str += self.fragment.to_bytes()
         return byte_str
+
+    @classmethod
+    def from_bytes(cls, data):
+        from .handshake import Handshake
+        reader = Reader(data)
+        _type                 = Uint8(reader.get(1))
+        legacy_record_version = Uint16(reader.get(2))
+        length                = Uint16(reader.get(2))
+        fragment              = reader.get_rest()
+
+        assert length.value == len(fragment)
+
+        if _type == ContentType.handshake:
+            return cls(_type, length, Handshake.from_bytes(fragment))
+        else:
+            raise NotImplementedError()
 
 
 class TLSInnerPlaintext:

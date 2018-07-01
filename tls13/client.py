@@ -63,20 +63,29 @@ def client_cmd(argv):
 
     ch_handshake = Handshake(
         msg_type=HandshakeType.client_hello,
-        length=len(ch),
-        msg=ch
-    )
+        length=Uint24(len(ch)),
+        msg=ch )
 
     ch_plain = TLSPlaintext(
         _type=ContentType.handshake,
-        length=len(ch_handshake),
-        fragment=ch_handshake
-    )
+        length=Uint16(len(ch_handshake)),
+        fragment=ch_handshake )
 
+    # ClientHello が入っている TLSPlaintext
     print(ch_plain)
 
     print("ClientHello bytes:")
-    print(hexdump(ch_plain.to_bytes()))
+    ch_bytes = ch_plain.to_bytes()
+    print(hexdump(ch_bytes))
+
+    # バイト列から TLSPlaintext を再構築する（実際はサーバ側が行うが，デバッグなのでここで行う）
+    ch_plain_restructed = TLSPlaintext.from_bytes(ch_bytes)
+    # print(ch_plain_restructed)
+
+    # デバッグ用
+    before = repr(ch_plain)
+    after  = repr(ch_plain_restructed)
+    assert before == after
 
     # TODO: バイト列に変換したときの長さを求めるメソッド __len__ を実装する．
     #       可変長のデータがある場合は，先頭の1~3byteにデータ長，続くNbyteにデータが入るので，

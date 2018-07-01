@@ -4,6 +4,7 @@
 
 import textwrap
 from ...utils.type import Uint16
+from ...utils.codec import Reader
 
 class NamedGroup:
     """
@@ -61,3 +62,10 @@ class NamedGroupList:
         byte_str += Uint16(sum(map(len, self.named_group_list))).to_bytes()
         byte_str += b''.join(x.to_bytes() for x in self.named_group_list)
         return byte_str
+
+    @classmethod
+    def from_bytes(cls, data):
+        reader = Reader(data)
+        named_group_list = \
+            [Uint16(x) for x in reader.get_var_list(elem_length=2, length_length=2)]
+        return cls(named_group_list)

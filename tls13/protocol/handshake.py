@@ -4,6 +4,7 @@
 
 import textwrap
 from ..utils.type import Uint8, Uint16, Uint24, Uint32
+from ..utils.codec import Reader
 
 class HandshakeType:
     """
@@ -54,7 +55,7 @@ class Handshake:
     """
     def __init__(self, msg_type, length, msg):
         self.msg_type = msg_type # HandshakeType
-        self.length = Uint24(length)
+        self.length = length
         self.msg = msg
 
     def __repr__(self):
@@ -79,3 +80,18 @@ class Handshake:
         byte_str += self.length.to_bytes()
         byte_str += self.msg.to_bytes()
         return byte_str
+
+    @classmethod
+    def from_bytes(cls, data):
+        from .keyexchange.messages import ClientHello
+        reader = Reader(data)
+        msg_type = Uint8(reader.get(1))
+        length   = Uint24(reader.get(3))
+        msg      = reader.get_rest()
+
+        assert length.value == len(msg)
+
+        if msg_type == HandshakeType.client_hello:
+            return cls(msg_type, length, ClientHello.from_bytes(msg))
+        else:
+            raise NotImplementedError()

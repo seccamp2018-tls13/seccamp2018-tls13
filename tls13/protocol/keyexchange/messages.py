@@ -8,7 +8,9 @@ import pprint
 from binascii import hexlify
 
 from .supportedgroups import NamedGroup
+from ...utils import hexstr
 from ...utils.type import Uint8, Uint16
+from ...utils.codec import Reader
 
 class ClientHello:
     """
@@ -21,10 +23,11 @@ class ClientHello:
       Extension extensions<8..2^16-1>;
     } ClientHello;
     """
-    def __init__(self, cipher_suites=[], extensions=[]):
+    def __init__(self, legacy_version=None, random=None, legacy_session_id=None,
+                       cipher_suites=[], extensions=[]):
         self.legacy_version = Uint16(0x0303)
-        self.random = secrets.token_bytes(32)
-        self.legacy_session_id = secrets.token_bytes(32)
+        self.random = random or secrets.token_bytes(32)
+        self.legacy_session_id = legacy_session_id or secrets.token_bytes(32)
         self.cipher_suites = cipher_suites
         self.legacy_compression_methods = [ Uint8(0x00) ]
         self.extensions = extensions
@@ -70,6 +73,28 @@ class ClientHello:
         byte_str += Uint16(sum(map(len, self.extensions))).to_bytes()
         byte_str += b''.join([ x.to_bytes() for x in self.extensions ])
         return byte_str
+
+    @classmethod
+    def from_bytes(cls, data):
+        from ..handshake import HandshakeType
+        reader = Reader(data)
+        legacy_version    = Uint16(reader.get(2))
+        random            = reader.get_fix_bytes(32)
+        legacy_session_id = reader.get_var_bytes(1)
+        cipher_suites = \
+            [Uint16(x) for x in reader.get_var_list(elem_length=2, length_length=2)]
+        legacy_compression_methods = \
+            [Uint8(x)  for x in reader.get_var_list(elem_length=1, length_length=1)]
+
+        # Read extensions
+        extensions = Extension.from_bytes(reader.get_rest(),
+                                          msg_type=HandshakeType.client_hello)
+
+        return cls(legacy_version=legacy_version,
+                   random=random,
+                   legacy_session_id=legacy_session_id,
+                   cipher_suites=cipher_suites,
+                   extensions=extensions)
 
 
 class ServerHello:
@@ -123,6 +148,41 @@ class Extension:
         byte_str += Uint16(len(self.extension_data)).to_bytes()
         byte_str += self.extension_data.to_bytes()
         return byte_str
+
+    @classmethod
+    def from_bytes(cls, data, msg_type):
+        from .version import SupportedVersions
+        from .supportedgroups import NamedGroupList
+        from .signature import SignatureSchemeList
+        reader = Reader(data)
+        extensions = []
+        extensions_length = reader.get(2)
+        assert extensions_length == reader.get_rest_length()
+
+        # Read extensions
+        while reader.get_rest_length() != 0:
+            extension_type = Uint16(reader.get(2))
+            extension_data = reader.get_var_bytes(2)
+
+            ExtClass = None
+            kwargs = {}
+            if extension_type == ExtensionType.supported_versions:
+                ExtClass = SupportedVersions
+                kwargs = {'msg_type': msg_type}
+            elif extension_type == ExtensionType.supported_groups:
+                ExtClass = NamedGroupList
+            elif extension_type == ExtensionType.signature_algorithms:
+                ExtClass = SignatureSchemeList
+            elif extension_type == ExtensionType.key_share:
+                ExtClass = KeyShareClientHello
+            else:
+                raise NotImplementedError()
+
+            extensions.append( cls(
+                extension_type=extension_type,
+                extension_data=ExtClass.from_bytes(extension_data, **kwargs)) )
+
+        return extensions
 
 
 class ExtensionType:
@@ -212,9 +272,27 @@ class KeyShareClientHello:
 
     def to_bytes(self):
         byte_str = bytearray(0)
-        byte_str += Uint16(len(self.client_shares)).to_bytes()
+        byte_str += Uint16(sum(map(len, self.client_shares))).to_bytes()
         byte_str += b''.join(x.to_bytes() for x in self.client_shares)
         return byte_str
+
+    @classmethod
+    def from_bytes(cls, data):
+        reader = Reader(data)
+
+        # Read client_shares
+        client_shares = []
+        client_shares_length = reader.get(2)
+        assert client_shares_length == reader.get_rest_length()
+
+        while reader.get_rest_length() != 0:
+            group = Uint16(reader.get(2))
+            key_exchange = reader.get_var_bytes(2)
+            client_shares.append( KeyShareEntry(group, key_exchange) )
+
+        return cls(client_shares)
+
+
 
 # class KeyShareHelloRetryRequest
 # class KeyShareServerHello:

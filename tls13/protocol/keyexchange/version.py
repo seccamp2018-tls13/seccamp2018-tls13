@@ -4,7 +4,8 @@
 
 import textwrap
 from ..handshake import HandshakeType
-from ...utils.type import Uint8
+from ...utils.type import Uint8, Uint16
+from ...utils.codec import Reader
 
 class SupportedVersions:
     """
@@ -52,3 +53,15 @@ class SupportedVersions:
             return byte_str
         else:
             return self.selected_version.to_bytes()
+
+    @classmethod
+    def from_bytes(cls, data, msg_type):
+        reader = Reader(data)
+        if msg_type == HandshakeType.client_hello:
+            versions = [Uint16(x) for x in reader.get_var_list(elem_length=2, length_length=1)]
+            return cls(msg_type, versions)
+        elif msg_type == HandshakeType.server_hello:
+            selected_version = Uint16(reader.get(2))
+            return cls(msg_type, selected_version)
+        else:
+            raise RuntimeError("Unkown message type: %s" % msg_type)
