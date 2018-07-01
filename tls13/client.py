@@ -78,14 +78,22 @@ def client_cmd(argv):
     ch_bytes = ch_plain.to_bytes()
     print(hexdump(ch_bytes))
 
-    # バイト列から TLSPlaintext を再構築する（実際はサーバ側が行うが，デバッグなのでここで行う）
-    ch_plain_restructed = TLSPlaintext.from_bytes(ch_bytes)
-    # print(ch_plain_restructed)
+    # # バイト列から TLSPlaintext を再構築する（実際はサーバ側が行うが，デバッグなのでここで行う）
+    # ch_plain_restructed = TLSPlaintext.from_bytes(ch_bytes)
+    # # print(ch_plain_restructed)
+    # # デバッグ用
+    # before = repr(ch_plain)
+    # after  = repr(ch_plain_restructed)
+    # assert before == after
+    # デバッグの処理は別のファイルで unittest したい
 
-    # デバッグ用
-    before = repr(ch_plain)
-    after  = repr(ch_plain_restructed)
-    assert before == after
+    # Server に ClientHello のバイト列を送信する
+    print("[INFO] Connecting to server...")
+    HOST = 'localhost' # The remote host
+    PORT = 50007 # The same port as used by the server
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(ch_bytes)
 
     # DONE: バイト列に変換したときの長さを求めるメソッド __len__ を実装する．
     #       可変長のデータがある場合は，先頭の1~3byteにデータ長，続くNbyteにデータが入るので，
@@ -95,7 +103,7 @@ def client_cmd(argv):
     #         <0..2^16-1> なら hex(2**16-1) == '0xffff' なので 2byte のように求める．
     # DONE: それぞれのクラスに .to_bytes() みたいなメソッドを作って再帰的に呼び出して
     #       送信用のバイト列を作る
-    # TODO: socketを使ってバイト列をサーバに送る処理の実装
+    # DONE: socketを使ってバイト列をサーバに送る処理の実装
     #       send(ch_plain.to_bytes(), to=server)
     # DONE: .to_bytes() ができたら，その逆関数として TLSPlaintext.from_bytes() みたいな
     #       送られてきたバイト列から構造体を組み立てるメソッドをそれぞれのクラスに作る．
