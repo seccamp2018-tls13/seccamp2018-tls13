@@ -16,11 +16,17 @@ class Uint8:
     def __len__(self):
         return 1
 
-    # HACK: __eq__ メソッドを実装すると，辞書使用時の型エラーの
-    #       「TypeError: unhashable type: Uint8」
-    #       が発生するので，__hash__ メソッドを作ってエラーを回避する．
-    #       より厳密に書く場合は，self.value を書き換え不可能（immutable）にする必要がある．
-    #       https://stackoverflow.com/questions/4996815/ways-to-make-a-class-immutable-in-python
+    # HACK:
+    # このクラスのインスタンスは以下の2つの場面で使われる：
+    #   - 定数からラベル名の取得：ContentType.labels[Uint8(22)]  #=> 'handshake'
+    #   - 定数との比較：ContentType.handshake == Uint8(22)     #=> True
+    # 2番目のために __eq__ メソッドを実装すると，1番目で辞書使用時の型エラーの
+    # 「TypeError: unhashable type: Uint8」
+    # が発生するので，__hash__ メソッドを作ってエラーを回避する．
+    # より厳密に書きたい場合は，Uint8 のインスタンスの属性 .value を直接変更しては
+    # いけないという制約が必要で，self.value を書き換え不可能（immutable）にする必要がある．
+    # https://qiita.com/yoichi22/items/ebf6ab3c6de26ddcc09a
+    # https://stackoverflow.com/questions/4996815/ways-to-make-a-class-immutable-in-python
     def __hash__(self):
         return hash((self.value,))
 
