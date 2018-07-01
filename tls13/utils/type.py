@@ -6,6 +6,7 @@ class Uint8:
     an unsigned byte
     """
     def __init__(self, value):
+        assert type(value) is int
         self.value = value
 
     def __repr__(self):
@@ -14,6 +15,17 @@ class Uint8:
 
     def __len__(self):
         return 1
+
+    # HACK: __eq__ メソッドを実装すると，辞書使用時の型エラーの
+    #       「TypeError: unhashable type: Uint8」
+    #       が発生するので，__hash__ メソッドを作ってエラーを回避する．
+    #       より厳密に書く場合は，self.value を書き換え不可能（immutable）にする必要がある．
+    #       https://stackoverflow.com/questions/4996815/ways-to-make-a-class-immutable-in-python
+    def __hash__(self):
+        return hash((self.value,))
+
+    def __eq__(self, other):
+        return self.value == other.value
 
     def to_bytes(self):
         return pack('>B', self.value)
