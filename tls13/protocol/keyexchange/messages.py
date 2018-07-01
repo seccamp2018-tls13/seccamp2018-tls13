@@ -21,13 +21,13 @@ class ClientHello:
       Extension extensions<8..2^16-1>;
     } ClientHello;
     """
-    def __init__(self):
+    def __init__(self, cipher_suites=[], extensions=[]):
         self.legacy_version = Uint16(0x0303)
         self.random = secrets.token_bytes(32)
         self.legacy_session_id = secrets.token_bytes(32)
-        self.cipher_suites = []
+        self.cipher_suites = cipher_suites
         self.legacy_compression_methods = [ Uint8(0x00) ]
-        self.extensions = []
+        self.extensions = extensions
 
     def __repr__(self):
         return textwrap.dedent("""\
@@ -83,14 +83,13 @@ class ServerHello:
       Extension extensions<6..2^16-1>;
     } ServerHello;
     """
-    def __init__(self):
+    def __init__(self, legacy_session_id_echo, cipher_suite=[], extensions=[]):
         self.legacy_version = Uint16(0x0303)
-        # TODO:
-        self.random
-        self.legacy_session_id_echo
-        self.cipher_suite
-        self.legacy_compression_method = 0 # uint8
-        self.extensions = []
+        self.random = secrets.token_bytes(32)
+        self.legacy_session_id_echo = legacy_session_id_echo
+        self.cipher_suite = cipher_suite
+        self.legacy_compression_method = Uint8(0x00)
+        self.extensions = extensions
 
 
 class Extension:
