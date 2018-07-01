@@ -1,6 +1,12 @@
 
 # export functions
-__all__ = ['hexdump']
+__all__ = ['hexstr', 'hexdump']
+
+import binascii
+
+
+def hexstr(binary):
+    return binascii.hexlify(binary).decode('ascii')
 
 
 def hexdump(data) -> str:
@@ -21,9 +27,7 @@ def hexdump(data) -> str:
             yield seq[d*size:]
 
     def dump(binary, size=2, sep=' '):
-        import binascii
-        hexstr = binascii.hexlify(binary).decode('ascii')
-        return sep.join(chunks(hexstr.upper(), size))
+        return sep.join(chunks(hexstr(binary).upper(), size))
 
     def dumpgen(data):
         '''
