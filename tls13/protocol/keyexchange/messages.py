@@ -67,7 +67,7 @@ class ClientHello:
         byte_str += Uint8(sum(map(len, self.legacy_compression_methods))).to_bytes()
         byte_str += b''.join(x.to_bytes() for x in self.legacy_compression_methods)
         # extensions
-        byte_str += sum(map(len, self.extensions)).to_bytes(2, byteorder='big')
+        byte_str += Uint16(sum(map(len, self.extensions))).to_bytes()
         byte_str += b''.join([ x.to_bytes() for x in self.extensions ])
         return byte_str
 
