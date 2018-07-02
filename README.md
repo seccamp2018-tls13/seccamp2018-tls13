@@ -8,7 +8,7 @@
     - [ ] ServerHello
     - [ ] Application Data
 - [ ] ネットワーク通信部分の分離/ライブラリ化（send, recv）
-- [ ] ユニットテスト（`pip install -U . && python test.py`）
+- [x] ユニットテスト（`python test.py`）
 - [ ] 鍵共有（最低限 Diffie-Hellman ができる）
 - [ ] 暗号化（chacha/poly やりたい）
 
