@@ -76,15 +76,6 @@ def client_cmd(argv):
     ch_bytes = ch_plain.to_bytes()
     print(hexdump(ch_bytes))
 
-    # # バイト列から TLSPlaintext を再構築する（実際はサーバ側が行うが，デバッグなのでここで行う）
-    # ch_plain_restructed = TLSPlaintext.from_bytes(ch_bytes)
-    # # print(ch_plain_restructed)
-    # # デバッグ用
-    # before = repr(ch_plain)
-    # after  = repr(ch_plain_restructed)
-    # assert before == after
-    # デバッグの処理は別のファイルで unittest したい
-
     # Server に ClientHello のバイト列を送信する
     print("[INFO] Connecting to server...")
     HOST = 'localhost' # The remote host
