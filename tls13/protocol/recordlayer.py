@@ -90,7 +90,7 @@ class TLSInnerPlaintext:
     } TLSInnerPlaintext;
     """
     def __init__(self, content, _type, length_of_padding):
-        self.content = content # TLSPLaintext.fragment
+        self.content = content # TLSPlaintext.fragment
         self.type = _type
         self.zeros = b'\x00' * length_of_padding
         self._length_of_padding = length_of_padding
