@@ -53,9 +53,9 @@ class Handshake:
       };
     } Handshake;
     """
-    def __init__(self, msg_type, length, msg):
+    def __init__(self, msg_type, msg, length=None):
         self.msg_type = msg_type # HandshakeType
-        self.length = length
+        self.length = length or Uint24(len(msg))
         self.msg = msg
 
     def __repr__(self):
@@ -92,6 +92,6 @@ class Handshake:
         assert length.value == len(msg)
 
         if msg_type == HandshakeType.client_hello:
-            return cls(msg_type, length, ClientHello.from_bytes(msg))
+            return cls(msg_type=msg_type, msg=ClientHello.from_bytes(msg))
         else:
             raise NotImplementedError()

@@ -32,10 +32,10 @@ class TLSPlaintext:
       opaque fragment[TLSPlaintext.length];
     } TLSPlaintext;
     """
-    def __init__(self, _type, length, fragment):
+    def __init__(self, _type, fragment, length=None):
         self.type = _type
         self.legacy_record_version = Uint16(0x0303)
-        self.length = length
+        self.length = length or Uint16(len(fragment))
         self.fragment = fragment
 
     def __repr__(self):
@@ -76,7 +76,7 @@ class TLSPlaintext:
         assert length.value == len(fragment)
 
         if _type == ContentType.handshake:
-            return cls(_type, length, Handshake.from_bytes(fragment))
+            return cls(_type=_type, fragment=Handshake.from_bytes(fragment))
         else:
             raise NotImplementedError()
 

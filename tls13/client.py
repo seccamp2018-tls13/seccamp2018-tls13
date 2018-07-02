@@ -63,12 +63,10 @@ def client_cmd(argv):
 
     ch_handshake = Handshake(
         msg_type=HandshakeType.client_hello,
-        length=Uint24(len(ch)),
         msg=ch )
 
     ch_plain = TLSPlaintext(
         _type=ContentType.handshake,
-        length=Uint16(len(ch_handshake)),
         fragment=ch_handshake )
 
     # ClientHello が入っている TLSPlaintext
