@@ -32,6 +32,7 @@ class HandshakeType:
 # inverted dict
 # usage: HandshakeType.labels[Uint8(1)] # => 'client_hello'
 HandshakeType.labels = dict( (v,k) for k,v in HandshakeType.__dict__.items() )
+HandshakeType.values = set( v for k,v in HandshakeType.__dict__.items() if type(v) == Uint8 )
 
 
 class Handshake:
@@ -57,6 +58,8 @@ class Handshake:
         self.msg_type = msg_type # HandshakeType
         self.length = length or Uint24(len(msg))
         self.msg = msg
+        assert self.msg_type in HandshakeType.values
+        assert type(self.length) == Uint24
 
     def __repr__(self):
         return textwrap.dedent("""\

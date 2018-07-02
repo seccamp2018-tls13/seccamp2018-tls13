@@ -21,6 +21,7 @@ class ContentType:
 # inverted dict
 # usage: ContentType.labels[Uint8(22)] # => 'handshake'
 ContentType.labels = dict( (v,k) for k,v in ContentType.__dict__.items() )
+ContentType.values = set( v for k,v in ContentType.__dict__.items() if type(v) == Uint8 )
 
 
 class TLSPlaintext:
@@ -37,6 +38,8 @@ class TLSPlaintext:
         self.legacy_record_version = Uint16(0x0303)
         self.length = length or Uint16(len(fragment))
         self.fragment = fragment
+        assert self.type in ContentType.values
+        assert type(self.length) == Uint16
 
     def __repr__(self):
         return textwrap.dedent("""\

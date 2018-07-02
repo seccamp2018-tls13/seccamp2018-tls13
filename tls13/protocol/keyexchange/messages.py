@@ -23,14 +23,22 @@ class ClientHello:
       Extension extensions<8..2^16-1>;
     } ClientHello;
     """
-    def __init__(self, legacy_version=None, random=None, legacy_session_id=None,
-                       cipher_suites=[], extensions=[]):
-        self.legacy_version = Uint16(0x0303)
-        self.random = random or secrets.token_bytes(32)
-        self.legacy_session_id = legacy_session_id or secrets.token_bytes(32)
+    def __init__(self, legacy_version=Uint16(0x0303),
+                       random=secrets.token_bytes(32),
+                       legacy_session_id=secrets.token_bytes(32),
+                       cipher_suites=[],
+                       extensions=[]):
+        self.legacy_version = legacy_version
+        self.random = random
+        self.legacy_session_id = legacy_session_id
         self.cipher_suites = cipher_suites
         self.legacy_compression_methods = [ Uint8(0x00) ]
         self.extensions = extensions
+        assert type(self.legacy_version) == Uint16
+        assert type(self.random) in (bytes, bytearray)
+        assert type(self.legacy_session_id) in (bytes, bytearray)
+        assert type(self.extensions) == list
+        assert all( type(ext) == Extension for ext in self.extensions )
 
     def __repr__(self):
         return textwrap.dedent("""\
@@ -108,13 +116,19 @@ class ServerHello:
       Extension extensions<6..2^16-1>;
     } ServerHello;
     """
-    def __init__(self, legacy_session_id_echo, cipher_suite=[], extensions=[]):
+    def __init__(self, legacy_session_id_echo,
+                       random=secrets.token_bytes(32),
+                       cipher_suite=[], extensions=[]):
         self.legacy_version = Uint16(0x0303)
-        self.random = secrets.token_bytes(32)
+        self.random = random
         self.legacy_session_id_echo = legacy_session_id_echo
         self.cipher_suite = cipher_suite
         self.legacy_compression_method = Uint8(0x00)
         self.extensions = extensions
+        assert type(self.random) in (bytes, bytearray)
+        assert type(self.legacy_session_id_echo) in (bytes, bytearray)
+        assert type(self.extensions) == list
+        assert all( type(ext) == Extension for ext in self.extensions )
 
 
 class Extension:
@@ -127,6 +141,7 @@ class Extension:
     def __init__(self, extension_type, extension_data):
         self.extension_type = extension_type
         self.extension_data = extension_data
+        assert self.extension_type in ExtensionType.values
 
     def __repr__(self):
         return textwrap.dedent("""\
@@ -218,6 +233,8 @@ class ExtensionType:
 # inverted dict
 # usage: ExtensionType.labels[Uint16(43)] # => 'supported_versions'
 ExtensionType.labels = dict( (v,k) for k,v in ExtensionType.__dict__.items() )
+ExtensionType.values = set( v for k,v in ExtensionType.__dict__.items()
+                              if type(v) == Uint16 )
 
 
 class KeyShareEntry:
@@ -230,6 +247,8 @@ class KeyShareEntry:
     def __init__(self, group, key_exchange):
         self.group = group
         self.key_exchange = key_exchange
+        assert self.group in NamedGroup.values
+        assert type(self.key_exchange) in (bytes, bytearray)
 
     def __repr__(self):
         return textwrap.dedent("""\
@@ -259,6 +278,8 @@ class KeyShareClientHello:
     """
     def __init__(self, client_shares=[]):
         self.client_shares = client_shares
+        assert type(self.client_shares) == list
+        assert all( type(entry) == KeyShareEntry for entry in self.client_shares )
 
     def __repr__(self):
         return textwrap.dedent("""\

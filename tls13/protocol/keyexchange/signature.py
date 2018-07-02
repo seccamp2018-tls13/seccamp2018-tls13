@@ -48,9 +48,13 @@ class SignatureScheme:
     obsolete_RESERVED = (Uint16(0x0504), Uint16(0x0600))
     dsa_sha512_RESERVED = Uint16(0x0602)
     obsolete_RESERVED = (Uint16(0x0604), Uint16(0x06FF))
-    private_use = [Uint16(0xFE00), Uint16(0xFFFF)]
+    private_use = (Uint16(0xFE00), Uint16(0xFFFF))
 
     _size = 2 # bytes
+
+SignatureScheme.labels = dict( (v,k) for k,v in SignatureScheme.__dict__.items() )
+SignatureScheme.values = set( v for k,v in SignatureScheme.__dict__.items()
+                                if type(v) == Uint16 )
 
 
 class SignatureSchemeList:
@@ -61,6 +65,9 @@ class SignatureSchemeList:
     """
     def __init__(self, supported_signature_algorithms=[]):
         self.supported_signature_algorithms = supported_signature_algorithms
+        assert type(self.supported_signature_algorithms) == list
+        assert all( bool(algo in SignatureScheme.values)
+                    for algo in self.supported_signature_algorithms )
 
     def __repr__(self):
         return textwrap.dedent("""\

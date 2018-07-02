@@ -12,6 +12,9 @@ class AlertLevel:
     fatal = Uint8(2)
     _size = 1 # byte
 
+AlertLevel.labels = dict( (v,k) for k,v in AlertLevel.__dict__.items() )
+AlertLevel.values = set( v for k,v in AlertLevel.__dict__.items() if type(v) == Uint8 )
+
 
 class AlertDescription:
     """
@@ -52,6 +55,10 @@ class AlertDescription:
     certificate_required = Uint8(116)
     no_application_protocol = Uint8(120)
     _size = 1 # byte
+
+AlertDescription.labels = dict( (v,k) for k,v in AlertDescription.__dict__.items() )
+AlertDescription.values = set( v for k,v in AlertDescription.__dict__.items()
+                                 if type(v) == Uint8 )
 
 
 class Alert:

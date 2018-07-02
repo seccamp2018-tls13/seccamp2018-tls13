@@ -13,6 +13,10 @@ class CertificateType:
     RawPublicKey = Uint8(2)
     _size = 1 # byte
 
+CertificateType.labels = dict( (v,k) for k,v in CertificateType.__dict__.items() )
+CertificateType.values = set( v for k,v in CertificateType.__dict__.items()
+                                if type(v) == Uint8 )
+
 
 class CertificateEntry:
     """

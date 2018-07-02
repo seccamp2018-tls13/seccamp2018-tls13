@@ -37,6 +37,7 @@ class NamedGroup:
 # inverted dict
 # usage: NamedGroup.labels[Uint16(0x0100)] # => 'ffdhe2048'
 NamedGroup.labels = dict( (v,k) for k,v in NamedGroup.__dict__.items() )
+NamedGroup.values = set( v for k,v in NamedGroup.__dict__.items() if type(v) == Uint16 )
 
 
 class NamedGroupList:
@@ -47,6 +48,7 @@ class NamedGroupList:
     """
     def __init__(self, named_group_list=[]):
         self.named_group_list = named_group_list
+        assert type(self.named_group_list) == list
 
     def __repr__(self):
         return textwrap.dedent("""\

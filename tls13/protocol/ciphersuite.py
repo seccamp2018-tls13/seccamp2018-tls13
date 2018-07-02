@@ -10,3 +10,6 @@ class CipherSuite:
     TLS_CHACHA20_POLY1305_SHA256 = Uint16(0x1301)
     TLS_AES_128_CCM_SHA256       = Uint16(0x1301)
     TLS_AES_128_CCM_8_SHA256     = Uint16(0x1301)
+
+CipherSuite.labels = dict( (v,k) for k,v in CipherSuite.__dict__.items() )
+CipherSuite.values = set( v for k,v in CipherSuite.__dict__.items() if type(v) == Uint16 )

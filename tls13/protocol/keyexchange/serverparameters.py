@@ -14,8 +14,8 @@ class EncryptedExtensions:
       Extension extensions<0..2^16-1>;
     } EncryptedExtensions;
     """
-    def __init__(self):
-        self.extensions = []
+    def __init__(self, extensions):
+        self.extensions = extensions
 
 
 # class CertificateRequest
