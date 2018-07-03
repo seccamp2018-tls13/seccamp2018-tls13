@@ -1,8 +1,8 @@
 
+import unittest
 import socket
 import secrets
 
-import unittest
 from tls13.protocol.recordlayer import TLSPlaintext, ContentType
 from tls13.protocol.handshake import Handshake, HandshakeType
 from tls13.protocol.ciphersuite import CipherSuite
@@ -15,6 +15,13 @@ from tls13.protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupLis
 from tls13.protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
 from tls13.utils.type import Uint8, Uint16, Uint24, Uint32
+
+
+class ContentTypeTest(unittest.TestCase):
+
+    @unittest.skip('empty')
+    def test_(self):
+        pass
 
 
 class TLSPlaintextTest(unittest.TestCase):
