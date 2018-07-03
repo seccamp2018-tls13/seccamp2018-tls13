@@ -36,6 +36,7 @@ class Uint8:
     def to_bytes(self):
         return pack('>B', self.value)
 
+
 class Uint16(Uint8):
     """
     uint8 uint24[3];
@@ -45,6 +46,7 @@ class Uint16(Uint8):
 
     def to_bytes(self):
         return pack('>H', self.value)
+
 
 class Uint24(Uint8):
     """
@@ -56,6 +58,7 @@ class Uint24(Uint8):
     def to_bytes(self):
         return pack('>BH', self.value >> 16, self.value & 0xffff)
 
+
 class Uint32(Uint8):
     """
     uint8 uint32[4];
@@ -65,3 +68,13 @@ class Uint32(Uint8):
 
     def to_bytes(self):
         return pack('>I', self.value)
+
+
+class Uint:
+    @staticmethod
+    def get_type(size):
+        if size == 1: return Uint8
+        if size == 2: return Uint16
+        if size == 3: return Uint24
+        if size == 4: return Uint32
+        raise NotImplementedError()
