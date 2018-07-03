@@ -316,7 +316,10 @@ class KeyShareClientHello:
 
 
 # class KeyShareHelloRetryRequest
-# class KeyShareServerHello:
+
+class KeyShareServerHello:
+    pass
+
 # class UncompressedPointRepresentation
 # class PskKeyExchangeMode
 # class PskKeyExchangeModes
