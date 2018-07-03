@@ -14,14 +14,20 @@ from tls13.protocol.keyexchange.version import SupportedVersions
 from tls13.protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from tls13.protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
-from tls13.utils.type import Uint8, Uint16, Uint24, Uint32
+from tls13.utils.type import *
 
 
 class ContentTypeTest(unittest.TestCase):
 
-    @unittest.skip('empty')
-    def test_(self):
-        pass
+    def test_size(self):
+        self.assertTrue(hasattr(ContentType, '_size'))
+
+    def test_values(self):
+        UintN = Uint.get_type(size=ContentType._size)
+        self.assertTrue(all( type(v) == UintN for v in ContentType.values ))
+
+    def test_labels(self):
+        self.assertTrue(all( ContentType.labels[v] for v in ContentType.values ))
 
 
 class TLSPlaintextTest(unittest.TestCase):
