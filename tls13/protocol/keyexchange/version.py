@@ -32,8 +32,10 @@ class SupportedVersions:
 
     def __repr__(self):
         if self.msg_type == HandshakeType.client_hello:
+            label = 'versions'
             versions = self.versions
         elif self.msg_type == HandshakeType.server_hello:
+            label = 'selected_version'
             versions = self.selected_version
         else:
             raise RuntimeError("Unkown message type: %s" % msg_type)
@@ -41,8 +43,7 @@ class SupportedVersions:
         return textwrap.dedent("""\
             %s:
             |%s: %s""" % \
-            (self.__class__.__name__,
-            HandshakeType.labels[self.msg_type], self.versions))
+            (self.__class__.__name__, label, versions))
 
     def __len__(self):
         if self.msg_type == HandshakeType.client_hello:
