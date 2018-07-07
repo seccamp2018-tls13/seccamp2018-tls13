@@ -5,9 +5,9 @@
 - [ ] プロトコルの構造体をクラスにする
 - [ ] 構造体 <=> バイト文字列の変換（to_bytes, from_bytes）
     - [x] ClientHello
-    - [ ] ServerHello
+    - [x] ServerHello
     - [ ] Application Data
-- [ ] ネットワーク通信部分の分離/ライブラリ化（send, recv）
+- [x] ネットワーク通信部分の分離/ライブラリ化（send, recv）
 - [x] ユニットテスト（`python test.py`）
 - [ ] 鍵共有（最低限 Diffie-Hellman ができる）
 - [ ] 暗号化（chacha/poly やりたい）
