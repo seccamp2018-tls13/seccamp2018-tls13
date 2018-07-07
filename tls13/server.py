@@ -20,7 +20,8 @@ def server_cmd(argv):
     print("server_cmd({})".format(", ".join(argv)))
 
     # ClientHello のバイト列を受け取る
-    data = socket.recv()
+    server_conn = socket.ServerConnection()
+    data = server_conn.recv_msg()
 
     ch_plain_restructed = TLSPlaintext.from_bytes(data)
     print(ch_plain_restructed)
@@ -65,10 +66,7 @@ def server_cmd(argv):
     sh_bytes = sh_plain.to_bytes()
     print(hexdump(sh_bytes))
 
-    # sh_plain_restructed = TLSPlaintext.from_bytes(sh_bytes)
-    # assert repr(sh_plain) == repr(sh_plain_restructed)
-
-    socket.send(sh_bytes, port=50008)
+    server_conn.send_msg(sh_bytes)
 
 
     # EncryptedExtensions
