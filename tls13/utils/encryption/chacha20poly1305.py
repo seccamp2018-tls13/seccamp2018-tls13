@@ -86,7 +86,8 @@ def chacha20(text, key, nonce, cnt=0):
 # nonce = [0, 0, 0] 
 
 
-
+# NOTE : chacha20の引数textは暗号化するメッセージを64bytesごとに区切ったもの(足りない部分は0パディング)
+#        呼び出し側で区切ってあげる?
 # TODO : Nonceの生成. NonceはTLSのシーケンス番号(8 [byte])に0パディングして12 [byte]長にしてから
 #  Master Secret によって生成される12 [byte]のWriteIVとXORをとって生成. 
 # TODO : 
