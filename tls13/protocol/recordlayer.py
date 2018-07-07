@@ -3,10 +3,11 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.1
 
 import textwrap
-from ..utils.type import Uint8, Uint16, Uint24, Uint32
+from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ..utils.codec import Reader
 from ..utils import hexstr
 
+@Type.add_labels_and_values
 class ContentType:
     """
     enum { ... } ContentType
@@ -17,11 +18,6 @@ class ContentType:
     handshake = Uint8(22)
     application_data = Uint8(23)
     _size = 1 # byte
-
-# inverted dict
-# usage: ContentType.labels[Uint8(22)] # => 'handshake'
-ContentType.labels = dict( (v,k) for k,v in ContentType.__dict__.items() )
-ContentType.values = set( v for k,v in ContentType.__dict__.items() if type(v) == Uint8 )
 
 
 class TLSPlaintext:

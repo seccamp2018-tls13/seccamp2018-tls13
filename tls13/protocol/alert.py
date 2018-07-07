@@ -2,8 +2,9 @@
 # B.2.  Alert Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.2
 
-from ..utils.type import Uint8
+from ..utils.type import Uint8, Type
 
+@Type.add_labels_and_values
 class AlertLevel:
     """
     enum { ... } AlertLevel
@@ -12,10 +13,8 @@ class AlertLevel:
     fatal = Uint8(2)
     _size = 1 # byte
 
-AlertLevel.labels = dict( (v,k) for k,v in AlertLevel.__dict__.items() )
-AlertLevel.values = set( v for k,v in AlertLevel.__dict__.items() if type(v) == Uint8 )
 
-
+@Type.add_labels_and_values
 class AlertDescription:
     """
     enum { ... } AlertDescription
@@ -55,10 +54,6 @@ class AlertDescription:
     certificate_required = Uint8(116)
     no_application_protocol = Uint8(120)
     _size = 1 # byte
-
-AlertDescription.labels = dict( (v,k) for k,v in AlertDescription.__dict__.items() )
-AlertDescription.values = set( v for k,v in AlertDescription.__dict__.items()
-                                 if type(v) == Uint8 )
 
 
 class Alert:

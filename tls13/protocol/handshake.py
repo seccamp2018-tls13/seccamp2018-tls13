@@ -3,9 +3,10 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3
 
 import textwrap
-from ..utils.type import Uint8, Uint16, Uint24, Uint32
+from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ..utils.codec import Reader
 
+@Type.add_labels_and_values
 class HandshakeType:
     """
     enum { ... } HandshakeType
@@ -28,11 +29,6 @@ class HandshakeType:
     key_update = Uint8(24)
     message_hash = Uint8(254)
     _size = 1 # byte
-
-# inverted dict
-# usage: HandshakeType.labels[Uint8(1)] # => 'client_hello'
-HandshakeType.labels = dict( (v,k) for k,v in HandshakeType.__dict__.items() )
-HandshakeType.values = set( v for k,v in HandshakeType.__dict__.items() if type(v) == Uint8 )
 
 
 class Handshake:

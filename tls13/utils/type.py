@@ -78,3 +78,16 @@ class Uint:
         if size == 3: return Uint24
         if size == 4: return Uint32
         raise NotImplementedError()
+
+
+class Type:
+    @staticmethod
+    def add_labels_and_values(cls):
+        UintN = Uint.get_type(cls._size)
+        # add labels (inverted dict) to class
+        # usage: HandshakeType.labels[Uint16(1)] # => 'client_hello'
+        cls.labels = dict( (v,k) for k,v in cls.__dict__.items() )
+        # add values to class
+        # usage: assert self.msg_type in HandshakeType.values
+        cls.values = set( v for k,v in cls.__dict__.items() if type(v) == UintN )
+        return cls

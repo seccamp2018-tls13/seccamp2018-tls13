@@ -3,9 +3,10 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.4
 
 import textwrap
-from ...utils.type import Uint16
+from ...utils.type import Uint16, Type
 from ...utils.codec import Reader
 
+@Type.add_labels_and_values
 class NamedGroup:
     """
     enum { ... } NamedGroup
@@ -33,11 +34,6 @@ class NamedGroup:
     obsolete_RESERVED = (Uint16(0xFF01), Uint16(0xFF02))
 
     _size = 2 # byte
-
-# inverted dict
-# usage: NamedGroup.labels[Uint16(0x0100)] # => 'ffdhe2048'
-NamedGroup.labels = dict( (v,k) for k,v in NamedGroup.__dict__.items() )
-NamedGroup.values = set( v for k,v in NamedGroup.__dict__.items() if type(v) == Uint16 )
 
 
 class NamedGroupList:

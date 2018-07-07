@@ -10,7 +10,7 @@ from binascii import hexlify
 from .supportedgroups import NamedGroup
 from ..ciphersuite import CipherSuite
 from ...utils import hexstr
-from ...utils.type import Uint8, Uint16
+from ...utils.type import Uint8, Uint16, Type
 from ...utils.codec import Reader
 
 class ClientHello:
@@ -246,6 +246,7 @@ class Extension:
         return extensions
 
 
+@Type.add_labels_and_values
 class ExtensionType:
     """
     enum { ... } ExtensionType
@@ -275,12 +276,6 @@ class ExtensionType:
     signature_algorithms_cert = Uint16(50)
     key_share = Uint16(51)
     _size = 2 # byte
-
-# inverted dict
-# usage: ExtensionType.labels[Uint16(43)] # => 'supported_versions'
-ExtensionType.labels = dict( (v,k) for k,v in ExtensionType.__dict__.items() )
-ExtensionType.values = set( v for k,v in ExtensionType.__dict__.items()
-                              if type(v) == Uint16 )
 
 
 class KeyShareEntry:

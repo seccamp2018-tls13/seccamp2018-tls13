@@ -3,9 +3,10 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.3
 
 import textwrap
-from ...utils.type import Uint16
+from ...utils.type import Uint16, Type
 from ...utils.codec import Reader
 
+@Type.add_labels_and_values
 class SignatureScheme:
     """
     enum { ... } SignatureScheme
@@ -51,10 +52,6 @@ class SignatureScheme:
     private_use = (Uint16(0xFE00), Uint16(0xFFFF))
 
     _size = 2 # bytes
-
-SignatureScheme.labels = dict( (v,k) for k,v in SignatureScheme.__dict__.items() )
-SignatureScheme.values = set( v for k,v in SignatureScheme.__dict__.items()
-                                if type(v) == Uint16 )
 
 
 class SignatureSchemeList:

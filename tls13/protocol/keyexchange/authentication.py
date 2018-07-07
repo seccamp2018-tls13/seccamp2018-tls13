@@ -2,8 +2,9 @@
 # B.3.3.  Authentication Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.3
 
-from ...utils.type import Uint8
+from ...utils.type import Uint8, Type
 
+@Type.add_labels_and_values
 class CertificateType:
     """
     enum { ... } CertificateType
@@ -12,10 +13,6 @@ class CertificateType:
     OpenPGP_RESERVED = Uint8(1)
     RawPublicKey = Uint8(2)
     _size = 1 # byte
-
-CertificateType.labels = dict( (v,k) for k,v in CertificateType.__dict__.items() )
-CertificateType.values = set( v for k,v in CertificateType.__dict__.items()
-                                if type(v) == Uint8 )
 
 
 class CertificateEntry:
