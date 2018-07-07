@@ -1,6 +1,6 @@
 
-import socket
 import secrets
+from .utils import socket
 
 from .protocol.recordlayer import TLSPlaintext, ContentType
 from .protocol.handshake import Handshake, HandshakeType
@@ -78,11 +78,7 @@ def client_cmd(argv):
 
     # Server に ClientHello のバイト列を送信する
     print("[INFO] Connecting to server...")
-    HOST = 'localhost' # The remote host
-    PORT = 50007 # The same port as used by the server
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        s.sendall(ch_bytes)
+    socket.send(ch_bytes)
 
     # DONE: バイト列に変換したときの長さを求めるメソッド __len__ を実装する．
     #       可変長のデータがある場合は，先頭の1~3byteにデータ長，続くNbyteにデータが入るので，
