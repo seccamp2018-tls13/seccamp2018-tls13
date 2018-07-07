@@ -8,6 +8,7 @@ import pprint
 from binascii import hexlify
 
 from .supportedgroups import NamedGroup
+from ..ciphersuite import CipherSuite
 from ...utils import hexstr
 from ...utils.type import Uint8, Uint16
 from ...utils.codec import Reader
@@ -118,7 +119,7 @@ class ServerHello:
     """
     def __init__(self, legacy_session_id_echo,
                        random=secrets.token_bytes(32),
-                       cipher_suite=[], extensions=[]):
+                       cipher_suite=None, extensions=[]):
         self.legacy_version = Uint16(0x0303)
         self.random = random
         self.legacy_session_id_echo = legacy_session_id_echo
@@ -127,8 +128,53 @@ class ServerHello:
         self.extensions = extensions
         assert type(self.random) in (bytes, bytearray)
         assert type(self.legacy_session_id_echo) in (bytes, bytearray)
+        assert self.cipher_suite in CipherSuite.values
         assert type(self.extensions) == list
         assert all( type(ext) == Extension for ext in self.extensions )
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |legacy_version: %s
+            |random: %s (len=%d)
+            |legacy_session_id_echo: %s (len=%d)
+            |cipher_suite: %s
+            |legacy_compression_method: %s
+            |extensions:
+            """ % (
+            self.__class__.__name__, self.legacy_version,
+            hexlify(self.random[0:10]) + b'...', len(self.random),
+            hexlify(self.legacy_session_id_echo[0:10]) + b'...', len(self.legacy_session_id_echo),
+            self.cipher_suite,
+            self.legacy_compression_method)) \
+            + textwrap.indent(pprint.pformat(self.extensions), prefix="    ")
+
+    def __len__(self):
+        return len(self.legacy_version) + len(self.random) + \
+               1 + len(self.legacy_session_id_echo) + \
+               len(self.cipher_suite) + \
+               len(self.legacy_compression_method) + \
+               2 + sum(map(len, self.extensions))
+
+    def to_bytes(self):
+        byte_str = bytearray(0)
+        byte_str += self.legacy_version.to_bytes()
+        byte_str += self.random
+        # legacy_session_id_echo
+        byte_str += Uint8(len(self.legacy_session_id_echo)).to_bytes()
+        byte_str += self.legacy_session_id_echo
+        # cipher_suites
+        byte_str += self.cipher_suite.to_bytes()
+        # legacy_compression_methods
+        byte_str += self.legacy_compression_method.to_bytes()
+        # extensions
+        byte_str += Uint16(sum(map(len, self.extensions))).to_bytes()
+        byte_str += b''.join([ x.to_bytes() for x in self.extensions ])
+        return byte_str
+
+    @classmethod
+    def from_bytes(cls, data):
+        raise NotImplementedError()
 
 
 class Extension:
@@ -314,11 +360,35 @@ class KeyShareClientHello:
         return cls(client_shares)
 
 
-
 # class KeyShareHelloRetryRequest
 
+
 class KeyShareServerHello:
-    pass
+    """
+    struct {
+      KeyShareEntry server_share;
+    } KeyShareServerHello;
+    """
+    def __init__(self, server_share):
+        self.server_share = server_share
+        assert type(self.server_share) == KeyShareEntry
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |server_share:
+            """ % (self.__class__.__name__)) \
+            + textwrap.indent(repr(self.server_share), prefix="    ")
+
+    def __len__(self):
+        return len(self.server_share)
+
+    def to_bytes(self):
+        return self.server_share.to_bytes()
+
+    @classmethod
+    def from_bytes(self, data):
+        raise NotImplementedError()
 
 # class UncompressedPointRepresentation
 # class PskKeyExchangeMode
