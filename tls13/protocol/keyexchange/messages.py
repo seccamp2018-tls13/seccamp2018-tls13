@@ -117,7 +117,8 @@ class ServerHello:
       Extension extensions<6..2^16-1>;
     } ServerHello;
     """
-    def __init__(self, legacy_session_id_echo,
+    def __init__(self, legacy_version=Uint16(0x0303),
+                       legacy_session_id_echo=secrets.token_bytes(32),
                        random=secrets.token_bytes(32),
                        cipher_suite=None, extensions=[]):
         self.legacy_version = Uint16(0x0303)
@@ -174,7 +175,23 @@ class ServerHello:
 
     @classmethod
     def from_bytes(cls, data):
-        raise NotImplementedError()
+        from ..handshake import HandshakeType
+        reader = Reader(data)
+        legacy_version         = Uint16(reader.get(2))
+        random                 = reader.get_fix_bytes(32)
+        legacy_session_id_echo = reader.get_var_bytes(1)
+        cipher_suite           = Uint16(reader.get(2))
+        legacy_compression_methods = Uint8(reader.get(1))
+
+        # Read extensions
+        extensions = Extension.from_bytes(reader.get_rest(),
+                                          msg_type=HandshakeType.server_hello)
+
+        return cls(legacy_version=legacy_version,
+                   random=random,
+                   legacy_session_id_echo=legacy_session_id_echo,
+                   cipher_suite=cipher_suite,
+                   extensions=extensions)
 
 
 class Extension:
@@ -212,6 +229,7 @@ class Extension:
 
     @classmethod
     def from_bytes(cls, data, msg_type):
+        from ..handshake import HandshakeType
         from .version import SupportedVersions
         from .supportedgroups import NamedGroupList
         from .signature import SignatureSchemeList
@@ -234,8 +252,12 @@ class Extension:
                 ExtClass = NamedGroupList
             elif extension_type == ExtensionType.signature_algorithms:
                 ExtClass = SignatureSchemeList
-            elif extension_type == ExtensionType.key_share:
+            elif extension_type == ExtensionType.key_share and \
+                    msg_type == HandshakeType.client_hello:
                 ExtClass = KeyShareClientHello
+            elif extension_type == ExtensionType.key_share and \
+                    msg_type == HandshakeType.server_hello:
+                ExtClass = KeyShareServerHello
             else:
                 raise NotImplementedError()
 
@@ -310,6 +332,13 @@ class KeyShareEntry:
         byte_str += self.key_exchange
         return byte_str
 
+    @classmethod
+    def from_bytes(cls, data):
+        reader = Reader(data)
+        group = Uint16(reader.get(2))
+        key_exchange = reader.get_var_bytes(2)
+        return cls(group=group, key_exchange=key_exchange)
+
 
 class KeyShareClientHello:
     """
@@ -382,8 +411,9 @@ class KeyShareServerHello:
         return self.server_share.to_bytes()
 
     @classmethod
-    def from_bytes(self, data):
-        raise NotImplementedError()
+    def from_bytes(cls, data):
+        return cls(server_share=KeyShareEntry.from_bytes(data))
+
 
 # class UncompressedPointRepresentation
 # class PskKeyExchangeMode

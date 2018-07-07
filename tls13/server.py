@@ -62,8 +62,11 @@ def server_cmd(argv):
     print(sh_plain)
 
     print("ServerHello bytes:")
-    sh_plain = sh_plain.to_bytes()
-    print(hexdump(sh_plain))
+    sh_bytes = sh_plain.to_bytes()
+    print(hexdump(sh_bytes))
+
+    sh_plain_restructed = TLSPlaintext.from_bytes(sh_bytes)
+    assert repr(sh_plain) == repr(sh_plain_restructed)
 
     # send()
 
