@@ -65,10 +65,10 @@ def server_cmd(argv):
     sh_bytes = sh_plain.to_bytes()
     print(hexdump(sh_bytes))
 
-    sh_plain_restructed = TLSPlaintext.from_bytes(sh_bytes)
-    assert repr(sh_plain) == repr(sh_plain_restructed)
+    # sh_plain_restructed = TLSPlaintext.from_bytes(sh_bytes)
+    # assert repr(sh_plain) == repr(sh_plain_restructed)
 
-    # send()
+    socket.send(sh_bytes, port=50008)
 
 
     # EncryptedExtensions

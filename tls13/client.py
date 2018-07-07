@@ -95,6 +95,10 @@ def client_cmd(argv):
     #       .from_bytes() も再帰的に呼び出してインスタンスを再構築する．
     # DONE: 再構築した ch_plain の内容を pretty-print で出力したい（デバッグ用）
 
+    data = socket.recv(port=50008)
+
+    sh_plain_restructed = TLSPlaintext.from_bytes(data)
+    print(sh_plain_restructed)
 
     # Finished
 
