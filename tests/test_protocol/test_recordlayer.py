@@ -6,8 +6,9 @@ import secrets
 from tls13.protocol.recordlayer import TLSPlaintext, ContentType
 from tls13.protocol.handshake import Handshake, HandshakeType
 from tls13.protocol.ciphersuite import CipherSuite
-from tls13.protocol.keyexchange.messages import ClientHello, Extension, ExtensionType, \
-    KeyShareEntry, KeyShareClientHello
+from tls13.protocol.keyexchange.messages import ClientHello, ServerHello, \
+    Extension, ExtensionType, \
+    KeyShareEntry, KeyShareClientHello, KeyShareServerHello
 
 # Extensions
 from tls13.protocol.keyexchange.version import SupportedVersions
@@ -64,6 +65,28 @@ class TLSPlaintextTest(unittest.TestCase):
                                         group=NamedGroup.ffdhe2048,
                                         key_exchange=secrets.token_bytes(2048 // 8)) ] )), ]) ))
         #
+        # ServerHello in TLSPlaintext
+        self.sh_plain = TLSPlaintext(
+            _type=ContentType.handshake,
+            fragment=Handshake(
+                msg_type=HandshakeType.server_hello,
+                msg=ServerHello(
+                    legacy_session_id_echo=secrets.token_bytes(32),
+                    cipher_suite=CipherSuite.TLS_AES_128_GCM_SHA256,
+                    extensions=[
+                        Extension(
+                            extension_type=ExtensionType.supported_versions,
+                            extension_data=SupportedVersions(
+                                msg_type=HandshakeType.server_hello,
+                                selected_version=Uint16(0x0304) )),
+                        Extension(
+                            extension_type=ExtensionType.key_share,
+                            extension_data=KeyShareServerHello(
+                                server_share=KeyShareEntry(
+                                    group=NamedGroup.ffdhe2048,
+                                    key_exchange=secrets.token_bytes(2048 // 8) ))) ] )))
+
+    # --- ClientHello ---
 
     def test_clienthello_length(self):
         self.assertEqual(
@@ -82,4 +105,25 @@ class TLSPlaintextTest(unittest.TestCase):
         ch_plain_restructed = TLSPlaintext.from_bytes(ch_bytes)
         self.assertEqual(
             repr(self.ch_plain), repr(ch_plain_restructed),
+            'should be same structure')
+
+    # --- ServerHello ---
+
+    def test_serverhello_length(self):
+        self.assertEqual(
+            type(self.ch_plain.length), Uint16,
+            'should be Uint16')
+        self.assertEqual(
+            self.ch_plain.length, Uint16(len(self.ch_plain.fragment)),
+            'should be correct length')
+
+    def test_serverhello_fragment(self):
+        self.assertEqual(
+            type(self.ch_plain.fragment), Handshake, 'should be Handshake')
+
+    def test_restruct_serverhello_from_bytes(self):
+        sh_bytes = self.sh_plain.to_bytes()
+        sh_plain_restructed = TLSPlaintext.from_bytes(sh_bytes)
+        self.assertEqual(
+            repr(self.sh_plain), repr(sh_plain_restructed),
             'should be same structure')

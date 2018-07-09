@@ -20,11 +20,15 @@ class HandshakeTypeTest(unittest.TestCase):
 
 class HandshakeTest(unittest.TestCase):
 
-    def test_restruct_handshake(self):
-        handshake = Handshake(
+    def setUp(self):
+        self.handshake = Handshake(
             msg_type=HandshakeType.client_hello,
             msg=ClientHello())
 
-        restructed_handshake = Handshake.from_bytes(handshake.to_bytes())
+    def test_length(self):
+        obj = self.handshake
+        self.assertEqual(len(obj), len(obj.to_bytes()))
 
-        self.assertEqual(repr(handshake), repr(restructed_handshake))
+    def test_restruct(self):
+        restructed = Handshake.from_bytes(self.handshake.to_bytes())
+        self.assertEqual(repr(self.handshake), repr(restructed))
