@@ -10,7 +10,7 @@ from binascii import hexlify
 from .supportedgroups import NamedGroup
 from ..ciphersuite import CipherSuite
 from ...utils import hexstr
-from ...utils.type import Uint8, Uint16, Type
+from ...utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ...utils.codec import Reader
 
 
@@ -406,7 +406,15 @@ class KeyShareClientHello:
         return None
 
 
-# class KeyShareHelloRetryRequest
+class KeyShareHelloRetryRequest:
+    """
+    struct {
+      NamedGroup selected_group;
+    } KeyShareHelloRetryRequest;
+    """
+    def __init__(self, selected_group):
+        self.selected_group = selected_group
+        assert self.selected_group in NamedGroup.values
 
 
 class KeyShareServerHello:
@@ -443,11 +451,84 @@ class KeyShareServerHello:
         return self.server_share.key_exchange
 
 
-# class UncompressedPointRepresentation
-# class PskKeyExchangeMode
-# class PskKeyExchangeModes
-# class Empty
-# class EarlyDataIndication
-# class PskIdentity
-# class OfferedPsks
-# class PreSharedKeyExtension
+class UncompressedPointRepresentation:
+    """
+    struct {
+      uint8 legacy_form = 4;
+      opaque X[coordinate_length];
+      opaque Y[coordinate_length];
+    } UncompressedPointRepresentation;
+    """
+
+
+@Type.add_labels_and_values
+class PskKeyExchangeMode:
+    """
+    enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;
+    """
+    psk_ke = Uint8(0)
+    psk_dhe_ke = Uint8(1)
+    _size = 1
+
+
+class PskKeyExchangeModes:
+    """
+    struct {
+      PskKeyExchangeMode ke_modes<1..255>;
+    } PskKeyExchangeModes;
+    """
+    def __init__(self, ke_modes=[]):
+        self.ke_modes = ke_modes
+
+
+class Empty:
+    """
+    struct {} Empty;
+    """
+
+
+class EarlyDataIndication:
+    """
+    struct {
+      select (Handshake.msg_type) {
+        case new_session_ticket:   uint32 max_early_data_size;
+        case client_hello:         Empty;
+        case encrypted_extensions: Empty;
+      };
+    } EarlyDataIndication;
+    """
+    def __init__(self, msg_type, max_early_data_size=Empty()):
+        assert msg_type in HandshakeType.values
+        self.msg_type = msg_type
+        self.max_early_data_size = max_early_data_size
+        if msg_type == Handshake.new_session_ticket:
+            assert type(max_early_data_size) == Uint32
+
+
+class PskIdentity:
+    """
+    struct {
+      opaque identity<1..2^16-1>;
+      uint32 obfuscated_ticket_age;
+    } PskIdentity;
+    """
+
+
+class OfferedPsks:
+    """
+    struct {
+      PskIdentity identities<7..2^16-1>;
+      PskBinderEntry binders<33..2^16-1>;
+    } OfferedPsks;
+    """
+
+
+class PreSharedKeyExtension:
+    """
+    struct {
+      select (Handshake.msg_type) {
+        case client_hello: OfferedPsks;
+        case server_hello: uint16 selected_identity;
+      };
+    } PreSharedKeyExtension;
+    """

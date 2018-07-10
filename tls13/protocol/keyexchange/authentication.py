@@ -28,9 +28,17 @@ class CertificateEntry:
       Extension extensions<0..2^16-1>;
     } CertificateEntry;
     """
-    def __init__(self):
-        self._entry
-        self.extensions = []
+    def __init__(self, certificate_type, cert_data, extensions=[]):
+        self.certificate_type = certificate_type
+        assert certificate_type in CertificateType.values
+
+        if self.certificate_type == CertificateType.RawPublicKey:
+            self.ASN1_subjectPublicKeyInfo = cert_data
+        elif self.certificate_type == CertificateType.X509:
+            self.cert_data = cert_data
+        else:
+            raise RuntimeError()
+        self.extensions = extensions
 
 
 class Certificate:
@@ -40,9 +48,9 @@ class Certificate:
       CertificateEntry certificate_list<0..2^24-1>;
     } Certificate;
     """
-    def __init__(self):
-        self.certificate_request_context
-        self.certificate_list = []
+    def __init__(self, certificate_request_context, certificate_list=[]):
+        self.certificate_request_context = certificate_request_context
+        self.certificate_list = certificate_list
 
 
 class CertificateVerify:
@@ -52,9 +60,9 @@ class CertificateVerify:
       opaque signature<0..2^16-1>;
     } CertificateVerify;
     """
-    def __init__(self):
-        self.algorithm
-        self.signature
+    def __init__(self, algorithm, signature):
+        self.algorithm = algorithm
+        self.signature = signature
 
 
 class Finished:
@@ -63,5 +71,5 @@ class Finished:
       opaque verify_data[Hash.length];
     } Finished;
     """
-    def __init__(self):
-        self.verify_data
+    def __init__(self, verify_data):
+        self.verify_data = verify_data
