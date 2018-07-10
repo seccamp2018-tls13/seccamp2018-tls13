@@ -394,6 +394,9 @@ class KeyShareClientHello:
 
         return cls(client_shares)
 
+    def get_groups(self):
+        return [client_share.group for client_share in self.client_shares]
+
     def get_key_exchange(self, group):
         assert group in NamedGroup.values
         assert type(self.client_shares) == list
