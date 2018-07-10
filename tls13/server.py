@@ -13,7 +13,7 @@ from .protocol.keyexchange.version import SupportedVersions
 from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
-from .utils import hexdump
+from .utils import hexdump, hexstr
 from .utils.type import Uint8, Uint16, Uint24, Uint32
 
 def server_cmd(argv):
@@ -62,11 +62,28 @@ def server_cmd(argv):
     # ServerHello が入っている TLSPlaintext
     print(sh_plain)
 
-    print("ServerHello bytes:")
+    # print("ServerHello bytes:")
     sh_bytes = sh_plain.to_bytes()
-    print(hexdump(sh_bytes))
+    # print(hexdump(sh_bytes))
 
     server_conn.send_msg(sh_bytes)
+
+
+    # -- create master_secret ---
+
+    client_pub_key = \
+        ch_plain_restructed.fragment.msg \
+        .get_extension(extension_type=ExtensionType.key_share) \
+        .get_key_exchange(group=NamedGroup.ffdhe2048)
+
+    # print('client_pub_key:')
+    # print(hexstr(client_pub_key)) # DHEのときは g^a mod p の値が入る
+
+    def gen_master_secret(peer_pub, my_secret):
+        # 実際の処理は utils/encryption/ffdhe.py などに書く
+        return 0
+
+    master_secret = gen_master_secret(client_pub_key, b'beef')
 
 
     # EncryptedExtensions
