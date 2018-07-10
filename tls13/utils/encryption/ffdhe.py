@@ -1,3 +1,8 @@
+# DONE : FFDHEに使用するMudulus(素数)を取得する関数の定義
+# TODO : 公開鍵``α''とクライアント/サーバの秘密鍵生成部分
+
+
+
 ### https://tools.ietf.org/html/rfc7919#appendix-A ###
 
 # p = 2^b - 2^{b-64} + {[2^{b-130} e] + X } * 2^64 - 1 
@@ -6,7 +11,7 @@
 # [ ] means floor function.
 
 
-# Public key MUST be choosed [2, ..., p-2]
+# Public key MUST be chosen [2, ..., p-2]
 # Secret keys (ServerSecretKey, ClientSecretKey) also will be [2, ..., p-2]
 
 
