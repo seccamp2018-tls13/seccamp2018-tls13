@@ -13,7 +13,18 @@ from ...utils import hexstr
 from ...utils.type import Uint8, Uint16, Type
 from ...utils.codec import Reader
 
-class ClientHello:
+
+class HasExtension:
+    def get_extension(self, extension_type):
+        assert extension_type in ExtensionType.values
+        assert type(self.extensions) == list
+        for ext in self.extensions:
+            if ext.extension_type == extension_type:
+                return ext.extension_data
+        return None
+
+
+class ClientHello(HasExtension):
     """
     struct {
       ProtocolVersion legacy_version = 0x0303;    /* TLS v1.2 */
@@ -106,7 +117,7 @@ class ClientHello:
                    extensions=extensions)
 
 
-class ServerHello:
+class ServerHello(HasExtension):
     """
     struct {
       ProtocolVersion legacy_version = 0x0303;    /* TLS v1.2 */
@@ -383,6 +394,14 @@ class KeyShareClientHello:
 
         return cls(client_shares)
 
+    def get_key_exchange(self, group):
+        assert group in NamedGroup.values
+        assert type(self.client_shares) == list
+        for client_share in self.client_shares:
+            if client_share.group == group:
+                return client_share.key_exchange
+        return None
+
 
 # class KeyShareHelloRetryRequest
 
@@ -413,6 +432,12 @@ class KeyShareServerHello:
     @classmethod
     def from_bytes(cls, data):
         return cls(server_share=KeyShareEntry.from_bytes(data))
+
+    def get_group(self):
+        return self.server_share.group
+
+    def get_key_exchange(self):
+        return self.server_share.key_exchange
 
 
 # class UncompressedPointRepresentation
