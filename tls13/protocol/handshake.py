@@ -62,12 +62,11 @@ class Handshake:
             %s:
             |msg_type: %s == %s
             |length: %s
-            |%s:
+            |msg:
             """ % (
             self.__class__.__name__,
             self.msg_type, HandshakeType.labels[self.msg_type],
-            self.length,
-            HandshakeType.labels[self.msg_type])) \
+            self.length)) \
             + textwrap.indent(repr(self.msg), prefix="    ")
 
     def __len__(self):
