@@ -28,6 +28,24 @@ def server_cmd(argv):
 
     # ServerHello
 
+    client_session_id = ch_plain_restructed.fragment.msg.legacy_session_id
+    client_cipher_suites = ch_plain_restructed.fragment.msg.cipher_suites
+    client_key_share_groups = ch_plain_restructed.fragment.msg \
+        .get_extension(ExtensionType.key_share) \
+        .get_groups()
+
+    # パラメータの決定
+    # 暗号化：受け取ったClientHelloの暗号スイートから選ぶ
+    cipher_suite = client_cipher_suites[0] # TODO: 暗号スイート実装してから優先順位を決める
+    # 鍵共有：ClientHelloのKeyShareEntryを見てどの方法で鍵共有するか決めてから，
+    # パラメータ（group, key_exchange）を決める
+    if NamedGroup.ffdhe2048 in client_key_share_groups:
+        server_share_group = NamedGroup.ffdhe2048
+        # TODO: DHEでは g^b mod p を相手に送るので，それをバイト列に変換して入れる
+        server_share_key_exchange = secrets.token_bytes(2048 // 8)
+    else:
+        raise NotImplementedError()
+
     supported_versions = Extension(
         extension_type=ExtensionType.supported_versions,
         extension_data=SupportedVersions(
@@ -37,17 +55,12 @@ def server_cmd(argv):
     key_share = Extension(
         extension_type=ExtensionType.key_share,
         extension_data=KeyShareServerHello(
-            # TODO: ClientHelloのKeyShareEntryを見てどの方法で鍵共有するか決めてから，
-            #       パラメータ（group, key_exchange）を決める
             server_share=KeyShareEntry(
-                group=NamedGroup.ffdhe2048,
-                key_exchange=secrets.token_bytes(2048 // 8) )))
+                group=server_share_group,
+                key_exchange=server_share_key_exchange )))
 
-    sh = ServerHello(
-        # TODO: 受け取ったClientHelloのsesion_idを入れる
-        legacy_session_id_echo=secrets.token_bytes(32),
-        # TODO: 受け取ったClientHelloの暗号スイートから選ぶ
-        cipher_suite=CipherSuite.TLS_AES_128_GCM_SHA256 )
+    sh = ServerHello(legacy_session_id_echo=client_session_id,
+                     cipher_suite=cipher_suite )
     sh.extensions.append(supported_versions)
     sh.extensions.append(key_share)
 
