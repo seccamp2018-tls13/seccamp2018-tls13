@@ -107,8 +107,9 @@ class ClientHello(HasExtension):
             [Uint8(x)  for x in reader.get_var_list(elem_length=1, length_length=1)]
 
         # Read extensions
-        extensions = Extension.from_bytes(reader.get_rest(),
-                                          msg_type=HandshakeType.client_hello)
+        extensions = Extension.get_list_from_bytes(
+            reader.get_rest(),
+            msg_type=HandshakeType.client_hello)
 
         return cls(legacy_version=legacy_version,
                    random=random,
@@ -195,8 +196,9 @@ class ServerHello(HasExtension):
         legacy_compression_methods = Uint8(reader.get(1))
 
         # Read extensions
-        extensions = Extension.from_bytes(reader.get_rest(),
-                                          msg_type=HandshakeType.server_hello)
+        extensions = Extension.get_list_from_bytes(
+            reader.get_rest(),
+            msg_type=HandshakeType.server_hello)
 
         return cls(legacy_version=legacy_version,
                    random=random,
@@ -239,11 +241,24 @@ class Extension:
         return byte_str
 
     @classmethod
-    def from_bytes(cls, data, msg_type):
-        from ..handshake import HandshakeType
-        from .version import SupportedVersions
-        from .supportedgroups import NamedGroupList
-        from .signature import SignatureSchemeList
+    def from_bytes(cls, data, msg_type=None):
+        reader = Reader(data)
+        extension_type = Uint16(reader.get(2))
+        extension_data = reader.get_var_bytes(2)
+
+        ExtClass, kwargs = cls.get_extension_class(extension_type, msg_type)
+
+        return cls(
+            extension_type=extension_type,
+            extension_data=ExtClass.from_bytes(extension_data, **kwargs))
+
+    @classmethod
+    def get_list_from_bytes(cls, data, msg_type=None):
+        """
+        バイト列から再構築するときにそれぞれの拡張を配列に入れて返す関数．
+        ClientHello や ServerHello などのあらゆるメッセージでは拡張は複数あり，
+        それぞれの拡張のバイト長は異なるので，他の from_bytes のように実装は簡単ではない．
+        """
         reader = Reader(data)
         extensions = []
         extensions_length = reader.get(2)
@@ -254,29 +269,57 @@ class Extension:
             extension_type = Uint16(reader.get(2))
             extension_data = reader.get_var_bytes(2)
 
-            ExtClass = None
-            kwargs = {}
-            if extension_type == ExtensionType.supported_versions:
-                ExtClass = SupportedVersions
-                kwargs = {'msg_type': msg_type}
-            elif extension_type == ExtensionType.supported_groups:
-                ExtClass = NamedGroupList
-            elif extension_type == ExtensionType.signature_algorithms:
-                ExtClass = SignatureSchemeList
-            elif extension_type == ExtensionType.key_share and \
-                    msg_type == HandshakeType.client_hello:
-                ExtClass = KeyShareClientHello
-            elif extension_type == ExtensionType.key_share and \
-                    msg_type == HandshakeType.server_hello:
-                ExtClass = KeyShareServerHello
-            else:
-                raise NotImplementedError()
+            # 拡張の種類から，拡張を表すクラスを取得する
+            ExtClass, kwargs = cls.get_extension_class(extension_type, msg_type)
 
             extensions.append( cls(
                 extension_type=extension_type,
                 extension_data=ExtClass.from_bytes(extension_data, **kwargs)) )
 
         return extensions
+
+    @classmethod
+    def get_extension_class(self, extension_type, msg_type=None):
+        """
+        拡張の種類 extension_type から，それを構成するためのクラス ExtClass と kwargs を返す．
+        辞書型 kwargs には，ExtClass.from_bytes を行うときにどちらの通信なのかを
+        引数に与える必要がある場合，必要な引数を kwargs に入れて返す．
+        いくつかのクラスは client_hello か server_hello によって構造体の中身が変わるので，
+        どちらの通信なのかを引数 msg_type に設定する必要がある可能性がある．
+        もし必要なのに引数 msg_type が設定されていないときは RuntimeError を出す．
+        """
+        from ..handshake import HandshakeType
+        from .version import SupportedVersions
+        from .supportedgroups import NamedGroupList
+        from .signature import SignatureSchemeList
+
+        ExtClass = None
+        kwargs = {}
+
+        if extension_type == ExtensionType.supported_versions:
+            if msg_type is None:
+                raise RuntimeError("must be set msg_type to get_extension_class()")
+            ExtClass = SupportedVersions
+            kwargs = {'msg_type': msg_type}
+
+        elif extension_type == ExtensionType.supported_groups:
+            ExtClass = NamedGroupList
+
+        elif extension_type == ExtensionType.signature_algorithms:
+            ExtClass = SignatureSchemeList
+
+        elif extension_type == ExtensionType.key_share:
+            if msg_type == HandshakeType.client_hello:
+                ExtClass = KeyShareClientHello
+            elif msg_type == HandshakeType.server_hello:
+                ExtClass = KeyShareServerHello
+            else:
+                raise RuntimeError("must be set msg_type to get_extension_class()")
+
+        else:
+            raise NotImplementedError()
+
+        return (ExtClass, kwargs)
 
 
 @Type.add_labels_and_values
