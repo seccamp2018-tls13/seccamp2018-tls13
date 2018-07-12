@@ -1,7 +1,7 @@
 ### https://tools.ietf.org/html/rfc7919#appendix-A ###
 
 # DONE : FFDHEに使用するMudulus(素数)を取得する関数の定義
-# TODO : 公開鍵``α''とクライアント/サーバの秘密鍵生成部分
+# TODO : 公開鍵``g''とクライアント/サーバの秘密鍵生成部分
 
 ### Description ###
 
@@ -51,4 +51,13 @@ class FFDHE:
     def get_p_int(self):
         return self.p
 
+    def gen_master_secret(peer_pub, my_secret):
+       """
+            peer_pub  : g^PubKey mod p
+            my_secret : [2, ..., p-2] 
+       """
+        # TODO : peer_pub, my_secret が bytes型 であった場合の変換処理をいい感じにしたい
+        if isinstance(peer_pub, bytes): peer_pub = int(binascii.hexlify(peer_pub), 16)
+        if isinstance(my_secret, bytes): my_secret = int(binascii.hexlify(my_secret), 16)
 
+        return pow(peer_pub, me_secret, p)
