@@ -30,7 +30,7 @@ def client_cmd(argv):
     ]
     cipher_suites = [ CipherSuite.TLS_AES_128_GCM_SHA256 ]
 
-    # ClientHello
+    # >>> ClientHello >>>
 
     ch_plain = TLSPlaintext(
         _type=ContentType.handshake,
@@ -77,6 +77,7 @@ def client_cmd(argv):
     client_conn = socket.ClientConnection()
     client_conn.send_msg(ch_bytes)
 
+    # <<< ClientHello <<<
     data = client_conn.recv_msg()
     sh_plain_restructed = TLSPlaintext.from_bytes(data)
     print(sh_plain_restructed)
@@ -99,6 +100,6 @@ def client_cmd(argv):
     master_secret = gen_master_secret(server_pub_key, b'dead')
 
 
-    # Finished
+    # >>> Finished >>>
 
-    # Application Data
+    # >>> Application Data <<<

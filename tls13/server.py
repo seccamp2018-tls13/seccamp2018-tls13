@@ -18,14 +18,13 @@ from .utils import hexdump, hexstr
 def server_cmd(argv):
     print("server_cmd({})".format(", ".join(argv)))
 
-    # ClientHello のバイト列を受け取る
+    # <<< ClientHello <<<
     server_conn = socket.ServerConnection()
     data = server_conn.recv_msg()
-
     ch_plain_restructed = TLSPlaintext.from_bytes(data)
     print(ch_plain_restructed)
 
-    # ServerHello
+    # >>> ServerHello >>>
 
     # select params
 
@@ -100,10 +99,12 @@ def server_cmd(argv):
     master_secret = gen_master_secret(client_pub_key, b'beef')
 
 
-    # EncryptedExtensions
+    # >>> EncryptedExtensions >>>
 
-    # Certificate
+    # >>> Certificate >>>
 
-    # CertificateVerify
+    # >>> CertificateVerify >>>
 
-    # Finished
+    # >>> Finished >>>
+
+    # >>> Application Data <<<
