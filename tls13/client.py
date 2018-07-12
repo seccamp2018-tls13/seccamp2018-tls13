@@ -85,8 +85,7 @@ def client_cmd(argv):
 
     # -- create master_secret ---
 
-    server_pub_key = \
-        sh_plain_restructed.fragment.msg \
+    server_pub_key = sh_plain_restructed \
         .get_extension(extension_type=ExtensionType.key_share) \
         .get_key_exchange()
 

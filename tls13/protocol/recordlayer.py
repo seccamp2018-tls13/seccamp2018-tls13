@@ -37,6 +37,19 @@ class TLSPlaintext:
         assert self.type in ContentType.values
         assert type(self.length) == Uint16
 
+    def __getattr__(self, name):
+        """
+        self.fragment.msg の指名された属性の値を返す．
+        このクラスでは self はrecord層，self.fragment はhandshake層を表していて，
+        record層とhandshake層は通信の種類を区別するために必要だが，
+        鍵共有等で使うデータ群は全てhandshake層より上の ClientHello や ServerHello にあるので，
+        self.fragment.msg.foobar とする代わりに self.foobar で簡単にアクセスできるようにする．
+        """
+        if self.fragment is None or self.fragment.msg is None:
+            raise AttributeError("'%s' object has no attribute '%s'" % \
+                  (self.__class__.__name__, name))
+        return getattr(self.fragment.msg, name)
+
     def __repr__(self):
         return textwrap.dedent("""\
             %s:

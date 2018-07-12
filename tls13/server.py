@@ -28,9 +28,9 @@ def server_cmd(argv):
 
     # select params
 
-    client_session_id = ch_plain_restructed.fragment.msg.legacy_session_id
-    client_cipher_suites = ch_plain_restructed.fragment.msg.cipher_suites
-    client_key_share_groups = ch_plain_restructed.fragment.msg \
+    client_session_id = ch_plain_restructed.legacy_session_id
+    client_cipher_suites = ch_plain_restructed.cipher_suites
+    client_key_share_groups = ch_plain_restructed \
         .get_extension(ExtensionType.key_share) \
         .get_groups()
 
@@ -84,8 +84,7 @@ def server_cmd(argv):
 
     # -- create master_secret ---
 
-    client_pub_key = \
-        ch_plain_restructed.fragment.msg \
+    client_pub_key = ch_plain_restructed \
         .get_extension(extension_type=ExtensionType.key_share) \
         .get_key_exchange(group=NamedGroup.ffdhe2048)
 
