@@ -2,6 +2,9 @@
 
 # DONE : FFDHEに使用するMudulus(素数)を取得する関数の定義
 # TODO : 公開鍵``g''とクライアント/サーバの秘密鍵生成部分
+#
+# [Mako 7/12]
+# RFC7919 の全ての ffdhe で The generator is: g = 2 と書かれているので，g = 2 は固定
 
 ### Description ###
 
@@ -43,6 +46,19 @@ class FFDHE:
         # self.ClientSecretKey
         # self.ServerSecretKey
         # self.PublicKey
+        #
+        # [Mako 7/12]
+        # FFDHEクラスのフィールドに my_secret というフィールド作ってインスタンス化するときに
+        # 一緒に秘密値も生成して self.my_secret = ... みたいな感じが良さそう．
+        # そうすると公開値を作るメソッド gen_public_key() とかも作れそう．
+        # 理想はこんな感じ：
+        #    client_dhe = FFDHE(NamedGroup.ffdhe2048)
+        #    server_dhe = FFDHE(NamedGroup.ffdhe2048)
+        #    client_pub_key = client_dhe.gen_public_key()
+        #    server_pub_key = server_dhe.gen_public_key()
+        #    client_master_secret = client_dhe.gen_master_secret(server_pub_key)
+        #    server_master_secret = server_dhe.gen_master_secret(client_pub_key)
+        #    assert client_master_secret == server_master_secret
 
     def get_p_bytes(self):
         return binascii.unhexlify(hex(self.p)[2:])
