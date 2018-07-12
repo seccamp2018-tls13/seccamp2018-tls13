@@ -127,3 +127,24 @@ class TLSPlaintextTest(unittest.TestCase):
         self.assertEqual(
             repr(self.sh_plain), repr(sh_plain_restructed),
             'should be same structure')
+
+
+    # --- TLSPlaintext methods ---
+
+    def test_getattr(self):
+        self.assertEqual(
+            self.ch_plain.fragment.msg.cipher_suites, self.ch_plain.cipher_suites)
+        self.assertEqual(
+            self.ch_plain.fragment.msg.extensions, self.ch_plain.extensions)
+        self.assertEqual(
+            self.ch_plain.fragment.msg \
+                         .get_extension(extension_type=ExtensionType.key_share),
+            self.ch_plain.get_extension(extension_type=ExtensionType.key_share))
+
+    def test_getattr_with_no_handshake_obj(self):
+        self.ch_plain.fragment = None
+        self.assertRaises(AttributeError, lambda: self.ch_plain.cipher_suite)
+
+    def test_getattr_with_no_msg_obj(self):
+        self.ch_plain.fragment.msg = None
+        self.assertRaises(AttributeError, lambda: self.ch_plain.cipher_suite)
