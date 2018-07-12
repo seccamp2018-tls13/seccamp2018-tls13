@@ -28,6 +28,8 @@ def server_cmd(argv):
 
     # ServerHello
 
+    # select params
+
     client_session_id = ch_plain_restructed.fragment.msg.legacy_session_id
     client_cipher_suites = ch_plain_restructed.fragment.msg.cipher_suites
     client_key_share_groups = ch_plain_restructed.fragment.msg \
@@ -46,31 +48,31 @@ def server_cmd(argv):
     else:
         raise NotImplementedError()
 
-    supported_versions = Extension(
-        extension_type=ExtensionType.supported_versions,
-        extension_data=SupportedVersions(
-            msg_type=HandshakeType.server_hello,
-            selected_version=Uint16(0x0304) ))
-
-    key_share = Extension(
-        extension_type=ExtensionType.key_share,
-        extension_data=KeyShareServerHello(
-            server_share=KeyShareEntry(
-                group=server_share_group,
-                key_exchange=server_share_key_exchange )))
-
-    sh = ServerHello(legacy_session_id_echo=client_session_id,
-                     cipher_suite=cipher_suite )
-    sh.extensions.append(supported_versions)
-    sh.extensions.append(key_share)
-
-    sh_handshake = Handshake(
-        msg_type=HandshakeType.server_hello,
-        msg=sh )
+    selected_version = Uint16(0x0304)
 
     sh_plain = TLSPlaintext(
         _type=ContentType.handshake,
-        fragment=sh_handshake )
+        fragment=Handshake(
+            msg_type=HandshakeType.server_hello,
+            msg=ServerHello(
+                legacy_session_id_echo=client_session_id,
+                cipher_suite=cipher_suite,
+                extensions=[
+                    # supported_versions
+                    Extension(
+                        extension_type=ExtensionType.supported_versions,
+                        extension_data=SupportedVersions(
+                            msg_type=HandshakeType.server_hello,
+                            selected_version=selected_version )),
+
+                    # key_share
+                    Extension(
+                        extension_type=ExtensionType.key_share,
+                        extension_data=KeyShareServerHello(
+                            server_share=KeyShareEntry(
+                                group=server_share_group,
+                                key_exchange=server_share_key_exchange ))),
+                ] )))
 
     # ServerHello が入っている TLSPlaintext
     print(sh_plain)
