@@ -20,8 +20,13 @@ def client_cmd(argv):
 
     # params
 
+    # ffdhe2048 = FFDHE(NamedGroup.ffdhe2048)
+    # ffdhe2048_key_exchange = ffdhe2048.get_public_key()
+    # ffdhe3072 = FFDHE(NamedGroup.ffdhe3072)
+    # ffdhe3078_key_exchange = ffdhe3072.get_public_key()
+
     versions = [ ProtocolVersion.TLS13 ]
-    named_group_list = [ NamedGroup.ffdhe2048 ]
+    named_group_list = [ NamedGroup.ffdhe2048, NamedGroup.ffdhe3072 ]
     supported_signature_algorithms = [ SignatureScheme.rsa_pkcs1_sha256 ]
     client_shares = [
         KeyShareEntry(
@@ -83,22 +88,36 @@ def client_cmd(argv):
     print(sh_plain_restructed)
 
 
-    # -- create master_secret ---
+    # decided params
 
-    server_pub_key = sh_plain_restructed \
-        .get_extension(extension_type=ExtensionType.key_share) \
+    server_cipher_suite = sh_plain_restructed.cipher_suite
+    server_selected_version = sh_plain_restructed \
+        .get_extension(ExtensionType.supported_versions) \
+        .selected_version
+    server_key_share_group = sh_plain_restructed \
+        .get_extension(ExtensionType.key_share) \
+        .get_group()
+    server_key_share_key_exchange = sh_plain_restructed \
+        .get_extension(ExtensionType.key_share) \
         .get_key_exchange()
 
-    # print('server_pub_key:')
-    # print(hexstr(server_pub_key)) # DHEのときは g^b mod p の値が入る
+    # DHEのときは g^b mod p の値が入る
+    server_pub_key = server_key_share_key_exchange
 
-    def gen_master_secret(peer_pub, my_secret):
-        # 実際の処理は utils/encryption/ffdhe.py などに書く
-        return 0
 
-    master_secret = gen_master_secret(server_pub_key, b'dead')
+    # create master_secret
+
+    if server_key_share_group == NamedGroup.ffdhe2048:
+        pass # master_secret = ffdhe2048.gen_master_secret(server_pub_key)
+    elif server_key_share_group == NamedGroup.ffdge3072:
+        pass # master_secret = ffdge3072.gen_master_secret(server_pub_key)
+    else:
+        raise NotImplementedError()
 
 
     # >>> Finished >>>
+
+    hash_algorithm = CipherSuite.get_hash_algorithm(server_cipher_suite)
+
 
     # >>> Application Data <<<
