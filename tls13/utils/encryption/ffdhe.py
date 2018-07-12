@@ -6,7 +6,7 @@
 ### Description ###
 
 # p = 2^b - 2^{b-64} + {[2^{b-130} e] + X } * 2^64 - 1 ;
-#   where b is the number of bits, e is base of natural logarithm, 
+#   where b is the number of bits, e is base of natural logarithm,
 # X is lowest number that is satisfied p is safe prime.
 # [ ] means floor function.
 #
@@ -28,10 +28,10 @@ functions = {
 
 class FFDHE:
 
-    ## dhe = FFDHE(NamedGroup.ffdhe2048) 
+    ## dhe = FFDHE(NamedGroup.ffdhe2048)
     ##  みたいな感じでインスタンス化
     ##
-    ##  client.py/server.py の方で key_share.extension_data. ... 
+    ##  client.py/server.py の方で key_share.extension_data. ...
     ##  と拡張から辿っていって
     ##  dhe = FFDHE(... .ffdhe2048) ができるように
     ##
@@ -53,7 +53,7 @@ class FFDHE:
     def gen_master_secret(peer_pub, my_secret):
        """
             peer_pub  : g^PubKey mod p
-            my_secret : [2, ..., p-2] 
+            my_secret : [2, ..., p-2]
        """
         # TODO : peer_pub, my_secret が bytes型 であった場合の変換処理をいい感じにしたい
         if isinstance(peer_pub, bytes): peer_pub = int(binascii.hexlify(peer_pub), 16)
