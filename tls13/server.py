@@ -9,12 +9,11 @@ from .protocol.keyexchange.messages import ServerHello, Extension, ExtensionType
     KeyShareEntry, KeyShareServerHello
 
 # Extensions
-from .protocol.keyexchange.version import SupportedVersions
+from .protocol.keyexchange.version import ProtocolVersion, SupportedVersions
 from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
 from .utils import hexdump, hexstr
-from .utils.type import Uint8, Uint16, Uint24, Uint32
 
 def server_cmd(argv):
     print("server_cmd({})".format(", ".join(argv)))
@@ -48,7 +47,7 @@ def server_cmd(argv):
     else:
         raise NotImplementedError()
 
-    selected_version = Uint16(0x0304)
+    selected_version = ProtocolVersion.TLS13
 
     sh_plain = TLSPlaintext(
         _type=ContentType.handshake,

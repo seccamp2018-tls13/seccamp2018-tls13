@@ -4,8 +4,19 @@
 
 import textwrap
 from ..handshake import HandshakeType
-from ...utils.type import Uint8, Uint16
+from ...utils.type import Uint8, Uint16, Type
 from ...utils.codec import Reader
+
+
+@Type.add_labels_and_values
+class ProtocolVersion:
+    SSL3  = Uint16(0x0300)
+    TLS10 = Uint16(0x0301)
+    TLS11 = Uint16(0x0302)
+    TLS12 = Uint16(0x0303)
+    TLS13 = Uint16(0x0304)
+    _size = 2
+
 
 class SupportedVersions:
     """

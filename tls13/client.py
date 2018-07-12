@@ -9,19 +9,18 @@ from .protocol.keyexchange.messages import ClientHello, Extension, ExtensionType
     KeyShareEntry, KeyShareClientHello
 
 # Extensions
-from .protocol.keyexchange.version import SupportedVersions
+from .protocol.keyexchange.version import ProtocolVersion, SupportedVersions
 from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
 from .utils import hexdump, hexstr
-from .utils.type import Uint8, Uint16, Uint24, Uint32
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
 
     # params
 
-    versions = [ Uint16(0x0304) ]
+    versions = [ ProtocolVersion.TLS13 ]
     named_group_list = [ NamedGroup.ffdhe2048 ]
     supported_signature_algorithms = [ SignatureScheme.rsa_pkcs1_sha256 ]
     client_shares = [
