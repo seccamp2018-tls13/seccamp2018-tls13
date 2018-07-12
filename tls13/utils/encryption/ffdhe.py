@@ -59,4 +59,4 @@ class FFDHE:
         if isinstance(peer_pub, bytes): peer_pub = int(binascii.hexlify(peer_pub), 16)
         if isinstance(my_secret, bytes): my_secret = int(binascii.hexlify(my_secret), 16)
 
-        return pow(peer_pub, my_secret, p)
+        return pow(peer_pub, my_secret, self.p)
