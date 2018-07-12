@@ -9,8 +9,7 @@
 #   where b is the number of bits, e is base of natural logarithm, 
 # X is lowest number that is satisfied p is safe prime.
 # [ ] means floor function.
-
-
+#
 # Public key MUST be chosen [2, ..., p-2]
 # Secret keys (ServerSecretKey, ClientSecretKey) also will be [2, ..., p-2]
 
@@ -60,4 +59,4 @@ class FFDHE:
         if isinstance(peer_pub, bytes): peer_pub = int(binascii.hexlify(peer_pub), 16)
         if isinstance(my_secret, bytes): my_secret = int(binascii.hexlify(my_secret), 16)
 
-        return pow(peer_pub, me_secret, p)
+        return pow(peer_pub, my_secret, p)
