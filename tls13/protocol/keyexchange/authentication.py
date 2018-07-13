@@ -76,6 +76,8 @@ class Finished:
 
     # TODO: ハッシュの求め方
     #
+    # Hash = SignatureSchemeにあるハッシュ関数
+    #
     # Transcript-Hash(M1, M2, ... MN) = Hash(M1 || M2 ... MN)
     #
     # finished_key = HKDF-Expand-Label(BaseKey, "finished", "", Hash.length)
@@ -83,19 +85,19 @@ class Finished:
     # HKDF-Expand-Label(Secret, Label, Context, Length) =
     #     HKDF-Expand(Secret, HkdfLabel, Length)
     #
-    # Where HkdfLabel is specified as:
+    #   Where HkdfLabel is specified as:
     #
-    #    struct {
-    #        uint16 length = Length;
-    #        opaque label<7..255> = "tls13 " + Label;
-    #        opaque context<0..255> = Context;
-    #    } HkdfLabel;
+    #      struct {
+    #          uint16 length = Length;
+    #          opaque label<7..255> = "tls13 " + Label;
+    #          opaque context<0..255> = Context;
+    #      } HkdfLabel;
     #
     # Derive-Secret(Secret, Label, Messages) =
     #     HKDF-Expand-Label(Secret, Label,
     #                       Transcript-Hash(Messages), Hash.length)
     #
-    # HMAC = hash_algorithm (例えば sha256, sha384 など)
+    # HMAC = ハッシュを使うメッセージ認証符号
     #
     # verify_data = HMAC(finished_key,
     #                    Transcript-Hash(Handshake Context,
