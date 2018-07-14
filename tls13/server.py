@@ -106,4 +106,7 @@ def server_cmd(argv):
 
     # >>> Finished >>>
 
+    hash_algorithm = CipherSuite.get_hash_algorithm(cipher_suite)
+
+
     # >>> Application Data <<<
