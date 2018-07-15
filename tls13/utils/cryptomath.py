@@ -4,28 +4,28 @@ import hashlib
 from .codec import Writer
 from .type import Uint8, Uint16
 
-def divceil(divident, divisor):
+def divceil(divident, divisor) -> int:
     """Integer division with rounding up"""
     quot, r = divmod(divident, divisor)
     return quot + int(bool(r))
 
-def secureHash(data, hash_algorithm):
+def secureHash(data, hash_algorithm) -> bytearray:
     """Return a digest of `data` using `hash_algorithm`"""
     hashInstance = hashlib.new(hash_algorithm)
     hashInstance.update(data)
     return bytearray(hashInstance.digest())
 
-def secureHMAC(k, b, hash_algorithm):
+def secureHMAC(k, b, hash_algorithm) -> bytearray:
     """Return a HMAC using `b` and `k` using `hash_algorithm`"""
     return bytearray(hmac.new(k, b, getattr(hashlib, hash_algorithm)).digest())
 
-def HMAC_SHA256(k, b):
+def HMAC_SHA256(k, b) -> bytearray:
     return secureHMAC(k, b, 'sha256')
 
-def HMAC_SHA384(k, b):
+def HMAC_SHA384(k, b) -> bytearray:
     return secureHMAC(k, b, 'sha384')
 
-def HKDF_extract(salt, IKM, hash_algorithm):
+def HKDF_extract(salt, IKM, hash_algorithm) -> bytearray:
     # https://tools.ietf.org/html/rfc5869#section-2.2
     """
     HKDF-Extract(salt, IKM) -> PRK
@@ -48,7 +48,7 @@ def HKDF_extract(salt, IKM, hash_algorithm):
     """
     return secureHMAC(salt, IKM, hash_algorithm)
 
-def HKDF_expand(PRK, info, L, hash_algorithm):
+def HKDF_expand(PRK, info, L, hash_algorithm) -> bytearray:
     # https://tools.ietf.org/html/rfc5869#section-2.3
     """
     HKDF-Expand(PRK, info, L) -> OKM
@@ -90,7 +90,7 @@ def HKDF_expand(PRK, info, L, hash_algorithm):
         T_prev = secureHMAC(PRK, T_prev + info + bytearray([x]), hash_algorithm)
     return T[:L]
 
-def HKDF_expand_label(secret, label, hashValue, length, hash_algorithm):
+def HKDF_expand_label(secret, label, hashValue, length, hash_algorithm) -> bytearray:
     """
     TLS1.3 key derivation function (HKDF-Expand-Label).
     :param bytearray secret: the key from which to derive the keying material
@@ -121,7 +121,7 @@ def HKDF_expand_label(secret, label, hashValue, length, hash_algorithm):
 
     return HKDF_expand(secret, hkdfLabel.bytes, length, hash_algorithm)
 
-def derive_secret(secret, label, handshake_hashes, hash_algorithm):
+def derive_secret(secret, label, handshake_hashes, hash_algorithm) -> bytearray:
     """
     TLS1.3 key derivation function (Derive-Secret).
     :param bytearray secret: secret key used to derive the keying material
