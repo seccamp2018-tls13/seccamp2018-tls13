@@ -11,10 +11,13 @@ from .supportedgroups import NamedGroup
 from ..ciphersuite import CipherSuite
 from ...utils import hexstr
 from ...utils.type import Uint8, Uint16, Uint24, Uint32, Type
-from ...utils.codec import Reader
+from ...utils.codec import Reader, Writer
 
 
 class HasExtension:
+    """
+    Mixin class HasExtension implements common operation about extension.
+    """
     def get_extension(self, extension_type):
         assert extension_type in ExtensionType.values
         assert type(self.extensions) == list
@@ -77,22 +80,14 @@ class ClientHello(HasExtension):
                2 + sum(map(len, self.extensions))
 
     def to_bytes(self):
-        byte_str = bytearray(0)
-        byte_str += self.legacy_version.to_bytes()
-        byte_str += self.random
-        # legacy_session_id
-        byte_str += Uint8(len(self.legacy_session_id)).to_bytes()
-        byte_str += self.legacy_session_id
-        # cipher_suites
-        byte_str += Uint16(sum(map(len, self.cipher_suites))).to_bytes()
-        byte_str += b''.join(x.to_bytes() for x in self.cipher_suites)
-        # legacy_compression_methods
-        byte_str += Uint8(sum(map(len, self.legacy_compression_methods))).to_bytes()
-        byte_str += b''.join(x.to_bytes() for x in self.legacy_compression_methods)
-        # extensions
-        byte_str += Uint16(sum(map(len, self.extensions))).to_bytes()
-        byte_str += b''.join([ x.to_bytes() for x in self.extensions ])
-        return byte_str
+        writer = Writer()
+        writer.add_bytes(self.legacy_version)
+        writer.add_bytes(self.random)
+        writer.add_bytes(self.legacy_session_id, length_t=Uint8)
+        writer.add_list(self.cipher_suites, length_t=Uint16)
+        writer.add_list(self.legacy_compression_methods, length_t=Uint8)
+        writer.add_list(self.extensions, length_t=Uint16)
+        return writer.bytes
 
     @classmethod
     def from_bytes(cls, data):
@@ -170,20 +165,14 @@ class ServerHello(HasExtension):
                2 + sum(map(len, self.extensions))
 
     def to_bytes(self):
-        byte_str = bytearray(0)
-        byte_str += self.legacy_version.to_bytes()
-        byte_str += self.random
-        # legacy_session_id_echo
-        byte_str += Uint8(len(self.legacy_session_id_echo)).to_bytes()
-        byte_str += self.legacy_session_id_echo
-        # cipher_suites
-        byte_str += self.cipher_suite.to_bytes()
-        # legacy_compression_methods
-        byte_str += self.legacy_compression_method.to_bytes()
-        # extensions
-        byte_str += Uint16(sum(map(len, self.extensions))).to_bytes()
-        byte_str += b''.join([ x.to_bytes() for x in self.extensions ])
-        return byte_str
+        writer = Writer()
+        writer.add_bytes(self.legacy_version)
+        writer.add_bytes(self.random)
+        writer.add_bytes(self.legacy_session_id_echo, length_t=Uint8)
+        writer.add_bytes(self.cipher_suite)
+        writer.add_bytes(self.legacy_compression_method)
+        writer.add_list(self.extensions, length_t=Uint16)
+        return writer.bytes
 
     @classmethod
     def from_bytes(cls, data):
@@ -233,12 +222,10 @@ class Extension:
         return len(self.extension_type) + 2 + len(self.extension_data)
 
     def to_bytes(self):
-        byte_str = bytearray(0)
-        byte_str += self.extension_type.to_bytes()
-        # extension_data
-        byte_str += Uint16(len(self.extension_data)).to_bytes()
-        byte_str += self.extension_data.to_bytes()
-        return byte_str
+        writer = Writer()
+        writer.add_bytes(self.extension_type)
+        writer.add_bytes(self.extension_data, length_t=Uint16)
+        return writer.bytes
 
     @classmethod
     def from_bytes(cls, data, msg_type=None):
@@ -380,11 +367,10 @@ class KeyShareEntry:
         return len(self.group) + 2 + len(self.key_exchange)
 
     def to_bytes(self):
-        byte_str = bytearray(0)
-        byte_str += self.group.to_bytes()
-        byte_str += Uint16(len(self.key_exchange)).to_bytes()
-        byte_str += self.key_exchange
-        return byte_str
+        writer = Writer()
+        writer.add_bytes(self.group)
+        writer.add_bytes(self.key_exchange, length_t=Uint16)
+        return writer.bytes
 
     @classmethod
     def from_bytes(cls, data):
@@ -416,10 +402,9 @@ class KeyShareClientHello:
         return 2 + sum(map(len, self.client_shares))
 
     def to_bytes(self):
-        byte_str = bytearray(0)
-        byte_str += Uint16(sum(map(len, self.client_shares))).to_bytes()
-        byte_str += b''.join(x.to_bytes() for x in self.client_shares)
-        return byte_str
+        writer = Writer()
+        writer.add_list(self.client_shares, length_t=Uint16)
+        return writer.bytes
 
     @classmethod
     def from_bytes(cls, data):

@@ -5,7 +5,7 @@
 import textwrap
 from ..handshake import HandshakeType
 from ...utils.type import Uint8, Uint16, Type
-from ...utils.codec import Reader
+from ...utils.codec import Reader, Writer
 
 
 @Type.add_labels_and_values
@@ -66,10 +66,9 @@ class SupportedVersions:
 
     def to_bytes(self):
         if self.msg_type == HandshakeType.client_hello:
-            byte_str = bytearray(0)
-            byte_str += Uint8(sum(map(len, self.versions))).to_bytes()
-            byte_str += b''.join(x.to_bytes() for x in self.versions)
-            return byte_str
+            writer = Writer()
+            writer.add_list(self.versions, length_t=Uint8)
+            return writer.bytes
         elif self.msg_type == HandshakeType.server_hello:
             return self.selected_version.to_bytes()
         else:

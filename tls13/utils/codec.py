@@ -2,6 +2,9 @@
 from typing import List
 
 class Reader:
+    """
+    Byte string reader
+    """
     def __init__(self, data):
         self.bytes = data
         self.index = 0
@@ -68,3 +71,26 @@ class Reader:
 
     def get_rest_length(self):
         return len(self.bytes) - self.index
+
+
+class Writer:
+    """
+    Byte string writer
+    """
+    def __init__(self):
+        self.bytes = bytearray(0)
+
+    def _get_bytes(self, obj):
+        if hasattr(obj, 'to_bytes') and callable(obj.to_bytes):
+            return obj.to_bytes()
+        else:
+            return obj
+
+    def add_bytes(self, obj, length_t=None):
+        if length_t:
+            self.bytes += length_t(len(obj)).to_bytes()
+        self.bytes += self._get_bytes(obj)
+
+    def add_list(self, a_list, length_t):
+        self.bytes += length_t(sum(map(len, a_list))).to_bytes()
+        self.bytes += b''.join(x.to_bytes() for x in a_list)
