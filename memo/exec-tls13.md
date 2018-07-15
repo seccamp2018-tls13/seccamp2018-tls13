@@ -42,4 +42,4 @@ python -i -m tls13.utils.cryptomath tls13/utils/cryptomath.py
 * `-m` オプションはプログラムをモジュールとして実行させるためのもので，
   トップモジュールが tls13/ であることを明示するためのもの．
   これがないと相対パスで他のプログラムを import する時に
-  「’__main__' is not a package」と怒られる．
+  「’\__main__' is not a package」と怒られる．

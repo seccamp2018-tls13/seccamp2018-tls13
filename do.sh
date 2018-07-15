@@ -11,6 +11,6 @@ wait
 # logファイルに Error: があればエラーを表示する
 log_search_result=$(grep -F 'Error: ' <(cat do-server.log do-client.log))
 if [[ $? -eq 0 ]]; then
-  echo "Detect Error!"
+  echo "Detected Error!"
   echo "$log_search_result"
 fi
