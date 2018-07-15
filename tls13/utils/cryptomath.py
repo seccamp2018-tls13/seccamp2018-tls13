@@ -91,6 +91,7 @@ def HKDF_expand(PRK, info, L, hash_algorithm) -> bytearray:
     return T[:L]
 
 def HKDF_expand_label(secret, label, hashValue, length, hash_algorithm) -> bytearray:
+    # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#section-7.1
     """
     TLS1.3 key derivation function (HKDF-Expand-Label).
     :param bytearray secret: the key from which to derive the keying material
@@ -122,6 +123,7 @@ def HKDF_expand_label(secret, label, hashValue, length, hash_algorithm) -> bytea
     return HKDF_expand(secret, hkdfLabel.bytes, length, hash_algorithm)
 
 def derive_secret(secret, label, handshake_hashes, hash_algorithm) -> bytearray:
+    # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#section-7.1
     """
     TLS1.3 key derivation function (Derive-Secret).
     :param bytearray secret: secret key used to derive the keying material
@@ -133,7 +135,15 @@ def derive_secret(secret, label, handshake_hashes, hash_algorithm) -> bytearray:
         basis of the HKDF hash_algorithm - governs how much keying material will
         be generated
     :rtype: bytearray
+
+    Derive-Secret(Secret, Label, Messages) =
+        HKDF-Expand-Label(Secret, Label,
+                          Transcript-Hash(Messages), Hash.length)
     """
+    # TODO: handshake_hashes.diget() は未実装なので，
+    #       Transcript-Hash(Messages) に相当するメソッドを作る．
+    #       同様にハッシュの長さを返す .digest_size も未実装なので，
+    #       Hash.length に相当するメソッドを作る．
     if handshake_hashes is None:
         hs_hash = secureHash(bytearray(b''), hash_algorithm)
     else:
