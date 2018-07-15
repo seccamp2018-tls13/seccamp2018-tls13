@@ -122,13 +122,13 @@ def HKDF_expand_label(secret, label, hashValue, length, hash_algorithm) -> bytea
 
     return HKDF_expand(secret, hkdfLabel.bytes, length, hash_algorithm)
 
-def derive_secret(secret, label, handshake_hashes, hash_algorithm) -> bytearray:
+def derive_secret(secret, label, messages, hash_algorithm) -> bytearray:
     # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#section-7.1
     """
     TLS1.3 key derivation function (Derive-Secret).
     :param bytearray secret: secret key used to derive the keying material
     :param bytearray label: label used to differentiate they keying materials
-    :param HandshakeHashes handshake_hashes: hashes of the handshake messages
+    :param List[Handshake] messages: hashes of the handshake messages
         or `None` if no handshake transcript is to be used for derivation of
         keying material
     :param str hash_algorithm: name of the secure hash hash_algorithm used as the
@@ -140,14 +140,25 @@ def derive_secret(secret, label, handshake_hashes, hash_algorithm) -> bytearray:
         HKDF-Expand-Label(Secret, Label,
                           Transcript-Hash(Messages), Hash.length)
     """
-    # TODO: handshake_hashes.diget() は未実装なので，
-    #       Transcript-Hash(Messages) に相当するメソッドを作る．
-    #       同様にハッシュの長さを返す .digest_size も未実装なので，
-    #       Hash.length に相当するメソッドを作る．
-    if handshake_hashes is None:
+    if messages is None:
         hs_hash = secureHash(bytearray(b''), hash_algorithm)
     else:
-        hs_hash = handshake_hashes.digest(hash_algorithm)
+        hs_hash = transcript_hash(messages, hash_algorithm)
     return HKDF_expand_label(secret, label, hs_hash,
                              getattr(hashlib, hash_algorithm)().digest_size,
                              hash_algorithm)
+
+def transcript_hash(messages, hash_algorithm) -> bytearray:
+    # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#section-4.4.1
+    """
+    Return value is computed by hashing the concatenation
+    of each included handshake message, including the handshake message
+    header carrying the handshake message type and length fields, but not
+    including record layer headers. I.e.,
+
+    Transcript-Hash(M1, M2, ... MN) = Hash(M1 || M2 ... MN)
+    """
+    # Record層（TLSPlaintext）は含めないで Handshake の部分だけを結合してハッシュを求める
+    assert all(type(m) == Handshake for m in messages)
+    data = b''.join(m.to_bytes() for m in messages)
+    return secureHash(data, hash_algorithm)
