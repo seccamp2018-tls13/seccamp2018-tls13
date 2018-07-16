@@ -42,7 +42,7 @@ class Chacha20Poly1305(Cipher):
 
     def encrypt(self, plaintext):
         if len(plaintext) % 64 != 0:
-            raise ValueError("Input strings must be a multipul of 64 in length")
+            plaintext = plaintext + bytearray(64 - len(plaintext) % 64)
 
         ## 1. 64 [bytes] ごとに区切る
         ## 2. さらに 64 [bytes] = 4 [bytes] * 16 [block] に区切る
@@ -89,16 +89,30 @@ class Chacha20Poly1305(Cipher):
                 dt = binascii.unhexlify(hex_c)
                 plain += dt
 
+        plain = plain.rstrip(b'\x00') # remove \x00 padding
         return  plain
 
-    def authenticate(self):
+    def authenticate(self, message):
         _, state = chacha20(b"\x00"*16, self.key, self.nonce, cnt=0)
         least16bytes = state[8:]
         s = least16bytes[:4]
         r = least16bytes[4:]
 
-        concate_r = concatenate_bytes(r)
         concate_s = concatenate_bytes(s)
+        concate_r = concatenate_bytes(r)
 
-        return concate_s, concate_r
+        s = bytes_to_long(concate_s)
+        r = bytes_to_long(concate_r)
+        
+        # 16 [bytes] に区切って 1 [byte] (\x01) を負荷
+        coefs_messages = make_array(message, 16, to_int=False)
+        for idx in range(len(coefs_messages)):
+            coefs_messages[idx] += b'\x01'
+
+        coefs_messages = list(map(bytes_to_long, coefs_messages))
+        auth = poly1305(coefs_messages, s, r)
+        return long_to_bytes(auth)
+
+    def gen_AEAD(self):
+        pass
 
