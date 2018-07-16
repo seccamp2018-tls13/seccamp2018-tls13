@@ -88,8 +88,11 @@ def chacha20(text, key, nonce, cnt=0):
 
 # NOTE : chacha20の引数textは暗号化するメッセージを64bytesごとに区切ったもの(足りない部分は0パディング)
 #        呼び出し側で区切ってあげる?
+#        Crypto.Cipher.AESでは16 * n bytesになっていれば問題ないので, クラス化して CIPHER_CLASS.encrypt(key, text)
+#        みたいな感じにしてencrypt内で16bytesに区切って暗号化
+#
 # TODO : Nonceの生成. NonceはTLSのシーケンス番号(8 [byte])に0パディングして12 [byte]長にしてから
-#  Master Secret によって生成される12 [byte]のWriteIVとXORをとって生成. 
+#        Master Secret によって生成される12 [byte]のWriteIVとXORをとって生成. 
 # TODO : 
 #
 #
