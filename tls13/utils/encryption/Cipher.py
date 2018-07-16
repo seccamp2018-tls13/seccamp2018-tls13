@@ -102,29 +102,3 @@ class Chacha20Poly1305(Cipher):
 
         return concate_s, concate_r
 
-## following parts, just for a test, will be removed 
-def main():
-
-    ### TEST ###
-    key = b'\xff' * 32
-    nonce = b'\xff' * 12
-    polychacha = Chacha20Poly1305(key, nonce)
-
-    m = b"""
-HOGEPIYOBARRBARR
-HOGEPIYOBARRBARR
-HOGEPIYOBARRBARR
-HOGEPIYOBARRBARR
-HOGEPIYOBARRBARR
-"""
-
-    enc = polychacha.encrypt(m[:64*1])
-    print(enc,"\n\nEncrpted\n")
-
-    dec = polychacha.decrypt(enc)
-    print(dec,"\n\nDecrpted\n")
-
-    #print(polychacha.authenticate())
-
-if __name__ == '__main__':
-    main()
