@@ -1,25 +1,9 @@
 import binascii
 import random
-
-bytes_to_int = lambda x:int(binascii.hexlify(x), 16)
-str_to_int = lambda x:int(binascii.hexlify(x.encode()), 16)
-
-def make_array(s:bytes):
-    return [ s[16*i:16*(i+1)] for i in range((len(s)+15)//16) ]
-
-def make_coef(array):
-    r = []
-    for s in array:
-        s = (s << 8) + 1
-        len_s = len(bin(s)[2:])
-        if len_s < 136:
-            s <<= (136-len_s)
-        r.append(s)
-    return r
+from Crypto.Util.number import bytes_to_long, long_to_bytes
 
 def poly1305(coefs, s, r):
     """
-
         chacha20のカウンタ0でのstateの下位32 [byte]のうち
         s : 上位 16 [byte]
         r : 下位 16 [byte]
@@ -30,7 +14,6 @@ def poly1305(coefs, s, r):
         x += (Ci % MOD)*pow(r, i, MOD) % MOD
     
     return (x + s) & 0xffffffffffffffffffffffffffffffff
-
 
 def plus(x, y):
     return (x + y) & 0xffffffff
@@ -82,10 +65,6 @@ def chacha20(text, key, nonce, cnt=0):
 
     return results, state
 
-# key = [0, 0, 0, 0, 0, 0, 0, 0]
-# nonce = [0, 0, 0] 
-
-
 # NOTE : chacha20の引数textは暗号化するメッセージを64bytesごとに区切ったもの(足りない部分は0パディング)
 #        呼び出し側で区切ってあげる?
 #        Crypto.Cipher.AESでは16 * n bytesになっていれば問題ないので, クラス化して CIPHER_CLASS.encrypt(key, text)
@@ -93,7 +72,3 @@ def chacha20(text, key, nonce, cnt=0):
 #
 # TODO : Nonceの生成. NonceはTLSのシーケンス番号(8 [byte])に0パディングして12 [byte]長にしてから
 #        Master Secret によって生成される12 [byte]のWriteIVとXORをとって生成. 
-# TODO : 
-#
-#
-#
