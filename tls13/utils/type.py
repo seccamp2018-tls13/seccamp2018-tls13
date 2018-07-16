@@ -83,6 +83,16 @@ class Uint:
 class Type:
     @staticmethod
     def add_labels_and_values(cls):
+        """
+        TLSで使われる定数群（enum）に labels と values というフィールドを追加する．
+
+        例えば HandshakeType に labels が追加されると次のように定数から定数名を取得できる．
+            HandshakeType.labels[Uint16(1)] # => 'client_hello'
+
+        また， HandshakeType に values が追加されると次のように
+        ある値が定数群の中に含まれているか確認することができる．
+            self.msg_type in HandshakeType.values # => True or False
+        """
         UintN = Uint.get_type(cls._size)
         # add labels (inverted dict) to class
         # usage: HandshakeType.labels[Uint16(1)] # => 'client_hello'

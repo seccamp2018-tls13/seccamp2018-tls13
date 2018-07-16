@@ -2,6 +2,9 @@
 from typing import List
 
 class Reader:
+    """
+    Byte string reader
+    """
     def __init__(self, data):
         self.bytes = data
         self.index = 0
@@ -68,3 +71,48 @@ class Reader:
 
     def get_rest_length(self):
         return len(self.bytes) - self.index
+
+
+class Writer:
+    """
+    Byte string writer
+    """
+    def __init__(self):
+        self.bytes = bytearray(0)
+
+    def _get_bytes(self, obj):
+        if hasattr(obj, 'to_bytes') and callable(obj.to_bytes):
+            return obj.to_bytes()
+        else:
+            return obj
+
+    def add_bytes(self, obj, length_t=None):
+        """
+        バイト列をバッファに追加するメソッド．
+        バッファは self.bytes のことを指す．
+        引数 obj に .to_bytes() メソッドがあれば，それを呼び出してバイト列に変換してから追加する．
+        引数 length_t は長さの型を表す．Uint8, Uint16 などの型が与えられたときは，
+        バイト列の長さを求めて Uint16 なら2byteのバイト列にし，それをバイト列の前に追加する．
+
+        例えば，追加するバイト列が b'abcdef' で，長さの型が Uint16 のとき，
+        最終的に追加されるバイト列は次のようになる．
+            b'\x00\x06abcdef'
+        """
+        if length_t:
+            self.bytes += length_t(len(obj)).to_bytes()
+        self.bytes += self._get_bytes(obj)
+
+    def add_list(self, a_list, length_t):
+        """
+        リストをバッファに追加するメソッド．
+        バッファは self.bytes のことを指す．
+        リストの要素は全て .to_bytes() メソッドを持っていることを前提とする．
+        引数 length_t は長さの型を表す．Uint8, Uint16 などの型が与えられたときは，
+        バイト列の長さを求めて Uint16 なら2byteのバイト列にし，それをバイト列の前に追加する．
+
+        例えば，追加するリストが [Uint16(0x0304), Uint16(0x0303), Uint16(0x0302)] で，
+        長さの型が Uint16 のとき，最終的に追加されるバイト列は次のようになる．
+            b'\x00\x06\x03\x04\x03\x03\x03\x02'
+        """
+        self.bytes += length_t(sum(map(len, a_list))).to_bytes()
+        self.bytes += b''.join(x.to_bytes() for x in a_list)

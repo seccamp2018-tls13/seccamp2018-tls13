@@ -2,7 +2,7 @@
 
 ## TODOs
 
-- [ ] プロトコルの構造体をクラスにする
+- [x] プロトコルの構造体をクラスにする
 - [ ] 構造体 <=> バイト文字列の変換（to_bytes, from_bytes）
     - [x] ClientHello
     - [x] ServerHello
@@ -10,12 +10,14 @@
 - [x] ネットワーク通信部分の分離/ライブラリ化（send, recv）
 - [x] ユニットテスト（`python test.py`）
 - [ ] 鍵共有（最低限 Diffie-Hellman ができる）
+- [ ] 鍵導出
 - [ ] 暗号化（chacha/poly やりたい）
 
 
 ## Requirements
 
 - Python3
+- PyCrypto (pip install pycrypto)
 
 
 ## Usage
