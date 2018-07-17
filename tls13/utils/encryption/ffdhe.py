@@ -16,11 +16,11 @@
 # Public key MUST be chosen [2, ..., p-2]
 # Secret keys (ServerSecretKey, ClientSecretKey) also will be [2, ..., p-2]
 
-import binascii
 from get_modulus_ffdhe import *
-from ...utils.type import Uint8, Uint16, Type # Uint16のインポート
+#from ...utils.type import Uint8, Uint16, Type # Uint16のインポート
 from Crypto.Util.number import long_to_bytes, bytes_to_long
-#from type import Uint8, Uint16, Type
+
+#from cryptomath import getRandomNumber
 
 functions = {
         Uint16(0x0100) : ffdhe2048, # ffdhe2048 = Uint16(0x0100)
@@ -70,12 +70,13 @@ class FFDHE:
         return long_to_bytes(public_key)
 
     def gen_master_secret(self, peer_pub):
-       """
+        """
             peer_pub  : g^PeerSecKey mod p
             self.my_secret : [2, ..., p-2]
-       """
+        """
         # DONE : peer_pub, my_secret が bytes型 であった場合の変換処理をいい感じにしたい
         if isinstance(peer_pub, bytes): peer_pub = bytes_to_long(peer_pub)
 
         master_secret = pow(peer_pub, self.my_secret, self.p)
         return long_to_bytes(master_secret)
+
