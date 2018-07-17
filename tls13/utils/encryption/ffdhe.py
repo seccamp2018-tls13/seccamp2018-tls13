@@ -19,6 +19,7 @@
 import binascii
 from get_modulus_ffdhe import *
 from ...utils.type import Uint8, Uint16, Type # Uint16のインポート
+from Crypto.Util.number import long_to_bytes, bytes_to_long
 #from type import Uint8, Uint16, Type
 
 functions = {
@@ -41,15 +42,19 @@ class FFDHE:
 
     def __init__(self, func_val=Uint16(0x0100)):
         self.p = functions[func_val]()
+        self.g = 2
+
+        #self.my_secret = [2, p-2]
+        self.my_secret = getRandomNumber(2, self.p) # from cryptomath.py
 
         # TODO : 以下をどうするか
         # self.ClientSecretKey
         # self.ServerSecretKey
-        # self.PublicKey
+        # self.PublicKey (g=2, modulus=p)
         #
         # [Mako 7/12]
         # FFDHEクラスのフィールドに my_secret というフィールド作ってインスタンス化するときに
-        # 一緒に秘密値も生成して self.my_secret = ... みたいな感じが良さそう．
+        # 一緒に秘密値も生成して self.my_secret = ... みたいな感じが良さそう. 
         # そうすると公開値を作るメソッド gen_public_key() とかも作れそう．
         # 理想はこんな感じ：
         #    client_dhe = FFDHE(NamedGroup.ffdhe2048)
@@ -60,19 +65,17 @@ class FFDHE:
         #    server_master_secret = server_dhe.gen_master_secret(client_pub_key)
         #    assert client_master_secret == server_master_secret
 
-    def get_p_bytes(self):
-        return binascii.unhexlify(hex(self.p)[2:])
+    def gen_public_key(self):
+        public_key = pow(self.g, self.my_secret, self.p)
+        return long_to_bytes(public_key)
 
-    def get_p_int(self):
-        return self.p
-
-    def gen_master_secret(peer_pub, my_secret):
+    def gen_master_secret(self, peer_pub):
        """
-            peer_pub  : g^PubKey mod p
-            my_secret : [2, ..., p-2]
+            peer_pub  : g^PeerSecKey mod p
+            self.my_secret : [2, ..., p-2]
        """
-        # TODO : peer_pub, my_secret が bytes型 であった場合の変換処理をいい感じにしたい
-        if isinstance(peer_pub, bytes): peer_pub = int(binascii.hexlify(peer_pub), 16)
-        if isinstance(my_secret, bytes): my_secret = int(binascii.hexlify(my_secret), 16)
+        # DONE : peer_pub, my_secret が bytes型 であった場合の変換処理をいい感じにしたい
+        if isinstance(peer_pub, bytes): peer_pub = bytes_to_long(peer_pub)
 
-        return pow(peer_pub, my_secret, self.p)
+        master_secret = pow(peer_pub, self.my_secret, self.p)
+        return long_to_bytes(master_secret)
