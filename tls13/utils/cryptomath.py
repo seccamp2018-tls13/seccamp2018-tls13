@@ -162,3 +162,25 @@ def transcript_hash(messages, hash_algorithm) -> bytearray:
     assert all(type(m) == Handshake for m in messages)
     data = b''.join(m.to_bytes() for m in messages)
     return secureHash(data, hash_algorithm)
+
+
+# [7/17 Haruka] FFDHEで使用するSecretKeyの生成(乱数)に使用する関数たち
+# https://github.com/trevp/tlslite/blob/master/tlslite/utils/cryptomath.py
+
+def getRandomBytes(howMany):
+    b = bytearray(os.urandom(howMany))
+    assert len(b) == howMany
+    return b
+
+def getRandomNumber(low, high):
+    assert low <= high
+    howManyBits = len(bin(high)[2:])
+    howManyBytes = len(long_to_bytes(high))
+    lastBits = howManyBits % 8
+    while True:
+        randomBytes = getRandomBytes(howManyBytes)
+        if lastBits != 0:
+            randomBytes[0] = randomBytes[0] % (1 << lastBits)
+        n = bytes_to_long(randomBytes)
+        if n >= low and n <= high:
+            return n
