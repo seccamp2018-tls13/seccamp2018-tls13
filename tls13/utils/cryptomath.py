@@ -1,8 +1,10 @@
 
 import hmac
 import hashlib
+import os
 from .codec import Writer
 from .type import Uint8, Uint16
+from Crypto.Util.number import bytes_to_long, long_to_bytes
 
 def divceil(divident, divisor) -> int:
     """Integer division with rounding up"""
@@ -166,6 +168,7 @@ def transcript_hash(messages, hash_algorithm) -> bytearray:
 
 # [7/17 Haruka] FFDHEで使用するSecretKeyの生成(乱数)に使用する関数たち
 # https://github.com/trevp/tlslite/blob/master/tlslite/utils/cryptomath.py
+# 上部に import os, from Crypto... を追加
 
 def getRandomBytes(howMany):
     b = bytearray(os.urandom(howMany))
