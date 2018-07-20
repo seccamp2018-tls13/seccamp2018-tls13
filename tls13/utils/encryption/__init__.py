@@ -1,3 +1,3 @@
-import ffdhe
-import ecdhe
-import Cipher
+from . import ffdhe
+from . import ecdhe
+from . import Cipher

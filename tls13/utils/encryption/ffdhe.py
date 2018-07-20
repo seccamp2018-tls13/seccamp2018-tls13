@@ -16,11 +16,11 @@
 # Public key MUST be chosen [2, ..., p-2]
 # Secret keys (ServerSecretKey, ClientSecretKey) also will be [2, ..., p-2]
 
-from get_modulus_ffdhe import *
-#from ...utils.type import Uint8, Uint16, Type # Uint16のインポート
+from .get_modulus_ffdhe import *
+from ...utils.type import Uint16
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 
-#from cryptomath import getRandomNumber
+from ..cryptomath import getRandomNumber
 
 functions = {
         Uint16(0x0100) : ffdhe2048, # ffdhe2048 = Uint16(0x0100)
@@ -45,7 +45,7 @@ class FFDHE:
         self.g = 2
 
         #self.my_secret = [2, p-2]
-        self.my_secret = getRandomNumber(2, self.p) # from cryptomath.py
+        self.my_secret = getRandomNumber(2, self.p)
 
         # TODO : 以下をどうするか
         # self.ClientSecretKey

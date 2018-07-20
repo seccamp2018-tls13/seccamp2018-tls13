@@ -1,9 +1,9 @@
 import binascii
-from chacha20poly1305 import *
+from .chacha20poly1305 import *
 
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 
-## NOTE : 今後のためにファイル分けとかも考えた方が良さそう? 
+## NOTE : 今後のためにファイル分けとかも考えた方が良さそう?
 ##          chacha20poly1305だけならまだ大丈夫かも
 
 def make_array(text, n_bytes=16, to_int=False):
