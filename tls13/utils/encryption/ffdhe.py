@@ -54,8 +54,8 @@ class FFDHE:
         #
         # [Mako 7/12]
         # FFDHEクラスのフィールドに my_secret というフィールド作ってインスタンス化するときに
-        # 一緒に秘密値も生成して self.my_secret = ... みたいな感じが良さそう. 
-        # そうすると公開値を作るメソッド gen_public_key() とかも作れそう．
+        # 一緒に秘密値も生成して self.my_secret = ... みたいな感じが良さそう.
+        # そうすると公開値を作るメソッド gen_public_key() とかも作れそう
         # 理想はこんな感じ：
         #    client_dhe = FFDHE(NamedGroup.ffdhe2048)
         #    server_dhe = FFDHE(NamedGroup.ffdhe2048)
@@ -64,12 +64,19 @@ class FFDHE:
         #    client_master_secret = client_dhe.gen_master_secret(server_pub_key)
         #    server_master_secret = server_dhe.gen_master_secret(client_pub_key)
         #    assert client_master_secret == server_master_secret
+        # [Mako 7/20] テスト作ってこのコメントを消す
 
     def gen_public_key(self):
         public_key = pow(self.g, self.my_secret, self.p)
         return long_to_bytes(public_key)
 
-    def gen_master_secret(self, peer_pub):
+    # gen_shared_key と同じ
+    # 互換性のために作成
+    # master secret という用語は RSA ではよく出てくるが DHE ではあまり出てこないので
+    def gen_master_secret(self, **kwargs):
+        self.gen_shared_secret(**kwargs)
+
+    def gen_shared_key(self, peer_pub):
         """
             peer_pub  : g^PeerSecKey mod p
             self.my_secret : [2, ..., p-2]
@@ -79,4 +86,3 @@ class FFDHE:
 
         master_secret = pow(peer_pub, self.my_secret, self.p)
         return long_to_bytes(master_secret)
-
