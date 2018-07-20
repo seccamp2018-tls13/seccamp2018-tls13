@@ -13,6 +13,9 @@ from .protocol.keyexchange.version import ProtocolVersion, SupportedVersions
 from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
+# Crypto
+from .utils.encryption.ffdhe import FFDHE
+
 from .utils import hexdump, hexstr
 
 def client_cmd(argv):
@@ -20,18 +23,18 @@ def client_cmd(argv):
 
     # params
 
-    # ffdhe2048 = FFDHE(NamedGroup.ffdhe2048)
-    # ffdhe2048_key_exchange = ffdhe2048.get_public_key()
+    ffdhe2048 = FFDHE(NamedGroup.ffdhe2048)
+    ffdhe2048_key_exchange = ffdhe2048.gen_public_key()
     # ffdhe3072 = FFDHE(NamedGroup.ffdhe3072)
-    # ffdhe3078_key_exchange = ffdhe3072.get_public_key()
+    # ffdhe3078_key_exchange = ffdhe3072.gen_public_key()
 
     versions = [ ProtocolVersion.TLS13 ]
-    named_group_list = [ NamedGroup.ffdhe2048, NamedGroup.ffdhe3072 ]
+    named_group_list = [ NamedGroup.ffdhe2048 ]
     supported_signature_algorithms = [ SignatureScheme.rsa_pkcs1_sha256 ]
     client_shares = [
         KeyShareEntry(
             group=NamedGroup.ffdhe2048,
-            key_exchange=secrets.token_bytes(2048 // 8)),
+            key_exchange=ffdhe2048_key_exchange),
     ]
     cipher_suites = [ CipherSuite.TLS_AES_128_GCM_SHA256 ]
 
@@ -101,18 +104,21 @@ def client_cmd(argv):
         .get_extension(ExtensionType.key_share) \
         .get_key_exchange()
 
-    # DHEのときは g^b mod p の値が入る
     server_pub_key = server_key_share_key_exchange
 
 
-    # create master_secret
+    # create shared_key
 
     if server_key_share_group == NamedGroup.ffdhe2048:
-        pass # master_secret = ffdhe2048.gen_master_secret(server_pub_key)
+        client_key_share_key_exchange = ffdhe2048_key_exchange
+        shared_key = ffdhe2048.gen_shared_key(server_pub_key)
     elif server_key_share_group == NamedGroup.ffdge3072:
-        pass # master_secret = ffdge3072.gen_master_secret(server_pub_key)
+        pass # shared_key = ffdge3072.gen_shared_key(server_pub_key)
+        raise NotImplementedError()
     else:
         raise NotImplementedError()
+
+    print("shared_key: %s" % hexstr(shared_key))
 
 
     # >>> Finished >>>

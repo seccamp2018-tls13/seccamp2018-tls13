@@ -13,6 +13,9 @@ from .protocol.keyexchange.version import ProtocolVersion, SupportedVersions
 from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
 from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 
+# Crypto
+from .utils.encryption.ffdhe import FFDHE
+
 from .utils import hexdump, hexstr
 
 def server_cmd(argv):
@@ -41,10 +44,16 @@ def server_cmd(argv):
     # パラメータ（group, key_exchange）を決める
     if NamedGroup.ffdhe2048 in client_key_share_groups:
         server_share_group = NamedGroup.ffdhe2048
-        # TODO: DHEでは g^b mod p を相手に送るので，それをバイト列に変換して入れる
-        server_share_key_exchange = secrets.token_bytes(2048 // 8)
+        ffdhe2048 = FFDHE(server_share_group)
+        server_key_share_key_exchange = ffdhe2048.gen_public_key()
+        client_key_share_key_exchange = ch_plain_restructed \
+            .get_extension(ExtensionType.key_share) \
+            .get_key_exchange(server_share_group)
+        shared_key = ffdhe2048.gen_shared_key(client_key_share_key_exchange)
     else:
         raise NotImplementedError()
+
+    print("shared_key: %s" % hexstr(shared_key))
 
     selected_version = ProtocolVersion.TLS13
 
@@ -69,7 +78,7 @@ def server_cmd(argv):
                         extension_data=KeyShareServerHello(
                             server_share=KeyShareEntry(
                                 group=server_share_group,
-                                key_exchange=server_share_key_exchange ))),
+                                key_exchange=server_key_share_key_exchange ))),
                 ] )))
 
     # ServerHello が入っている TLSPlaintext
