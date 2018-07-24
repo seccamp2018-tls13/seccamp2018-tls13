@@ -22,7 +22,23 @@ class CertificateEntryTest(unittest.TestCase):
 
 
 class CertificateTest(unittest.TestCase):
-    pass
+
+    def setUp(self):
+        certificate_request_context = b''
+        certificate_list = [
+            CertificateEntry(cert_data=b'1234567890abcdef'), # TODO: read file.crt
+        ]
+        self.certificate = Certificate(
+            certificate_request_context=certificate_request_context,
+            certificate_list=certificate_list)
+
+    def test_length(self):
+        obj = self.certificate
+        self.assertEqual(len(obj), len(obj.to_bytes()))
+
+    def test_restruct(self):
+        restructed = Certificate.from_bytes(self.certificate.to_bytes())
+        self.assertEqual(repr(self.certificate), repr(restructed))
 
 
 class CertificateVerifyTest(unittest.TestCase):
