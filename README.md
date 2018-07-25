@@ -1,17 +1,7 @@
 # seccamp2018-tls13
 
-## TODOs
-
-- [x] プロトコルの構造体をクラスにする
-- [ ] 構造体 <=> バイト文字列の変換（to_bytes, from_bytes）
-    - [x] ClientHello
-    - [x] ServerHello
-    - [ ] Application Data
-- [x] ネットワーク通信部分の分離/ライブラリ化（send, recv）
-- [x] ユニットテスト（`python test.py`）
-- [ ] 鍵共有（最低限 Diffie-Hellman ができる）
-- [ ] 鍵導出
-- [ ] 暗号化（chacha/poly やりたい）
+![](https://circleci.com/gh/seccamp2018-tls13/seccamp2018-tls13/tree/master.svg?style=shield&circle-token=8cba96a486a4be89b38a9bbe356555d237d307eb)
+<a href="https://codeclimate.com/github/seccamp2018-tls13/seccamp2018-tls13/maintainability"><img src="https://api.codeclimate.com/v1/badges/22925422e5e90c48b254/maintainability" /></a>
 
 
 ## Requirements
