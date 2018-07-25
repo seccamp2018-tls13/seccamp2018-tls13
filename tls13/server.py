@@ -7,6 +7,7 @@ from .protocol.handshake import Handshake, HandshakeType
 from .protocol.ciphersuite import CipherSuite
 from .protocol.keyexchange.messages import ServerHello, Extension, ExtensionType, \
     KeyShareEntry, KeyShareServerHello
+from .protocol.keyexchange.authentication import Certificate, CertificateEntry
 
 # Extensions
 from .protocol.keyexchange.version import ProtocolVersion, SupportedVersions
@@ -109,7 +110,32 @@ def server_cmd(argv):
 
     # >>> EncryptedExtensions >>>
 
-    # >>> Certificate >>>
+
+    # >>> server Certificate >>>
+
+    with open('.ssh/server.crt', 'r') as f:
+        cert_data = ''.join(f.readlines()[1:-1]).replace('\n', '')
+        cert_data = bytes(cert_data, 'ascii')
+
+    cert_plain = TLSPlaintext(
+        _type=ContentType.handshake,
+        fragment=Handshake(
+            msg_type=HandshakeType.certificate,
+            msg=Certificate(
+                certificate_request_context=b'',
+                certificate_list=[
+                    CertificateEntry(cert_data=cert_data)
+                ])))
+
+    print(cert_plain)
+    print(cert_plain.to_bytes())
+
+    # print("server Certificate bytes:")
+    cert_bytes = cert_plain.to_bytes()
+    # print(hexdump(sh_bytes))
+
+    server_conn.send_msg(cert_bytes)
+
 
     # >>> CertificateVerify >>>
 
