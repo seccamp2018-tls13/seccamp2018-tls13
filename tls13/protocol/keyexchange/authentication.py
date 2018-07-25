@@ -5,6 +5,9 @@
 from ...utils.codec import Reader, Writer
 from ...utils.type import Uint8, Uint16, Uint24, Type
 
+import pprint
+import textwrap
+
 @Type.add_labels_and_values
 class CertificateType:
     """
@@ -31,8 +34,17 @@ class CertificateEntry:
     """
     def __init__(self, cert_data, extensions=[]):
         assert type(cert_data) in (bytes, bytearray)
-        self.cert_data = cert_data
+        self.cert_data = bytes(cert_data)
         self.extensions = extensions
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |cert_data: %s
+            |extensions:
+            """ % (
+            self.__class__.__name__, self.cert_data)) \
+            + textwrap.indent(pprint.pformat(self.extensions), prefix="    ")
 
     def __len__(self):
         return 3 + len(self.cert_data) + \
@@ -63,8 +75,17 @@ class Certificate:
     } Certificate;
     """
     def __init__(self, certificate_request_context=b'', certificate_list=[]):
-        self.certificate_request_context = certificate_request_context
+        self.certificate_request_context = bytes(certificate_request_context)
         self.certificate_list = certificate_list
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |certificate_request_context: %s
+            |certificate_list:
+            """ % (
+            self.__class__.__name__, self.certificate_request_context)) \
+            + textwrap.indent(pprint.pformat(self.certificate_list), prefix="    ")
 
     def __len__(self):
         return 1 + len(self.certificate_request_context) + \
@@ -73,7 +94,7 @@ class Certificate:
     def to_bytes(self):
         writer = Writer()
         writer.add_bytes(self.certificate_request_context, length_t=Uint8)
-        writer.add_list(self.certificate_list, length_t=Uint16)
+        writer.add_list(self.certificate_list, length_t=Uint24)
         return writer.bytes
 
     @classmethod
