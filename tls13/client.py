@@ -91,8 +91,7 @@ def client_cmd(argv):
     print(sh_plain_restructed)
 
 
-    # decided params
-
+    # パラメータの決定
     server_cipher_suite = sh_plain_restructed.cipher_suite
     server_selected_version = sh_plain_restructed \
         .get_extension(ExtensionType.supported_versions) \
@@ -106,9 +105,7 @@ def client_cmd(argv):
 
     server_pub_key = server_key_share_key_exchange
 
-
-    # create shared_key
-
+    # shared_key の作成
     if server_key_share_group == NamedGroup.ffdhe2048:
         client_key_share_key_exchange = ffdhe2048_key_exchange
         shared_key = ffdhe2048.gen_shared_key(server_pub_key)
@@ -120,6 +117,8 @@ def client_cmd(argv):
 
     print("shared_key: %s" % hexstr(shared_key))
 
+
+    # -- HKDF ---
 
     # >>> Finished >>>
 

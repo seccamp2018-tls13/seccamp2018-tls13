@@ -37,10 +37,10 @@ def server_cmd(argv):
         .get_extension(ExtensionType.key_share) \
         .get_groups()
 
-    # パラメータの決定
+    # パラメータの決定と shared_key の作成
     # 暗号化：受け取ったClientHelloの暗号スイートから選ぶ
     cipher_suite = client_cipher_suites[0] # TODO: 暗号スイート実装してから優先順位を決める
-    # 鍵共有：ClientHelloのKeyShareEntryを見てどの方法で鍵共有するか決めてから，
+    # 鍵共有：ClientHelloのKeyShareEntryを見てどの方法で鍵共有するか決めてから、
     # パラメータ（group, key_exchange）を決める
     if NamedGroup.ffdhe2048 in client_key_share_groups:
         server_share_group = NamedGroup.ffdhe2048
@@ -91,21 +91,7 @@ def server_cmd(argv):
     server_conn.send_msg(sh_bytes)
 
 
-    # -- create master_secret ---
-
-    client_pub_key = ch_plain_restructed \
-        .get_extension(extension_type=ExtensionType.key_share) \
-        .get_key_exchange(group=NamedGroup.ffdhe2048)
-
-    # print('client_pub_key:')
-    # print(hexstr(client_pub_key)) # DHEのときは g^a mod p の値が入る
-
-    def gen_master_secret(peer_pub, my_secret):
-        # 実際の処理は utils/encryption/ffdhe.py などに書く
-        return 0
-
-    master_secret = gen_master_secret(client_pub_key, b'beef')
-
+    # -- HKDF ---
 
     # >>> EncryptedExtensions >>>
 
