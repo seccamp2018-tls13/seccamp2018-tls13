@@ -2,7 +2,11 @@
 # B.3.3.  Authentication Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.3
 
-from ...utils.type import Uint8, Type
+from ...utils.codec import Reader, Writer
+from ...utils.type import Uint8, Uint16, Uint24, Type
+
+import pprint
+import textwrap
 
 @Type.add_labels_and_values
 class CertificateType:
@@ -28,17 +32,39 @@ class CertificateEntry:
       Extension extensions<0..2^16-1>;
     } CertificateEntry;
     """
-    def __init__(self, certificate_type, cert_data, extensions=[]):
-        self.certificate_type = certificate_type
-        assert certificate_type in CertificateType.values
-
-        if self.certificate_type == CertificateType.RawPublicKey:
-            self.ASN1_subjectPublicKeyInfo = cert_data
-        elif self.certificate_type == CertificateType.X509:
-            self.cert_data = cert_data
-        else:
-            raise RuntimeError()
+    def __init__(self, cert_data, extensions=[]):
+        assert type(cert_data) in (bytes, bytearray)
+        self.cert_data = bytes(cert_data)
         self.extensions = extensions
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |cert_data: %s
+            |extensions:
+            """ % (
+            self.__class__.__name__, self.cert_data)) \
+            + textwrap.indent(pprint.pformat(self.extensions), prefix="    ")
+
+    def __len__(self):
+        return 3 + len(self.cert_data) + \
+               2 + sum(map(len, self.extensions))
+
+    def to_bytes(self):
+        writer = Writer()
+        writer.add_bytes(self.cert_data, length_t=Uint24)
+        writer.add_list(self.extensions, length_t=Uint16)
+        return writer.bytes
+
+    @classmethod
+    def from_bytes(self, data):
+        reader = Reader(data)
+        cert_data  = reader.get_var_bytes(3)
+        extensions = reader.get_var_bytes(2)
+
+        # extensions に入る拡張は status_request か signed_certificate_timestamp
+        # extensions のバイト列はパースが面倒 & 重要度が低いので後回しにする
+        return cls(cert_data=cert_data, extensions=[])
 
 
 class Certificate:
@@ -48,9 +74,47 @@ class Certificate:
       CertificateEntry certificate_list<0..2^24-1>;
     } Certificate;
     """
-    def __init__(self, certificate_request_context, certificate_list=[]):
-        self.certificate_request_context = certificate_request_context
+    def __init__(self, certificate_request_context=b'', certificate_list=[]):
+        self.certificate_request_context = bytes(certificate_request_context)
         self.certificate_list = certificate_list
+
+    def __repr__(self):
+        return textwrap.dedent("""\
+            %s:
+            |certificate_request_context: %s
+            |certificate_list:
+            """ % (
+            self.__class__.__name__, self.certificate_request_context)) \
+            + textwrap.indent(pprint.pformat(self.certificate_list), prefix="    ")
+
+    def __len__(self):
+        return 1 + len(self.certificate_request_context) + \
+               3 + sum(map(len, self.certificate_list))
+
+    def to_bytes(self):
+        writer = Writer()
+        writer.add_bytes(self.certificate_request_context, length_t=Uint8)
+        writer.add_list(self.certificate_list, length_t=Uint24)
+        return writer.bytes
+
+    @classmethod
+    def from_bytes(cls, data):
+        reader = Reader(data)
+        certificate_request_context = reader.get_var_bytes(1)
+        certificate_list_bytes = reader.get_var_bytes(3)
+        certificate_list = []
+
+        reader = Reader(certificate_list_bytes)
+        while reader.get_rest_length() > 0:
+            cert_data  = reader.get_var_bytes(3)
+            extensions = reader.get_var_bytes(2)
+
+            # extensions に入る拡張は status_request か signed_certificate_timestamp
+            # extensions のバイト列はパースが面倒 & 重要度が低いので後回しにする
+            entry = CertificateEntry(cert_data=cert_data, extensions=[])
+            certificate_list.append(entry)
+
+        return cls(certificate_request_context, certificate_list)
 
 
 class CertificateVerify:

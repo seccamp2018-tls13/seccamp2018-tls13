@@ -85,7 +85,7 @@ def client_cmd(argv):
     client_conn = socket.ClientConnection()
     client_conn.send_msg(ch_bytes)
 
-    # <<< ClientHello <<<
+    # <<< ServerHello <<<
     data = client_conn.recv_msg()
     sh_plain_restructed = TLSPlaintext.from_bytes(data)
     print(sh_plain_restructed)
@@ -117,8 +117,13 @@ def client_cmd(argv):
 
     print("shared_key: %s" % hexstr(shared_key))
 
-
     # -- HKDF ---
+
+    # <<< server Certificate <<<
+    data = client_conn.recv_msg()
+    plain_restructed = TLSPlaintext.from_bytes(data)
+    print(plain_restructed)
+
 
     # >>> Finished >>>
 
