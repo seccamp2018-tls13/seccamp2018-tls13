@@ -138,7 +138,7 @@ def server_cmd(argv):
     if SignatureScheme.rsa_pkcs1_sha256 in client_signature_scheme_list:
         server_signature_scheme = SignatureScheme.rsa_pkcs1_sha256
         from Crypto.Signature import pkcs1_15
-        message = cert_data
+        message = b'\x20' * 64 + b'TLS 1.3, server CertificateVerify' + b'\x00' + cert_data
         h = SHA256.new(message)
         certificate_signature = pkcs1_15.new(key).sign(h)
     else:
