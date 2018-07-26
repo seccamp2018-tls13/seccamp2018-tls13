@@ -1,6 +1,7 @@
 
 import unittest
 
+from tls13.protocol.keyexchange.signature import *
 from tls13.protocol.keyexchange.authentication import *
 from tls13.utils.type import *
 
@@ -26,7 +27,7 @@ class CertificateTest(unittest.TestCase):
     def setUp(self):
         certificate_request_context = b''
         certificate_list = [
-            CertificateEntry(cert_data=b'1234567890abcdef'), # TODO: read file.crt
+            CertificateEntry(cert_data=b'1234567890abcdef'), # read file.crt
         ]
         self.certificate = Certificate(
             certificate_request_context=certificate_request_context,
@@ -42,7 +43,19 @@ class CertificateTest(unittest.TestCase):
 
 
 class CertificateVerifyTest(unittest.TestCase):
-    pass
+
+    def setUp(self):
+        self.certificate_verify = CertificateVerify(
+            algorithm=SignatureScheme.rsa_pkcs1_sha256,
+            signature=b'58db140f')
+
+    def test_length(self):
+        obj = self.certificate_verify
+        self.assertEqual(len(obj), len(obj.to_bytes()))
+
+    def test_restruct(self):
+        restructed = CertificateVerify.from_bytes(self.certificate_verify.to_bytes())
+        self.assertEqual(repr(self.certificate_verify), repr(restructed))
 
 
 class FinishedTest(unittest.TestCase):

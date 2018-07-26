@@ -135,6 +135,19 @@ class CertificateVerify:
             signature=bytes)
         return make_format(self, props)
 
+    def to_bytes(self):
+        writer = Writer()
+        writer.add_bytes(self.algorithm)
+        writer.add_bytes(self.signature, length_t=Uint16)
+        return writer.bytes
+
+    @classmethod
+    def from_bytes(cls, data):
+        reader = Reader(data)
+        algorithm = Uint16(reader.get(2))
+        signature = reader.get_var_bytes(2)
+        return cls(algorithm=algorithm, signature=signature)
+
 
 class Finished:
     """
