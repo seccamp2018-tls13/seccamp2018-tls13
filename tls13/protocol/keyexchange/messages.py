@@ -3,16 +3,15 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1
 
 import secrets
-import textwrap
-import pprint
-from binascii import hexlify
+import collections
 
 from .supportedgroups import NamedGroup
+from .version import ProtocolVersion
 from ..ciphersuite import CipherSuite
 from ...utils import hexstr
 from ...utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ...utils.codec import Reader, Writer
-
+from ...utils.repr import make_format
 
 class HasExtension:
     """
@@ -56,21 +55,14 @@ class ClientHello(HasExtension):
         assert all( type(ext) == Extension for ext in self.extensions )
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |legacy_version: %s
-            |random: %s (len=%d)
-            |legacy_session_id: %s (len=%d)
-            |cipher_suites: %s
-            |legacy_compression_methods: %s
-            |extensions:
-            """ % (
-            self.__class__.__name__, self.legacy_version,
-            hexlify(self.random[0:10]) + b'...', len(self.random),
-            hexlify(self.legacy_session_id[0:10]) + b'...', len(self.legacy_session_id),
-            self.cipher_suites,
-            self.legacy_compression_methods)) \
-            + textwrap.indent(pprint.pformat(self.extensions), prefix="    ")
+        props = collections.OrderedDict(
+            legacy_version=ProtocolVersion,
+            random=bytes,
+            legacy_session_id=bytes,
+            cipher_suites=list,
+            legacy_compression_methods=list,
+            extensions=list)
+        return make_format(self, props)
 
     def __len__(self):
         return len(self.legacy_version) + len(self.random) + \
@@ -141,21 +133,14 @@ class ServerHello(HasExtension):
         assert all( type(ext) == Extension for ext in self.extensions )
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |legacy_version: %s
-            |random: %s (len=%d)
-            |legacy_session_id_echo: %s (len=%d)
-            |cipher_suite: %s
-            |legacy_compression_method: %s
-            |extensions:
-            """ % (
-            self.__class__.__name__, self.legacy_version,
-            hexlify(self.random[0:10]) + b'...', len(self.random),
-            hexlify(self.legacy_session_id_echo[0:10]) + b'...', len(self.legacy_session_id_echo),
-            self.cipher_suite,
-            self.legacy_compression_method)) \
-            + textwrap.indent(pprint.pformat(self.extensions), prefix="    ")
+        props = collections.OrderedDict(
+            legacy_version=ProtocolVersion,
+            random=bytes,
+            legacy_session_id_echo=bytes,
+            cipher_suite=CipherSuite,
+            legacy_compression_method=Uint16,
+            extensions=list)
+        return make_format(self, props)
 
     def __len__(self):
         return len(self.legacy_version) + len(self.random) + \
@@ -209,14 +194,10 @@ class Extension:
         assert self.extension_type in ExtensionType.values
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |extension_type: %s == %s
-            |extension_data:
-            """ % (
-            self.__class__.__name__,
-            self.extension_type, ExtensionType.labels[self.extension_type])) \
-            + textwrap.indent(repr(self.extension_data), prefix="    ")
+        props = collections.OrderedDict(
+            extension_type=ExtensionType,
+            extension_data=object)
+        return make_format(self, props)
 
     def __len__(self):
         return len(self.extension_type) + 2 + len(self.extension_data)
@@ -310,7 +291,7 @@ class Extension:
 
 
 @Type.add_labels_and_values
-class ExtensionType:
+class ExtensionType(Type):
     """
     enum { ... } ExtensionType
     """
@@ -355,13 +336,10 @@ class KeyShareEntry:
         assert type(self.key_exchange) in (bytes, bytearray)
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |group: %s == %s
-            |key_exchange: %s (len=%d)""" % ( \
-            self.__class__.__name__,
-            self.group, NamedGroup.labels[self.group],
-            hexlify(self.key_exchange[0:10]) + b'...', len(self.key_exchange) ))
+        props = collections.OrderedDict(
+            group=NamedGroup,
+            key_exchange=bytes)
+        return make_format(self, props)
 
     def __len__(self):
         return len(self.group) + 2 + len(self.key_exchange)
@@ -392,11 +370,8 @@ class KeyShareClientHello:
         assert all( type(entry) == KeyShareEntry for entry in self.client_shares )
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |client_shares:
-            """ % (self.__class__.__name__)) \
-            + textwrap.indent(repr(self.client_shares), prefix="    ")
+        props = collections.OrderedDict(client_shares=list)
+        return make_format(self, props)
 
     def __len__(self):
         return 2 + sum(map(len, self.client_shares))
@@ -456,11 +431,8 @@ class KeyShareServerHello:
         assert type(self.server_share) == KeyShareEntry
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |server_share:
-            """ % (self.__class__.__name__)) \
-            + textwrap.indent(repr(self.server_share), prefix="    ")
+        props = collections.OrderedDict(server_share=object)
+        return make_format(self, props)
 
     def __len__(self):
         return len(self.server_share)

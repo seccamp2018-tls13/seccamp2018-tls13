@@ -2,12 +2,14 @@
 # B.3.  Handshake Protocol
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3
 
-import textwrap
+import collections
+
 from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ..utils.codec import Reader
+from ..utils.repr import make_format
 
 @Type.add_labels_and_values
-class HandshakeType:
+class HandshakeType(Type):
     """
     enum { ... } HandshakeType
     """
@@ -58,16 +60,11 @@ class Handshake:
         assert type(self.length) == Uint24
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |msg_type: %s == %s
-            |length: %s
-            |msg:
-            """ % (
-            self.__class__.__name__,
-            self.msg_type, HandshakeType.labels[self.msg_type],
-            self.length)) \
-            + textwrap.indent(repr(self.msg), prefix="    ")
+        props = collections.OrderedDict(
+            msg_type=HandshakeType,
+            length=int,
+            msg=object)
+        return make_format(self, props)
 
     def __len__(self):
         return len(self.msg_type) + len(self.length) + len(self.msg)

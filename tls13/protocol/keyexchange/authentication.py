@@ -2,14 +2,17 @@
 # B.3.3.  Authentication Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.3
 
+import collections
+
 from ...utils.codec import Reader, Writer
 from ...utils.type import Uint8, Uint16, Uint24, Type
+from ...utils.repr import make_format
 
 import pprint
 import textwrap
 
 @Type.add_labels_and_values
-class CertificateType:
+class CertificateType(Type):
     """
     enum { ... } CertificateType
     """
@@ -38,13 +41,10 @@ class CertificateEntry:
         self.extensions = extensions
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |cert_data: %s
-            |extensions:
-            """ % (
-            self.__class__.__name__, self.cert_data)) \
-            + textwrap.indent(pprint.pformat(self.extensions), prefix="    ")
+        props = collections.OrderedDict(
+            cert_data=bytes,
+            extensions=list)
+        return make_format(self, props)
 
     def __len__(self):
         return 3 + len(self.cert_data) + \
@@ -79,13 +79,10 @@ class Certificate:
         self.certificate_list = certificate_list
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |certificate_request_context: %s
-            |certificate_list:
-            """ % (
-            self.__class__.__name__, self.certificate_request_context)) \
-            + textwrap.indent(pprint.pformat(self.certificate_list), prefix="    ")
+        props = collections.OrderedDict(
+            certificate_request_context=bytes,
+            certificate_list=list)
+        return make_format(self, props)
 
     def __len__(self):
         return 1 + len(self.certificate_request_context) + \

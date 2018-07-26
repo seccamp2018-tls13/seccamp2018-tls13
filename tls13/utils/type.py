@@ -1,7 +1,6 @@
 
 from struct import pack
 
-
 class Uint:
     """
     base class
@@ -30,6 +29,9 @@ class Uint:
 
     def __eq__(self, other):
         return self.value == other.value
+
+    def __int__(self):
+        return self.value
 
     @staticmethod
     def get_type(size):

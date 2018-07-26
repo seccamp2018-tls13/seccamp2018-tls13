@@ -2,13 +2,15 @@
 # B.1.  Record Layer
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.1
 
-import textwrap
+import collections
+
+from .keyexchange.version import ProtocolVersion
 from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ..utils.codec import Reader
-from ..utils import hexstr
+from ..utils.repr import make_format
 
 @Type.add_labels_and_values
-class ContentType:
+class ContentType(Type):
     """
     enum { ... } ContentType
     """
@@ -51,18 +53,12 @@ class TLSPlaintext:
         return getattr(self.fragment.msg, name)
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |type: %s == %s
-            |legacy_record_version: %s
-            |length: %s
-            |fragment:
-            """ % (
-            self.__class__.__name__,
-            self.type, ContentType.labels[self.type],
-            self.legacy_record_version,
-            self.length)) \
-            + textwrap.indent(repr(self.fragment), prefix="    ")
+        props = collections.OrderedDict(
+            type=ContentType,
+            legacy_record_version=ProtocolVersion,
+            length=int,
+            fragment=object)
+        return make_format(self, props)
 
     def __len__(self):
         return len(self.type) + len(self.legacy_record_version) + \

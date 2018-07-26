@@ -2,14 +2,16 @@
 # B.3.1.1.  Version Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.1
 
-import textwrap
+import collections
+
 from ..handshake import HandshakeType
 from ...utils.type import Uint8, Uint16, Type
 from ...utils.codec import Reader, Writer
+from ...utils.repr import make_format
 
 
 @Type.add_labels_and_values
-class ProtocolVersion:
+class ProtocolVersion(Type):
     SSL3  = Uint16(0x0300)
     TLS10 = Uint16(0x0301)
     TLS11 = Uint16(0x0302)
@@ -42,19 +44,15 @@ class SupportedVersions:
             raise RuntimeError("Unkown message type: %s" % msg_type)
 
     def __repr__(self):
+        props = collections.OrderedDict()
         if self.msg_type == HandshakeType.client_hello:
-            label = 'versions'
-            versions = self.versions
+            props['versions'] = list
         elif self.msg_type == HandshakeType.server_hello:
-            label = 'selected_version'
-            versions = self.selected_version
+            props['selected_version'] = ProtocolVersion
         else:
             raise RuntimeError("Unkown message type: %s" % msg_type)
 
-        return textwrap.dedent("""\
-            %s:
-            |%s: %s""" % \
-            (self.__class__.__name__, label, versions))
+        return make_format(self, props)
 
     def __len__(self):
         if self.msg_type == HandshakeType.client_hello:

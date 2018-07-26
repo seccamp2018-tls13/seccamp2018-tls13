@@ -2,12 +2,14 @@
 # B.3.1.4.  Supported Groups Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.4
 
-import textwrap
+import collections
+
 from ...utils.type import Uint16, Type
 from ...utils.codec import Reader, Writer
+from ...utils.repr import make_format
 
 @Type.add_labels_and_values
-class NamedGroup:
+class NamedGroup(Type):
     """
     enum { ... } NamedGroup
     """
@@ -47,10 +49,8 @@ class NamedGroupList:
         assert type(self.named_group_list) == list
 
     def __repr__(self):
-        return textwrap.dedent("""\
-            %s:
-            |named_group_list: %s""" % \
-            (self.__class__.__name__, self.named_group_list))
+        props = collections.OrderedDict(named_group_list=list)
+        return make_format(self, props)
 
     def __len__(self):
         return 2 + sum(map(len, self.named_group_list))

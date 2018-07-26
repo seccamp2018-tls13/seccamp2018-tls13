@@ -5,7 +5,7 @@
 from ..utils.type import Uint8, Type
 
 @Type.add_labels_and_values
-class AlertLevel:
+class AlertLevel(Type):
     """
     enum { ... } AlertLevel
     """
@@ -15,7 +15,7 @@ class AlertLevel:
 
 
 @Type.add_labels_and_values
-class AlertDescription:
+class AlertDescription(Type):
     """
     enum { ... } AlertDescription
     """
