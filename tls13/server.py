@@ -7,7 +7,8 @@ from .protocol.handshake import Handshake, HandshakeType
 from .protocol.ciphersuite import CipherSuite
 from .protocol.keyexchange.messages import ServerHello, Extension, ExtensionType, \
     KeyShareEntry, KeyShareServerHello
-from .protocol.keyexchange.authentication import Certificate, CertificateEntry
+from .protocol.keyexchange.authentication import Certificate, CertificateEntry, \
+    CertificateVerify
 
 # Extensions
 from .protocol.keyexchange.version import ProtocolVersion, SupportedVersions
@@ -37,20 +38,24 @@ def server_cmd(argv):
     client_key_share_groups = ch_plain_restructed \
         .get_extension(ExtensionType.key_share) \
         .get_groups()
+    client_signature_scheme_list = ch_plain_restructed \
+        .get_extension(ExtensionType.signature_algorithms) \
+        .supported_signature_algorithms
+    client_key_share = ch_plain_restructed \
+        .get_extension(ExtensionType.key_share)
 
     # パラメータの決定と shared_key の作成
     # 暗号化：受け取ったClientHelloの暗号スイートから選ぶ
     cipher_suite = client_cipher_suites[0] # TODO: 暗号スイート実装してから優先順位を決める
+
     # 鍵共有：ClientHelloのKeyShareEntryを見てどの方法で鍵共有するか決めてから、
     # パラメータ（group, key_exchange）を決める
     if NamedGroup.ffdhe2048 in client_key_share_groups:
         server_share_group = NamedGroup.ffdhe2048
+        client_key_exchange = client_key_share.get_key_exchange(server_share_group)
         ffdhe2048 = FFDHE(server_share_group)
         server_key_share_key_exchange = ffdhe2048.gen_public_key()
-        client_key_share_key_exchange = ch_plain_restructed \
-            .get_extension(ExtensionType.key_share) \
-            .get_key_exchange(server_share_group)
-        shared_key = ffdhe2048.gen_shared_key(client_key_share_key_exchange)
+        shared_key = ffdhe2048.gen_shared_key(client_key_exchange)
     else:
         raise NotImplementedError()
 
@@ -114,7 +119,7 @@ def server_cmd(argv):
                 ])))
 
     print(cert_plain)
-    print(cert_plain.to_bytes())
+    # print(cert_plain.to_bytes())
 
     # print("server Certificate bytes:")
     cert_bytes = cert_plain.to_bytes()
@@ -124,6 +129,31 @@ def server_cmd(argv):
 
 
     # >>> CertificateVerify >>>
+
+    # デジタル署名アルゴリズム
+    # 秘密鍵 .ssh/server.key を使って署名する
+    from Crypto.Hash import SHA256
+    from Crypto.PublicKey import RSA
+    key = RSA.import_key(open('.ssh/server.key').read())
+    if SignatureScheme.rsa_pkcs1_sha256 in client_signature_scheme_list:
+        server_signature_scheme = SignatureScheme.rsa_pkcs1_sha256
+        from Crypto.Signature import pkcs1_15
+        message = cert_data
+        h = SHA256.new(message)
+        certificate_signature = pkcs1_15.new(key).sign(h)
+    else:
+        raise NotImplementedError()
+
+    cert_verify = TLSPlaintext(
+        _type=ContentType.handshake,
+        fragment=Handshake(
+            msg_type=HandshakeType.certificate_verify,
+            msg=CertificateVerify(
+                algorithm=server_signature_scheme,
+                signature=certificate_signature )))
+
+    print(cert_verify)
+
 
     # >>> Finished >>>
 

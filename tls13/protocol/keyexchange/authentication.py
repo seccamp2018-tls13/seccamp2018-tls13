@@ -4,6 +4,7 @@
 
 import collections
 
+from .signature import SignatureScheme
 from ...utils.codec import Reader, Writer
 from ...utils.type import Uint8, Uint16, Uint24, Type
 from ...utils.repr import make_format
@@ -124,6 +125,15 @@ class CertificateVerify:
     def __init__(self, algorithm, signature):
         self.algorithm = algorithm
         self.signature = signature
+
+    def __len__(self):
+        return len(self.algorithm) + 2 + len(self.signature)
+
+    def __repr__(self):
+        props = collections.OrderedDict(
+            algorithm=SignatureScheme,
+            signature=bytes)
+        return make_format(self, props)
 
 
 class Finished:
