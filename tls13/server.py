@@ -2,18 +2,13 @@
 import secrets
 from .utils import socket
 
-from .protocol.recordlayer import TLSPlaintext, ContentType
-from .protocol.handshake import Handshake, HandshakeType
-from .protocol.ciphersuite import CipherSuite
-from .protocol.keyexchange.messages import ServerHello, Extension, ExtensionType, \
-    KeyShareEntry, KeyShareServerHello
-from .protocol.keyexchange.authentication import Certificate, CertificateEntry, \
-    CertificateVerify
-
-# Extensions
-from .protocol.keyexchange.version import ProtocolVersion, SupportedVersions
-from .protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
-from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
+from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
+    CipherSuite, ServerHello, KeyShareEntry, KeyShareServerHello, \
+    Extension, ExtensionType, \
+    ProtocolVersion, SupportedVersions, \
+    NamedGroup, NamedGroupList, \
+    SignatureScheme, SignatureSchemeList, \
+    Certificate, CertificateEntry, CertificateVerify
 
 # Crypto
 from .utils.encryption.ffdhe import FFDHE

@@ -1,10 +1,8 @@
 
+import secrets
 import unittest
 
-from tls13.protocol.keyexchange.messages import *
-from tls13.protocol.keyexchange.version import *
-from tls13.protocol.keyexchange.supportedgroups import *
-from tls13.protocol.keyexchange.signature import *
+from tls13.protocol import *
 from tls13.utils.type import *
 
 class ClientHelloTest(unittest.TestCase):

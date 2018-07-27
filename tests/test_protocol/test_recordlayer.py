@@ -3,18 +3,7 @@ import unittest
 import socket
 import secrets
 
-from tls13.protocol.recordlayer import TLSPlaintext, ContentType
-from tls13.protocol.handshake import Handshake, HandshakeType
-from tls13.protocol.ciphersuite import CipherSuite
-from tls13.protocol.keyexchange.messages import ClientHello, ServerHello, \
-    Extension, ExtensionType, \
-    KeyShareEntry, KeyShareClientHello, KeyShareServerHello
-
-# Extensions
-from tls13.protocol.keyexchange.version import SupportedVersions
-from tls13.protocol.keyexchange.supportedgroups import NamedGroup, NamedGroupList
-from tls13.protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
-
+from tls13.protocol import *
 from tls13.utils.type import *
 
 

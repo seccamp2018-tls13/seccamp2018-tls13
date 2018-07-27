@@ -2,6 +2,10 @@
 # B.3.1.1.  Version Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.1
 
+__all__ = [
+    'ProtocolVersion', 'SupportedVersions',
+]
+
 import collections
 
 from ..handshake import HandshakeType

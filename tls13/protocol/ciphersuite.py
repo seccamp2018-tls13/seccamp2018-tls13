@@ -2,6 +2,10 @@
 # B.4.  Cipher Suites
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.4
 
+__all__ = [
+    'CipherSuite',
+]
+
 import hashlib
 from ..utils.type import Uint16, Type
 

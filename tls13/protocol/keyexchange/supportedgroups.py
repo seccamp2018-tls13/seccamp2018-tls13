@@ -2,6 +2,10 @@
 # B.3.1.4.  Supported Groups Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.4
 
+__all__ = [
+    'NamedGroup', 'NamedGroupList',
+]
+
 import collections
 
 from ...utils.type import Uint16, Type
