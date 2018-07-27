@@ -11,13 +11,13 @@ def divceil(divident, divisor) -> int:
     quot, r = divmod(divident, divisor)
     return quot + int(bool(r))
 
-def secureHash(data, hash_algorithm) -> bytearray:
+def secureHash(data, hash_algorithm='sha256') -> bytearray:
     """Return a digest of `data` using `hash_algorithm`"""
     hashInstance = hashlib.new(hash_algorithm)
     hashInstance.update(data)
     return bytearray(hashInstance.digest())
 
-def secureHMAC(k, b, hash_algorithm) -> bytearray:
+def secureHMAC(k, b, hash_algorithm='sha256') -> bytearray:
     """Return a HMAC using `b` and `k` using `hash_algorithm`"""
     return bytearray(hmac.new(k, b, getattr(hashlib, hash_algorithm)).digest())
 
@@ -27,7 +27,7 @@ def HMAC_SHA256(k, b) -> bytearray:
 def HMAC_SHA384(k, b) -> bytearray:
     return secureHMAC(k, b, 'sha384')
 
-def HKDF_extract(salt, IKM, hash_algorithm) -> bytearray:
+def HKDF_extract(salt, IKM, hash_algorithm='sha256') -> bytearray:
     # https://tools.ietf.org/html/rfc5869#section-2.2
     """
     HKDF-Extract(salt, IKM) -> PRK
@@ -50,7 +50,7 @@ def HKDF_extract(salt, IKM, hash_algorithm) -> bytearray:
     """
     return secureHMAC(salt, IKM, hash_algorithm)
 
-def HKDF_expand(PRK, info, L, hash_algorithm) -> bytearray:
+def HKDF_expand(PRK, info, L, hash_algorithm='sha256') -> bytearray:
     # https://tools.ietf.org/html/rfc5869#section-2.3
     """
     HKDF-Expand(PRK, info, L) -> OKM
@@ -92,7 +92,9 @@ def HKDF_expand(PRK, info, L, hash_algorithm) -> bytearray:
         T_prev = secureHMAC(PRK, T_prev + info + bytearray([x]), hash_algorithm)
     return T[:L]
 
-def HKDF_expand_label(secret, label, hashValue, length, hash_algorithm) -> bytearray:
+def HKDF_expand_label(secret, label,
+                      hashValue, length,
+                      hash_algorithm='sha256') -> bytearray:
     # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#section-7.1
     """
     TLS1.3 key derivation function (HKDF-Expand-Label).
@@ -124,7 +126,8 @@ def HKDF_expand_label(secret, label, hashValue, length, hash_algorithm) -> bytea
 
     return HKDF_expand(secret, hkdfLabel.bytes, length, hash_algorithm)
 
-def derive_secret(secret, label, messages, hash_algorithm) -> bytearray:
+def derive_secret(secret, label, messages,
+                  hash_algorithm='sha256') -> bytearray:
     # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#section-7.1
     """
     TLS1.3 key derivation function (Derive-Secret).
@@ -150,7 +153,7 @@ def derive_secret(secret, label, messages, hash_algorithm) -> bytearray:
                              getattr(hashlib, hash_algorithm)().digest_size,
                              hash_algorithm)
 
-def transcript_hash(messages, hash_algorithm) -> bytearray:
+def transcript_hash(messages, hash_algorithm='sha256') -> bytearray:
     # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#section-4.4.1
     """
     Return value is computed by hashing the concatenation
