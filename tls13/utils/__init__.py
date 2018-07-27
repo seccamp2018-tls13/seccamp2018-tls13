@@ -6,4 +6,5 @@ from .cryptomath import *
 from .repr import *
 # from .socket import *
 from .type import *
-from .utils import *
+
+__all__ = ['hexstr', 'hexdump']
