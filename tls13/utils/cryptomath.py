@@ -2,6 +2,7 @@
 import hmac
 import hashlib
 import os
+from ..protocol.handshake import Handshake
 from .codec import Writer
 from .type import Uint8, Uint16
 from Crypto.Util.number import bytes_to_long, long_to_bytes
