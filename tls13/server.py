@@ -19,14 +19,18 @@ from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 from .utils.encryption.ffdhe import FFDHE
 
 from .utils import hexdump, hexstr
+from .utils.cryptomath import *
 
 def server_cmd(argv):
     print("server_cmd({})".format(", ".join(argv)))
+
+    messages = []
 
     # <<< ClientHello <<<
     server_conn = socket.ServerConnection()
     data = server_conn.recv_msg()
     ch_plain_restructed = TLSPlaintext.from_bytes(data)
+    messages.append(ch_plain_restructed.fragment)
     print(ch_plain_restructed)
 
     # >>> ServerHello >>>
@@ -95,9 +99,25 @@ def server_cmd(argv):
     # print(hexdump(sh_bytes))
 
     server_conn.send_msg(sh_bytes)
+    messages.append(sh_plain.fragment)
 
 
     # -- HKDF ---
+
+    shared_key  # DH で得た共有鍵
+    early_secret = b'\x00'  # PSKがないときは0
+    secret = HKDF_extract(early_secret, shared_key)
+    secret = derive_secret(secret, b"derive", b"")
+    secret = HKDF_extract(b'\x00', secret)
+    client_application_traffic_secret_0 = \
+        derive_secret(secret, b"c ap traffic", messages)
+    server_application_traffic_secret_0 = \
+        derive_secret(secret, b"s ap traffic", messages)
+
+    print('client_application_traffic_secret_0 =',
+        hexstr(client_application_traffic_secret_0))
+    print('server_application_traffic_secret_0 =',
+        hexstr(server_application_traffic_secret_0))
 
     # >>> EncryptedExtensions >>>
 
@@ -126,6 +146,7 @@ def server_cmd(argv):
     # print(hexdump(sh_bytes))
 
     server_conn.send_msg(cert_bytes)
+    messages.append(cert_plain.fragment)
 
 
     # >>> CertificateVerify >>>

@@ -17,9 +17,12 @@ from .protocol.keyexchange.signature import SignatureScheme, SignatureSchemeList
 from .utils.encryption.ffdhe import FFDHE
 
 from .utils import hexdump, hexstr
+from .utils.cryptomath import *
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
+
+    messages = []
 
     # params
 
@@ -84,12 +87,13 @@ def client_cmd(argv):
     print("[INFO] Connecting to server...")
     client_conn = socket.ClientConnection()
     client_conn.send_msg(ch_bytes)
+    messages.append(ch_plain.fragment)
 
     # <<< ServerHello <<<
     data = client_conn.recv_msg()
     sh_plain_restructed = TLSPlaintext.from_bytes(data)
+    messages.append(sh_plain_restructed.fragment)
     print(sh_plain_restructed)
-
 
     # パラメータの決定
     server_cipher_suite = sh_plain_restructed.cipher_suite
@@ -119,9 +123,25 @@ def client_cmd(argv):
 
     # -- HKDF ---
 
+    shared_key  # DH で得た共有鍵
+    early_secret = b'\x00'  # PSKがないときは0
+    secret = HKDF_extract(early_secret, shared_key)
+    secret = derive_secret(secret, b"derive", b"")
+    secret = HKDF_extract(b'\x00', secret)
+    client_application_traffic_secret_0 = \
+        derive_secret(secret, b"c ap traffic", messages)
+    server_application_traffic_secret_0 = \
+        derive_secret(secret, b"s ap traffic", messages)
+
+    print('client_application_traffic_secret_0 =',
+        hexstr(client_application_traffic_secret_0))
+    print('server_application_traffic_secret_0 =',
+        hexstr(server_application_traffic_secret_0))
+
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
     plain_restructed = TLSPlaintext.from_bytes(data)
+    messages.append(plain_restructed.fragment)
     print(plain_restructed)
 
 
