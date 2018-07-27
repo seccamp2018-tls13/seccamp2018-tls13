@@ -1,4 +1,10 @@
 
+__all__ = [
+    'secureHash', 'secureHMAC',
+    'HKDF_extract', 'HKDF_expand', 'HKDF_expand_label', 'derive_secret',
+    'transcript_hash', 'getRandomBytes', 'getRandomNumber',
+]
+
 import hmac
 import hashlib
 import os
@@ -170,9 +176,7 @@ def transcript_hash(messages, hash_algorithm='sha256') -> bytearray:
     return secureHash(data, hash_algorithm)
 
 
-# [7/17 Haruka] FFDHEで使用するSecretKeyの生成(乱数)に使用する関数たち
-# https://github.com/trevp/tlslite/blob/master/tlslite/utils/cryptomath.py
-# 上部に import os, from Crypto... を追加
+# FFDHEで使用するSecretKeyの生成(乱数)に使用する関数たち
 
 def getRandomBytes(howMany):
     b = bytearray(os.urandom(howMany))

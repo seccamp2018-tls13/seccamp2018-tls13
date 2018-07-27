@@ -1,4 +1,6 @@
 
+__all__ = ['make_format', 'hexstr', 'hexdump']
+
 import binascii
 import inspect
 import textwrap

@@ -1,4 +1,8 @@
 
+__all__ = [
+    'ClientConnection', 'ServerConnection',
+]
+
 import socket
 
 # ネットワーク通信部分の機能

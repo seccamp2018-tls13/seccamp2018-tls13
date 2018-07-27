@@ -13,8 +13,7 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
 # Crypto
 from .utils.encryption.ffdhe import FFDHE
 
-from .utils import hexdump, hexstr
-from .utils.cryptomath import *
+from .utils import cryptomath, hexdump, hexstr
 
 def server_cmd(argv):
     print("server_cmd({})".format(", ".join(argv)))
@@ -101,13 +100,13 @@ def server_cmd(argv):
 
     shared_key  # DH で得た共有鍵
     early_secret = b'\x00'  # PSKがないときは0
-    secret = HKDF_extract(early_secret, shared_key)
-    secret = derive_secret(secret, b"derive", b"")
-    secret = HKDF_extract(b'\x00', secret)
+    secret = cryptomath.HKDF_extract(early_secret, shared_key)
+    secret = cryptomath.derive_secret(secret, b"derive", b"")
+    secret = cryptomath.HKDF_extract(b'\x00', secret)
     client_application_traffic_secret_0 = \
-        derive_secret(secret, b"c ap traffic", messages)
+        cryptomath.derive_secret(secret, b"c ap traffic", messages)
     server_application_traffic_secret_0 = \
-        derive_secret(secret, b"s ap traffic", messages)
+        cryptomath.derive_secret(secret, b"s ap traffic", messages)
 
     print('client_application_traffic_secret_0 =',
         hexstr(client_application_traffic_secret_0))
