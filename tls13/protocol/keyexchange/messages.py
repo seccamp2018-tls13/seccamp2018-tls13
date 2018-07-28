@@ -162,24 +162,29 @@ class Extension(Struct):
         ])
 
     @classmethod
-    def from_bytes(cls, data, msg_type=None):
-        reader = Reader(data)
+    def from_bytes(cls, data=b'', msg_type=None, reader=None):
+        is_given_reader = bool(reader)
+        if not is_given_reader:
+            reader = Reader(data)
+
         extension_type = reader.get(Uint16)
         extension_data = reader.get_var_bytes(2)
 
         ExtClass, kwargs = cls.get_extension_class(extension_type, msg_type)
 
-        return cls(
+        obj = cls(
             extension_type=extension_type,
             extension_data=ExtClass.from_bytes(extension_data, **kwargs))
 
+        if is_given_reader:
+            return (obj, reader)
+        return obj
+
+    # バイト列から再構築するときにそれぞれの拡張を配列に入れて返す関数。
+    # ClientHello や ServerHello などのあらゆるメッセージでは拡張は複数あり、
+    # それぞれの拡張のバイト長は異なるので、他の from_bytes のように実装は簡単ではない。
     @classmethod
     def get_list_from_bytes(cls, data, msg_type=None):
-        """
-        バイト列から再構築するときにそれぞれの拡張を配列に入れて返す関数．
-        ClientHello や ServerHello などのあらゆるメッセージでは拡張は複数あり，
-        それぞれの拡張のバイト長は異なるので，他の from_bytes のように実装は簡単ではない．
-        """
         reader = Reader(data)
         extensions = []
         extensions_length = reader.get(2)
@@ -187,28 +192,19 @@ class Extension(Struct):
 
         # Read extensions
         while reader.get_rest_length() != 0:
-            extension_type = reader.get(Uint16)
-            extension_data = reader.get_var_bytes(2)
-
-            # 拡張の種類から，拡張を表すクラスを取得する
-            ExtClass, kwargs = cls.get_extension_class(extension_type, msg_type)
-
-            extensions.append( cls(
-                extension_type=extension_type,
-                extension_data=ExtClass.from_bytes(extension_data, **kwargs)) )
+            ext, reader = cls.from_bytes(reader=reader, msg_type=msg_type)
+            extensions.append(ext)
 
         return extensions
 
+    # 拡張の種類 extension_type から、それを構成するためのクラス ExtClass と kwargs を返す。
+    # 辞書型 kwargs には、ExtClass.from_bytes を行うときにどちらの通信なのかを
+    # 引数に与える必要がある場合、必要な引数を kwargs に入れて返す。
+    # いくつかのクラスは client_hello か server_hello によって構造体の中身が変わるので、
+    # どちらの通信なのかを引数 msg_type に設定する必要がある可能性がある。
+    # もし必要なのに引数 msg_type が設定されていないときは RuntimeError を出す。
     @classmethod
     def get_extension_class(self, extension_type, msg_type=None):
-        """
-        拡張の種類 extension_type から，それを構成するためのクラス ExtClass と kwargs を返す．
-        辞書型 kwargs には，ExtClass.from_bytes を行うときにどちらの通信なのかを
-        引数に与える必要がある場合，必要な引数を kwargs に入れて返す．
-        いくつかのクラスは client_hello か server_hello によって構造体の中身が変わるので，
-        どちらの通信なのかを引数 msg_type に設定する必要がある可能性がある．
-        もし必要なのに引数 msg_type が設定されていないときは RuntimeError を出す．
-        """
         from ..handshake import HandshakeType
         from .version import SupportedVersions
         from .supportedgroups import NamedGroupList
@@ -293,11 +289,18 @@ class KeyShareEntry(Struct):
         ])
 
     @classmethod
-    def from_bytes(cls, data):
-        reader = Reader(data)
+    def from_bytes(cls, data=b'', reader=None):
+        is_given_reader = bool(reader)
+        if not is_given_reader:
+            reader = Reader(data)
+
         group = reader.get(Uint16)
         key_exchange = reader.get_var_bytes(2)
-        return cls(group=group, key_exchange=key_exchange)
+        obj = cls(group=group, key_exchange=key_exchange)
+
+        if is_given_reader:
+            return (obj, reader)
+        return obj
 
 
 class KeyShareClientHello(Struct):
@@ -324,9 +327,8 @@ class KeyShareClientHello(Struct):
         assert client_shares_length == reader.get_rest_length()
 
         while reader.get_rest_length() != 0:
-            group = reader.get(Uint16)
-            key_exchange = reader.get_var_bytes(2)
-            client_shares.append( KeyShareEntry(group, key_exchange) )
+            entry, reader = KeyShareEntry.from_bytes(reader=reader)
+            client_shares.append(entry)
 
         return cls(client_shares)
 
