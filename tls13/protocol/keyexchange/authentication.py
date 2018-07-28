@@ -13,6 +13,8 @@ from .signature import SignatureScheme
 from ...utils.codec import Reader, Writer
 from ...utils.type import Uint8, Uint16, Uint24, Type
 from ...utils.repr import make_format
+from ...utils.struct import Struct, Members, Member, Listof
+
 
 import pprint
 import textwrap
@@ -28,7 +30,7 @@ class CertificateType(Type):
     _size = 1 # byte
 
 
-class CertificateEntry:
+class CertificateEntry(Struct):
     """
     struct {
       select (certificate_type) {
@@ -73,7 +75,7 @@ class CertificateEntry:
         return cls(cert_data=cert_data, extensions=[])
 
 
-class Certificate:
+class Certificate(Struct):
     """
     struct {
       opaque certificate_request_context<0..2^8-1>;
@@ -120,7 +122,7 @@ class Certificate:
         return cls(certificate_request_context, certificate_list)
 
 
-class CertificateVerify:
+class CertificateVerify(Struct):
     """
     struct {
       SignatureScheme algorithm;
@@ -154,7 +156,7 @@ class CertificateVerify:
         return cls(algorithm=algorithm, signature=signature)
 
 
-class Finished:
+class Finished(Struct):
     """
     struct {
       opaque verify_data[Hash.length];

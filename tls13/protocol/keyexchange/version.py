@@ -2,9 +2,7 @@
 # B.3.1.1.  Version Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.1
 
-__all__ = [
-    'ProtocolVersion', 'SupportedVersions',
-]
+__all__ = ['ProtocolVersion', 'SupportedVersions']
 
 import collections
 
@@ -12,6 +10,7 @@ from ..handshake import HandshakeType
 from ...utils.type import Uint8, Uint16, Type
 from ...utils.codec import Reader, Writer
 from ...utils.repr import make_format
+from ...utils.struct import Struct, Members, Member, Listof
 
 
 @Type.add_labels_and_values
@@ -24,7 +23,7 @@ class ProtocolVersion(Type):
     _size = 2
 
 
-class SupportedVersions:
+class SupportedVersions(Struct):
     """
     struct {
       select (Handshake.msg_type) {

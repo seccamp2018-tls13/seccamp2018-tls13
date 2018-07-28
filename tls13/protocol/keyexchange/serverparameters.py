@@ -7,6 +7,8 @@ __all__ = [
     'PostHandshakeAuth', 'EncryptedExtensions', 'CertificateRequest',
 ]
 
+from ...utils.struct import Struct, Members, Member, Listof
+
 
 class CertificateAuthoritiesExtension:
     pass
@@ -24,7 +26,7 @@ class PostHandshakeAuth:
     pass
 
 
-class EncryptedExtensions:
+class EncryptedExtensions(Struct):
     """
     struct {
       Extension extensions<0..2^16-1>;

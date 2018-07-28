@@ -2,15 +2,15 @@
 # B.3.  Handshake Protocol
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3
 
-__all__ = [
-    'HandshakeType', 'Handshake',
-]
+__all__ = ['HandshakeType', 'Handshake']
 
 import collections
 
 from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ..utils.codec import Reader
 from ..utils.repr import make_format
+from ..utils.struct import Struct, Members, Member, Listof
+
 
 @Type.add_labels_and_values
 class HandshakeType(Type):
@@ -37,7 +37,7 @@ class HandshakeType(Type):
     _size = 1 # byte
 
 
-class Handshake:
+class Handshake(Struct):
     """
     struct {
       HandshakeType msg_type;    /* handshake type */

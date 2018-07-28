@@ -2,15 +2,15 @@
 # B.3.1.3.  Signature Algorithm Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.3
 
-__all__ = [
-    'SignatureScheme', 'SignatureSchemeList',
-]
+__all__ = ['SignatureScheme', 'SignatureSchemeList']
 
 import collections
 
 from ...utils.type import Uint16, Type
 from ...utils.codec import Reader, Writer
 from ...utils.repr import make_format
+from ...utils.struct import Struct, Members, Member, Listof
+
 
 @Type.add_labels_and_values
 class SignatureScheme(Type):
@@ -60,7 +60,7 @@ class SignatureScheme(Type):
     _size = 2 # bytes
 
 
-class SignatureSchemeList:
+class SignatureSchemeList(Struct):
     """
     struct {
       SignatureScheme supported_signature_algorithms<2..2^16-2>;

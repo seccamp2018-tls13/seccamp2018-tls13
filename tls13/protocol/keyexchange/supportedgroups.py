@@ -2,15 +2,15 @@
 # B.3.1.4.  Supported Groups Extension
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.1.4
 
-__all__ = [
-    'NamedGroup', 'NamedGroupList',
-]
+__all__ = ['NamedGroup', 'NamedGroupList']
 
 import collections
 
 from ...utils.type import Uint16, Type
 from ...utils.codec import Reader, Writer
 from ...utils.repr import make_format
+from ...utils.struct import Struct, Members, Member, Listof
+
 
 @Type.add_labels_and_values
 class NamedGroup(Type):
@@ -42,7 +42,7 @@ class NamedGroup(Type):
     _size = 2 # byte
 
 
-class NamedGroupList:
+class NamedGroupList(Struct):
     """
     struct {
       NamedGroup named_group_list<2..2^16-1>;

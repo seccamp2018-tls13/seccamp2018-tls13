@@ -17,6 +17,7 @@ from .supportedgroups import NamedGroup
 from .version import ProtocolVersion
 from ..ciphersuite import CipherSuite
 from ...utils import hexstr, make_format, Uint8, Uint16, Type, Reader, Writer
+from ...utils.struct import Struct, Members, Member, Listof
 
 
 def find(lst, cond):
@@ -34,7 +35,7 @@ class HasExtension:
         return getattr(ext, 'extension_data', None)
 
 
-class ClientHello(HasExtension):
+class ClientHello(Struct, HasExtension):
     """
     struct {
       ProtocolVersion legacy_version = 0x0303;    /* TLS v1.2 */
@@ -56,38 +57,15 @@ class ClientHello(HasExtension):
         self.cipher_suites = cipher_suites
         self.legacy_compression_methods = [ Uint8(0x00) ]
         self.extensions = extensions
-        assert type(self.legacy_version) == Uint16
-        assert type(self.random) in (bytes, bytearray)
-        assert type(self.legacy_session_id) in (bytes, bytearray)
-        assert type(self.extensions) == list
-        assert all( type(ext) == Extension for ext in self.extensions )
 
-    def __repr__(self):
-        props = collections.OrderedDict(
-            legacy_version=ProtocolVersion,
-            random=bytes,
-            legacy_session_id=bytes,
-            cipher_suites=list,
-            legacy_compression_methods=list,
-            extensions=list)
-        return make_format(self, props)
-
-    def __len__(self):
-        return len(self.legacy_version) + len(self.random) + \
-               1 + len(self.legacy_session_id) + \
-               2 + sum(map(len, self.cipher_suites)) + \
-               1 + sum(map(len, self.legacy_compression_methods)) + \
-               2 + sum(map(len, self.extensions))
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_bytes(self.legacy_version)
-        writer.add_bytes(self.random)
-        writer.add_bytes(self.legacy_session_id, length_t=Uint8)
-        writer.add_list(self.cipher_suites, length_t=Uint16)
-        writer.add_list(self.legacy_compression_methods, length_t=Uint8)
-        writer.add_list(self.extensions, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(ProtocolVersion, 'legacy_version'),
+            Member(bytes, 'random'),
+            Member(bytes, 'legacy_session_id', length_t=Uint8),
+            Member(Listof(CipherSuite), 'cipher_suites', length_t=Uint16),
+            Member(Listof(Uint8), 'legacy_compression_methods', length_t=Uint8),
+            Member(Listof(Extension), 'extensions', length_t=Uint16),
+        ])
 
     @classmethod
     def from_bytes(cls, data):
@@ -113,7 +91,7 @@ class ClientHello(HasExtension):
                    extensions=extensions)
 
 
-class ServerHello(HasExtension):
+class ServerHello(Struct, HasExtension):
     """
     struct {
       ProtocolVersion legacy_version = 0x0303;    /* TLS v1.2 */
@@ -134,38 +112,15 @@ class ServerHello(HasExtension):
         self.cipher_suite = cipher_suite
         self.legacy_compression_method = Uint8(0x00)
         self.extensions = extensions
-        assert type(self.random) in (bytes, bytearray)
-        assert type(self.legacy_session_id_echo) in (bytes, bytearray)
-        assert self.cipher_suite in CipherSuite.values
-        assert type(self.extensions) == list
-        assert all( type(ext) == Extension for ext in self.extensions )
 
-    def __repr__(self):
-        props = collections.OrderedDict(
-            legacy_version=ProtocolVersion,
-            random=bytes,
-            legacy_session_id_echo=bytes,
-            cipher_suite=CipherSuite,
-            legacy_compression_method=Uint16,
-            extensions=list)
-        return make_format(self, props)
-
-    def __len__(self):
-        return len(self.legacy_version) + len(self.random) + \
-               1 + len(self.legacy_session_id_echo) + \
-               len(self.cipher_suite) + \
-               len(self.legacy_compression_method) + \
-               2 + sum(map(len, self.extensions))
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_bytes(self.legacy_version)
-        writer.add_bytes(self.random)
-        writer.add_bytes(self.legacy_session_id_echo, length_t=Uint8)
-        writer.add_bytes(self.cipher_suite)
-        writer.add_bytes(self.legacy_compression_method)
-        writer.add_list(self.extensions, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(ProtocolVersion, 'legacy_version'),
+            Member(bytes, 'random'),
+            Member(bytes, 'legacy_session_id_echo', length_t=Uint8),
+            Member(CipherSuite, 'cipher_suite'),
+            Member(Uint8, 'legacy_compression_method'),
+            Member(Listof(Extension), 'extensions', length_t=Uint16),
+        ])
 
     @classmethod
     def from_bytes(cls, data):
@@ -189,7 +144,7 @@ class ServerHello(HasExtension):
                    extensions=extensions)
 
 
-class Extension:
+class Extension(Struct):
     """
     struct {
       ExtensionType extension_type;
@@ -201,20 +156,10 @@ class Extension:
         self.extension_data = extension_data
         assert self.extension_type in ExtensionType.values
 
-    def __repr__(self):
-        props = collections.OrderedDict(
-            extension_type=ExtensionType,
-            extension_data=object)
-        return make_format(self, props)
-
-    def __len__(self):
-        return len(self.extension_type) + 2 + len(self.extension_data)
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_bytes(self.extension_type)
-        writer.add_bytes(self.extension_data, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(ExtensionType, 'extension_type'),
+            Member(object, 'extension_data', length_t=Uint16),
+        ])
 
     @classmethod
     def from_bytes(cls, data, msg_type=None):
@@ -330,33 +275,22 @@ class ExtensionType(Type):
     _size = 2 # byte
 
 
-class KeyShareEntry:
+class KeyShareEntry(Struct):
     """
     struct {
       NamedGroup group;
       opaque key_exchange<1..2^16-1>;
     } KeyShareEntry;
     """
-    def __init__(self, group, key_exchange):
+    def __init__(self, group, key_exchange=b''):
         self.group = group
         self.key_exchange = key_exchange
         assert self.group in NamedGroup.values
-        assert type(self.key_exchange) in (bytes, bytearray)
 
-    def __repr__(self):
-        props = collections.OrderedDict(
-            group=NamedGroup,
-            key_exchange=bytes)
-        return make_format(self, props)
-
-    def __len__(self):
-        return len(self.group) + 2 + len(self.key_exchange)
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_bytes(self.group)
-        writer.add_bytes(self.key_exchange, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(NamedGroup, 'group'),
+            Member(bytes, 'key_exchange', length_t=Uint16),
+        ])
 
     @classmethod
     def from_bytes(cls, data):
@@ -366,7 +300,7 @@ class KeyShareEntry:
         return cls(group=group, key_exchange=key_exchange)
 
 
-class KeyShareClientHello:
+class KeyShareClientHello(Struct):
     """
     struct {
       KeyShareEntry client_shares<0..2^16-1>;
@@ -374,20 +308,11 @@ class KeyShareClientHello:
     """
     def __init__(self, client_shares=[]):
         self.client_shares = client_shares
-        assert type(self.client_shares) == list
-        assert all( type(entry) == KeyShareEntry for entry in self.client_shares )
+        assert all(type(entry) == KeyShareEntry for entry in self.client_shares)
 
-    def __repr__(self):
-        props = collections.OrderedDict(client_shares=list)
-        return make_format(self, props)
-
-    def __len__(self):
-        return 2 + sum(map(len, self.client_shares))
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_list(self.client_shares, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(Listof(KeyShareEntry), 'client_shares', length_t=Uint16),
+        ])
 
     @classmethod
     def from_bytes(cls, data):
@@ -414,7 +339,7 @@ class KeyShareClientHello:
         return getattr(cs, 'key_exchange', None)
 
 
-class KeyShareHelloRetryRequest:
+class KeyShareHelloRetryRequest(Struct):
     """
     struct {
       NamedGroup selected_group;
@@ -425,7 +350,7 @@ class KeyShareHelloRetryRequest:
         assert self.selected_group in NamedGroup.values
 
 
-class KeyShareServerHello:
+class KeyShareServerHello(Struct):
     """
     struct {
       KeyShareEntry server_share;
@@ -435,15 +360,9 @@ class KeyShareServerHello:
         self.server_share = server_share
         assert type(self.server_share) == KeyShareEntry
 
-    def __repr__(self):
-        props = collections.OrderedDict(server_share=object)
-        return make_format(self, props)
-
-    def __len__(self):
-        return len(self.server_share)
-
-    def to_bytes(self):
-        return self.server_share.to_bytes()
+        self.struct = Members(self, [
+            Member(KeyShareEntry, 'server_share'),
+        ])
 
     @classmethod
     def from_bytes(cls, data):
@@ -467,7 +386,7 @@ class UncompressedPointRepresentation:
 
 
 @Type.add_labels_and_values
-class PskKeyExchangeMode:
+class PskKeyExchangeMode(Type):
     """
     enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;
     """
