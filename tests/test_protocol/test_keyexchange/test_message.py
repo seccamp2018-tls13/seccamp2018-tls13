@@ -5,6 +5,9 @@ import unittest
 from tls13.protocol import *
 from tls13.utils.type import *
 
+from ..common import TypeTestMixin
+
+
 class ClientHelloTest(unittest.TestCase):
 
     def setUp(self):
@@ -83,17 +86,10 @@ class ServerHelloTest(unittest.TestCase):
         self.assertEqual(ext, None)
 
 
-class ExtensionTypeTest(unittest.TestCase):
+class ExtensionTypeTest(unittest.TestCase, TypeTestMixin):
 
-    def test_size(self):
-        self.assertTrue(hasattr(ExtensionType, '_size'))
-
-    def test_values(self):
-        UintN = Uint.get_type(size=ExtensionType._size)
-        self.assertTrue(all( type(v) == UintN for v in ExtensionType.values ))
-
-    def test_labels(self):
-        self.assertTrue(all( ExtensionType.labels[v] for v in ExtensionType.values ))
+    def setUp(self):
+        self.target = ExtensionType
 
 
 class ExtensionTest(unittest.TestCase):

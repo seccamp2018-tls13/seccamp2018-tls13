@@ -1,23 +1,17 @@
 
 import unittest
-import socket
 import secrets
 
 from tls13.protocol import *
 from tls13.utils.type import *
 
+from .common import TypeTestMixin
 
-class ContentTypeTest(unittest.TestCase):
 
-    def test_size(self):
-        self.assertTrue(hasattr(ContentType, '_size'))
+class ContentTypeTest(unittest.TestCase, TypeTestMixin):
 
-    def test_values(self):
-        UintN = Uint.get_type(size=ContentType._size)
-        self.assertTrue(all( type(v) == UintN for v in ContentType.values ))
-
-    def test_labels(self):
-        self.assertTrue(all( ContentType.labels[v] for v in ContentType.values ))
+    def setUp(self):
+        self.target = ContentType
 
 
 class TLSPlaintextTest(unittest.TestCase):

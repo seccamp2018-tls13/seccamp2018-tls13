@@ -5,17 +5,13 @@ from tls13.protocol.keyexchange.signature import *
 from tls13.protocol.keyexchange.authentication import *
 from tls13.utils.type import *
 
-class CertificateTypeTest(unittest.TestCase):
+from ..common import TypeTestMixin
 
-    def test_size(self):
-        self.assertTrue(hasattr(CertificateType, '_size'))
 
-    def test_values(self):
-        UintN = Uint.get_type(size=CertificateType._size)
-        self.assertTrue(all( type(v) == UintN for v in CertificateType.values ))
+class CertificateTypeTest(unittest.TestCase, TypeTestMixin):
 
-    def test_labels(self):
-        self.assertTrue(all( CertificateType.labels[v] for v in CertificateType.values ))
+    def setUp(self):
+        self.target = CertificateType
 
 
 class CertificateEntryTest(unittest.TestCase):

@@ -5,17 +5,13 @@ from tls13.protocol.handshake import *
 from tls13.protocol.keyexchange.messages import *
 from tls13.utils.type import *
 
-class HandshakeTypeTest(unittest.TestCase):
+from .common import TypeTestMixin
 
-    def test_size(self):
-        self.assertTrue(hasattr(HandshakeType, '_size'))
 
-    def test_values(self):
-        UintN = Uint.get_type(size=HandshakeType._size)
-        self.assertTrue(all( type(v) == UintN for v in HandshakeType.values ))
+class HandshakeTypeTest(unittest.TestCase, TypeTestMixin):
 
-    def test_labels(self):
-        self.assertTrue(all( HandshakeType.labels[v] for v in HandshakeType.values ))
+    def setUp(self):
+        self.target = HandshakeType
 
 
 class HandshakeTest(unittest.TestCase):

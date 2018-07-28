@@ -4,7 +4,21 @@ import unittest
 from tls13.utils.type import Uint8, Uint16, Uint24, Uint32
 
 
-class Uint8Test(unittest.TestCase):
+class UintTestMixin:
+
+    def test_has_size(self):
+        self.assertTrue(hasattr(self.target, '_size'))
+        self.assertEqual(self.size, self.target._size)
+
+    def test_len(self):
+        self.assertEqual(self.target._size, len(self.target(0)))
+
+
+class Uint8Test(unittest.TestCase, UintTestMixin):
+
+    def setUp(self):
+        self.target = Uint8
+        self.size = 1
 
     def test_to_bytes(self):
         self.assertEqual(b'\x00', Uint8(0).to_bytes())
@@ -14,7 +28,11 @@ class Uint8Test(unittest.TestCase):
         self.assertRaises(Exception, lambda: Uint8(-1).to_bytes())
 
 
-class Uint16Test(unittest.TestCase):
+class Uint16Test(unittest.TestCase, UintTestMixin):
+
+    def setUp(self):
+        self.target = Uint16
+        self.size = 2
 
     def test_to_bytes(self):
         self.assertEqual(b'\x00\x1d', Uint16(29).to_bytes())
@@ -23,7 +41,11 @@ class Uint16Test(unittest.TestCase):
         self.assertRaises(Exception, lambda: Uint16(-1).to_bytes())
 
 
-class Uint24Test(unittest.TestCase):
+class Uint24Test(unittest.TestCase, UintTestMixin):
+
+    def setUp(self):
+        self.target = Uint24
+        self.size = 3
 
     def test_to_bytes(self):
         self.assertEqual(b'\x00\x00\x1d', Uint24(29).to_bytes())
@@ -32,7 +54,11 @@ class Uint24Test(unittest.TestCase):
         self.assertRaises(Exception, lambda: Uint24(-1).to_bytes())
 
 
-class Uint32Test(unittest.TestCase):
+class Uint32Test(unittest.TestCase, UintTestMixin):
+
+    def setUp(self):
+        self.target = Uint32
+        self.size = 4
 
     def test_to_bytes(self):
         self.assertEqual(b'\x00\x00\x00\x1d', Uint32(29).to_bytes())
