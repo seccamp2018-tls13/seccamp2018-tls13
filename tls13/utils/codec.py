@@ -78,6 +78,12 @@ class Reader:
             l[x] = self.get(elem_length)
         return l
 
+    def get_uint_var_list(self, elem, length_length):
+        uint = elem
+        elem_length = uint._size
+        assert issubclass(uint, Uint)
+        return [uint(x) for x in self.get_var_list(elem_length, length_length)]
+
     def get_rest(self):
         """
         Read a rest of the data.
@@ -88,6 +94,7 @@ class Reader:
 
     def get_rest_length(self):
         return len(self.bytes) - self.index
+
 
 
 class Writer:

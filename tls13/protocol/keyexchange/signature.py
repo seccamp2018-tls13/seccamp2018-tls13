@@ -88,5 +88,5 @@ class SignatureSchemeList:
     def from_bytes(cls, data):
         reader = Reader(data)
         supported_signature_algorithms = \
-            [Uint16(x) for x in reader.get_var_list(elem_length=2, length_length=2)]
+            reader.get_uint_var_list(elem=Uint16, length_length=2)
         return cls(supported_signature_algorithms)

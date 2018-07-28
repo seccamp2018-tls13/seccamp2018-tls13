@@ -97,9 +97,9 @@ class ClientHello(HasExtension):
         random            = reader.get_fix_bytes(32)
         legacy_session_id = reader.get_var_bytes(1)
         cipher_suites = \
-            [Uint16(x) for x in reader.get_var_list(elem_length=2, length_length=2)]
+            reader.get_uint_var_list(elem=Uint16, length_length=2)
         legacy_compression_methods = \
-            [Uint8(x)  for x in reader.get_var_list(elem_length=1, length_length=1)]
+            reader.get_uint_var_list(elem=Uint8, length_length=1)
 
         # Read extensions
         extensions = Extension.get_list_from_bytes(

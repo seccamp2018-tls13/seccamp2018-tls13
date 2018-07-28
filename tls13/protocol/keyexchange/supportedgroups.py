@@ -68,5 +68,5 @@ class NamedGroupList:
     def from_bytes(cls, data):
         reader = Reader(data)
         named_group_list = \
-            [Uint16(x) for x in reader.get_var_list(elem_length=2, length_length=2)]
+            reader.get_uint_var_list(elem=Uint16, length_length=2)
         return cls(named_group_list)
