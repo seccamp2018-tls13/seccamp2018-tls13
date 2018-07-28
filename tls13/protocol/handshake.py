@@ -56,18 +56,17 @@ class Handshake(Struct):
       };
     } Handshake;
     """
-    def __init__(self, msg_type, msg, length=None):
-        self.msg_type = msg_type # HandshakeType
-        self.length = length or Uint24(len(msg))
-        self.msg = msg
-        assert self.msg_type in HandshakeType.values
-        assert type(self.length) == Uint24
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(HandshakeType, 'msg_type'),
             Member(Uint24, 'length'),
             Member(Struct, 'msg'),
         ])
+        self.struct.set_default('legacy_record_version', Uint16(0x0303))
+        self.struct.set_default('length', Uint24(len(kwargs['msg'])))
+        self.struct.set_args(**kwargs)
+
+        assert self.msg_type in HandshakeType.values
 
     @classmethod
     def from_bytes(cls, data):

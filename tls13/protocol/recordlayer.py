@@ -36,20 +36,18 @@ class TLSPlaintext(Struct):
       opaque fragment[TLSPlaintext.length];
     } TLSPlaintext;
     """
-    def __init__(self, _type, fragment, length=None):
-        self.type = _type
-        self.legacy_record_version = Uint16(0x0303)
-        self.length = length or Uint16(len(fragment))
-        self.fragment = fragment
-        assert self.type in ContentType.values
-        assert type(self.length) == Uint16
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(ContentType, 'type'),
             Member(ProtocolVersion, 'legacy_record_version'),
             Member(Uint16, 'length'),
             Member(Struct, 'fragment'),
         ])
+        self.struct.set_default('legacy_record_version', Uint16(0x0303))
+        self.struct.set_default('length', Uint16(len(kwargs['fragment'])))
+        self.struct.set_args(**kwargs)
+
+        assert self.type in ContentType.values
 
     def __getattr__(self, name):
         """
@@ -68,15 +66,15 @@ class TLSPlaintext(Struct):
     def from_bytes(cls, data):
         from .handshake import Handshake
         reader = Reader(data)
-        _type                 = reader.get(Uint8)
+        type                  = reader.get(Uint8)
         legacy_record_version = reader.get(Uint16)
         length                = reader.get(Uint16)
         fragment              = reader.get_rest()
 
         assert length.value == len(fragment)
 
-        if _type == ContentType.handshake:
-            return cls(_type=_type, fragment=Handshake.from_bytes(fragment))
+        if type == ContentType.handshake:
+            return cls(type=type, fragment=Handshake.from_bytes(fragment))
         else:
             raise NotImplementedError()
 
@@ -89,9 +87,9 @@ class TLSInnerPlaintext(Struct):
       uint8 zeros[length_of_padding];
     } TLSInnerPlaintext;
     """
-    def __init__(self, content, _type, length_of_padding):
+    def __init__(self, content, type, length_of_padding):
         self.content = content # TLSPlaintext.fragment
-        self.type = _type
+        self.type = type
         self.zeros = b'\x00' * length_of_padding
         self._length_of_padding = length_of_padding
 

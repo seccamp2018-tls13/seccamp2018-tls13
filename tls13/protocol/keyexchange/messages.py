@@ -46,18 +46,7 @@ class ClientHello(Struct, HasExtension):
       Extension extensions<8..2^16-1>;
     } ClientHello;
     """
-    def __init__(self, legacy_version=Uint16(0x0303),
-                       random=secrets.token_bytes(32),
-                       legacy_session_id=secrets.token_bytes(32),
-                       cipher_suites=[],
-                       extensions=[]):
-        self.legacy_version = legacy_version
-        self.random = random
-        self.legacy_session_id = legacy_session_id
-        self.cipher_suites = cipher_suites
-        self.legacy_compression_methods = [ Uint8(0x00) ]
-        self.extensions = extensions
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(ProtocolVersion, 'legacy_version'),
             Member(bytes, 'random'),
@@ -66,6 +55,11 @@ class ClientHello(Struct, HasExtension):
             Member(Listof(Uint8), 'legacy_compression_methods', length_t=Uint8),
             Member(Listof(Extension), 'extensions', length_t=Uint16),
         ])
+        self.struct.set_default('legacy_version', Uint16(0x0303))
+        self.struct.set_default('random', secrets.token_bytes(32))
+        self.struct.set_default('legacy_session_id', secrets.token_bytes(32))
+        self.struct.set_default('legacy_compression_methods', [Uint8(0x00)])
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data):
@@ -102,17 +96,7 @@ class ServerHello(Struct, HasExtension):
       Extension extensions<6..2^16-1>;
     } ServerHello;
     """
-    def __init__(self, legacy_version=Uint16(0x0303),
-                       legacy_session_id_echo=secrets.token_bytes(32),
-                       random=secrets.token_bytes(32),
-                       cipher_suite=None, extensions=[]):
-        self.legacy_version = Uint16(0x0303)
-        self.random = random
-        self.legacy_session_id_echo = legacy_session_id_echo
-        self.cipher_suite = cipher_suite
-        self.legacy_compression_method = Uint8(0x00)
-        self.extensions = extensions
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(ProtocolVersion, 'legacy_version'),
             Member(bytes, 'random'),
@@ -121,6 +105,11 @@ class ServerHello(Struct, HasExtension):
             Member(Uint8, 'legacy_compression_method'),
             Member(Listof(Extension), 'extensions', length_t=Uint16),
         ])
+        self.struct.set_default('legacy_version', Uint16(0x0303))
+        self.struct.set_default('random', secrets.token_bytes(32))
+        self.struct.set_default('legacy_session_id_echo', secrets.token_bytes(32))
+        self.struct.set_default('legacy_compression_method', Uint8(0x00))
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data):
@@ -151,15 +140,14 @@ class Extension(Struct):
       opaque extension_data<0..2^16-1>;
     } Extension;
     """
-    def __init__(self, extension_type, extension_data):
-        self.extension_type = extension_type
-        self.extension_data = extension_data
-        assert self.extension_type in ExtensionType.values
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(ExtensionType, 'extension_type'),
             Member(Struct, 'extension_data', length_t=Uint16),
         ])
+        self.struct.set_args(**kwargs)
+
+        assert self.extension_type in ExtensionType.values
 
     @classmethod
     def from_bytes(cls, data=b'', msg_type=None, reader=None):
@@ -278,15 +266,14 @@ class KeyShareEntry(Struct):
       opaque key_exchange<1..2^16-1>;
     } KeyShareEntry;
     """
-    def __init__(self, group, key_exchange=b''):
-        self.group = group
-        self.key_exchange = key_exchange
-        assert self.group in NamedGroup.values
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(NamedGroup, 'group'),
             Member(bytes, 'key_exchange', length_t=Uint16),
         ])
+        self.struct.set_args(**kwargs)
+
+        assert self.group in NamedGroup.values
 
     @classmethod
     def from_bytes(cls, data=b'', reader=None):

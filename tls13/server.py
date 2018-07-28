@@ -62,7 +62,7 @@ def server_cmd(argv):
     selected_version = ProtocolVersion.TLS13
 
     sh_plain = TLSPlaintext(
-        _type=ContentType.handshake,
+        type=ContentType.handshake,
         fragment=Handshake(
             msg_type=HandshakeType.server_hello,
             msg=ServerHello(
@@ -123,7 +123,7 @@ def server_cmd(argv):
         cert_data = bytes(cert_data, 'ascii')
 
     cert_plain = TLSPlaintext(
-        _type=ContentType.handshake,
+        type=ContentType.handshake,
         fragment=Handshake(
             msg_type=HandshakeType.certificate,
             msg=Certificate(
@@ -160,7 +160,7 @@ def server_cmd(argv):
         raise NotImplementedError()
 
     cert_verify = TLSPlaintext(
-        _type=ContentType.handshake,
+        type=ContentType.handshake,
         fragment=Handshake(
             msg_type=HandshakeType.certificate_verify,
             msg=CertificateVerify(

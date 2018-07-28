@@ -39,7 +39,7 @@ def client_cmd(argv):
     # >>> ClientHello >>>
 
     ch_plain = TLSPlaintext(
-        _type=ContentType.handshake,
+        type=ContentType.handshake,
         fragment=Handshake(
             msg_type=HandshakeType.client_hello,
             msg=ClientHello(

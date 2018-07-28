@@ -41,6 +41,51 @@ class Members:
     def __init__(self, obj, members=[]):
         self.obj = obj
         self.members = members
+        self.members_default = {}
+
+    # __init__のための引数をフィールドに設定するメソッド
+    # 例えば次のように書くと、引数に与えられた extension_type と extension_data を
+    # self のフィールドの設定する。
+    #
+    #     def __init__(self, **kwargs):
+    #         self.struct = Members(self, [
+    #             Member(ExtensionType, 'extension_type'),
+    #             Member(Struct, 'extension_data', length_t=Uint16),
+    #         ])
+    #         self.struct.set_args(**kwargs)
+    #         # set_args を実行するのは以下と同じ
+    #         #   self.extension_type = kwargs['extension_type']
+    #         #   self.extension_data = kwargs['extension_data']
+    #
+    # kwargs に値が設定されていない時にデフォルト値を使いたい場合は、
+    # set_args の前に set_default でデフォルト値を設定する。
+    #
+    #         self.struct.set_default('extension_type', Uint16(0x0123))
+    #         self.struct.set_args(**kwargs)
+    #         # このプログラムは以下と同じ
+    #         #   self.extension_type = kwargs['extension_type'] or Uint16(0x0123)
+    #
+    def set_args(self, **kwargs):
+        for member in self.members:
+            key = member.name
+            if key in kwargs.keys():
+                value = kwargs[key]
+            elif key in self.members_default.keys():
+                value = self.members_default[key]
+            else:
+                value = self._get_default_from_type(member.type)
+
+            setattr(self.obj, key, value)
+
+    def set_default(self, attr_name, default_value):
+        self.members_default[attr_name] = default_value
+
+    def _get_default_from_type(self, type):
+        if isinstance(type, Listof):
+            return list()
+        if isinstance(type, (str, bytes, bytearray, int)):
+            return type()
+        return None
 
     # __repr__のための順序付き辞書を返すメソッド
     #

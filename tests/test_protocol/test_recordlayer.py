@@ -19,7 +19,7 @@ class TLSPlaintextTest(unittest.TestCase):
     def setUp(self):
         # ClientHello in TLSPlaintext
         self.ch_plain = TLSPlaintext(
-            _type=ContentType.handshake,
+            type=ContentType.handshake,
             fragment=Handshake(
                 msg_type=HandshakeType.client_hello,
                 msg=ClientHello(
@@ -50,7 +50,7 @@ class TLSPlaintextTest(unittest.TestCase):
         #
         # ServerHello in TLSPlaintext
         self.sh_plain = TLSPlaintext(
-            _type=ContentType.handshake,
+            type=ContentType.handshake,
             fragment=Handshake(
                 msg_type=HandshakeType.server_hello,
                 msg=ServerHello(
