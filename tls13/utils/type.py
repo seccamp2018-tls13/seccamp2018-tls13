@@ -20,6 +20,12 @@ class Uint:
         return "{}(0x{:0{width}x})" \
                .format(self.__class__.__name__, self.value, width=len(self)*2)
 
+    def __len__(self):
+        return self.__class__._size
+
+    def __int__(self):
+        return self.value
+
     # HACK:
     # このクラスのインスタンスは以下の2つの場面で使われる：
     #   - 定数からラベル名の取得：ContentType.labels[Uint8(22)]  #=> 'handshake'
@@ -37,9 +43,6 @@ class Uint:
     def __eq__(self, other):
         return self.value == other.value
 
-    def __int__(self):
-        return self.value
-
     @staticmethod
     def size(size):
         return Uint.get_type(size)
@@ -54,52 +57,32 @@ class Uint:
 
 
 class Uint8(Uint):
-    """
-    an unsigned byte
-    """
+    """an unsigned byte"""
     _size = 1
-
-    def __len__(self):
-        return 1
 
     def to_bytes(self):
         return pack('>B', self.value)
 
 
 class Uint16(Uint):
-    """
-    uint8 uint24[2];
-    """
+    """ uint8 uint24[2]; """
     _size = 2
-
-    def __len__(self):
-        return 2
 
     def to_bytes(self):
         return pack('>H', self.value)
 
 
 class Uint24(Uint):
-    """
-    uint8 uint24[3];
-    """
+    """ uint8 uint24[3]; """
     _size = 3
-
-    def __len__(self):
-        return 3
 
     def to_bytes(self):
         return pack('>BH', self.value >> 16, self.value & 0xffff)
 
 
 class Uint32(Uint):
-    """
-    uint8 uint32[4];
-    """
+    """ uint8 uint32[4]; """
     _size = 4
-
-    def __len__(self):
-        return 4
 
     def to_bytes(self):
         return pack('>I', self.value)
