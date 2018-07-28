@@ -44,6 +44,13 @@ class TLSPlaintext(Struct):
         assert self.type in ContentType.values
         assert type(self.length) == Uint16
 
+        self.struct = Members(self, [
+            Member(ContentType, 'type'),
+            Member(ProtocolVersion, 'legacy_record_version'),
+            Member(Uint16, 'length'),
+            Member(Struct, 'fragment'),
+        ])
+
     def __getattr__(self, name):
         """
         self.fragment.msg の指名された属性の値を返す．
@@ -56,26 +63,6 @@ class TLSPlaintext(Struct):
             raise AttributeError("'%s' object has no attribute '%s'" % \
                   (self.__class__.__name__, name))
         return getattr(self.fragment.msg, name)
-
-    def __repr__(self):
-        props = collections.OrderedDict(
-            type=ContentType,
-            legacy_record_version=ProtocolVersion,
-            length=int,
-            fragment=object)
-        return make_format(self, props)
-
-    def __len__(self):
-        return len(self.type) + len(self.legacy_record_version) + \
-               len(self.length) + len(self.fragment)
-
-    def to_bytes(self):
-        byte_str = bytearray(0)
-        byte_str += self.type.to_bytes()
-        byte_str += self.legacy_record_version.to_bytes()
-        byte_str += self.length.to_bytes()
-        byte_str += self.fragment.to_bytes()
-        return byte_str
 
     @classmethod
     def from_bytes(cls, data):

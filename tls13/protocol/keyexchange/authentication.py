@@ -9,15 +9,13 @@ __all__ = [
 
 import collections
 
+from .messages import Extension
 from .signature import SignatureScheme
 from ...utils.codec import Reader, Writer
 from ...utils.type import Uint8, Uint16, Uint24, Type
 from ...utils.repr import make_format
 from ...utils.struct import Struct, Members, Member, Listof
 
-
-import pprint
-import textwrap
 
 @Type.add_labels_and_values
 class CertificateType(Type):
@@ -48,21 +46,10 @@ class CertificateEntry(Struct):
         self.cert_data = bytes(cert_data)
         self.extensions = extensions
 
-    def __repr__(self):
-        props = collections.OrderedDict(
-            cert_data=bytes,
-            extensions=list)
-        return make_format(self, props)
-
-    def __len__(self):
-        return 3 + len(self.cert_data) + \
-               2 + sum(map(len, self.extensions))
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_bytes(self.cert_data, length_t=Uint24)
-        writer.add_list(self.extensions, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(bytes, 'cert_data', length_t=Uint24),
+            Member(Listof(Extension), 'extensions', length_t=Uint16),
+        ])
 
     @classmethod
     def from_bytes(self, data):
@@ -86,21 +73,10 @@ class Certificate(Struct):
         self.certificate_request_context = bytes(certificate_request_context)
         self.certificate_list = certificate_list
 
-    def __repr__(self):
-        props = collections.OrderedDict(
-            certificate_request_context=bytes,
-            certificate_list=list)
-        return make_format(self, props)
-
-    def __len__(self):
-        return 1 + len(self.certificate_request_context) + \
-               3 + sum(map(len, self.certificate_list))
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_bytes(self.certificate_request_context, length_t=Uint8)
-        writer.add_list(self.certificate_list, length_t=Uint24)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(bytes, 'certificate_request_context', length_t=Uint8),
+            Member(Listof(CertificateEntry), 'certificate_list', length_t=Uint24),
+        ])
 
     @classmethod
     def from_bytes(cls, data):
@@ -133,20 +109,10 @@ class CertificateVerify(Struct):
         self.algorithm = algorithm
         self.signature = signature
 
-    def __len__(self):
-        return len(self.algorithm) + 2 + len(self.signature)
-
-    def __repr__(self):
-        props = collections.OrderedDict(
-            algorithm=SignatureScheme,
-            signature=bytes)
-        return make_format(self, props)
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_bytes(self.algorithm)
-        writer.add_bytes(self.signature, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(SignatureScheme, 'algorithm'),
+            Member(bytes, 'signature', length_t=Uint16),
+        ])
 
     @classmethod
     def from_bytes(cls, data):
@@ -164,6 +130,10 @@ class Finished(Struct):
     """
     def __init__(self, verify_data):
         self.verify_data = verify_data
+
+        self.struct = Members(self, [
+            Member(bytes, 'verify_data'),
+        ])
 
     # TODO: ハッシュの求め方
     #

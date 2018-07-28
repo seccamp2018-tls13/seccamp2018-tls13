@@ -158,7 +158,7 @@ class Extension(Struct):
 
         self.struct = Members(self, [
             Member(ExtensionType, 'extension_type'),
-            Member(object, 'extension_data', length_t=Uint16),
+            Member(Struct, 'extension_data', length_t=Uint16),
         ])
 
     @classmethod

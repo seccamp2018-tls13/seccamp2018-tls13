@@ -63,22 +63,11 @@ class Handshake(Struct):
         assert self.msg_type in HandshakeType.values
         assert type(self.length) == Uint24
 
-    def __repr__(self):
-        props = collections.OrderedDict(
-            msg_type=HandshakeType,
-            length=int,
-            msg=object)
-        return make_format(self, props)
-
-    def __len__(self):
-        return len(self.msg_type) + len(self.length) + len(self.msg)
-
-    def to_bytes(self):
-        byte_str = bytearray(0)
-        byte_str += self.msg_type.to_bytes()
-        byte_str += self.length.to_bytes()
-        byte_str += self.msg.to_bytes()
-        return byte_str
+        self.struct = Members(self, [
+            Member(HandshakeType, 'msg_type'),
+            Member(Uint24, 'length'),
+            Member(Struct, 'msg'),
+        ])
 
     @classmethod
     def from_bytes(cls, data):

@@ -50,19 +50,10 @@ class NamedGroupList(Struct):
     """
     def __init__(self, named_group_list=[]):
         self.named_group_list = named_group_list
-        assert type(self.named_group_list) == list
 
-    def __repr__(self):
-        props = collections.OrderedDict(named_group_list=list)
-        return make_format(self, props)
-
-    def __len__(self):
-        return 2 + sum(map(len, self.named_group_list))
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_list(self.named_group_list, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(Listof(NamedGroup), 'named_group_list', length_t=Uint16)
+        ])
 
     @classmethod
     def from_bytes(cls, data):

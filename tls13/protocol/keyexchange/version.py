@@ -38,42 +38,14 @@ class SupportedVersions(Struct):
         self.msg_type = msg_type
         if self.msg_type == HandshakeType.client_hello:
             self.versions = versions
-            assert type(self.versions) == list
-            assert selected_version is None
+            member = Member(Listof(ProtocolVersion), 'versions', length_t=Uint8)
         elif self.msg_type == HandshakeType.server_hello:
             self.selected_version = selected_version
-            assert type(selected_version) == Uint16
+            member = Member(ProtocolVersion, 'selected_version')
         else:
             raise RuntimeError("Unkown message type: %s" % msg_type)
 
-    def __repr__(self):
-        props = collections.OrderedDict()
-        if self.msg_type == HandshakeType.client_hello:
-            props['versions'] = list
-        elif self.msg_type == HandshakeType.server_hello:
-            props['selected_version'] = ProtocolVersion
-        else:
-            raise RuntimeError("Unkown message type: %s" % msg_type)
-
-        return make_format(self, props)
-
-    def __len__(self):
-        if self.msg_type == HandshakeType.client_hello:
-            return 1 + sum(map(len, self.versions))
-        elif self.msg_type == HandshakeType.server_hello:
-            return len(self.selected_version)
-        else:
-            raise RuntimeError("Unkown message type: %s" % msg_type)
-
-    def to_bytes(self):
-        if self.msg_type == HandshakeType.client_hello:
-            writer = Writer()
-            writer.add_list(self.versions, length_t=Uint8)
-            return writer.bytes
-        elif self.msg_type == HandshakeType.server_hello:
-            return self.selected_version.to_bytes()
-        else:
-            raise RuntimeError("Unkown message type: %s" % msg_type)
+        self.struct = Members(self, [member])
 
     @classmethod
     def from_bytes(cls, data, msg_type):

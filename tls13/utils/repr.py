@@ -37,21 +37,24 @@ def make_format(obj, props):
 
         assert inspect.isclass(prop_type)
 
-        if prop_type in (str, bytes, bytearray): # 文字列
+        if issubclass(prop_type, (str, bytes, bytearray)):
+            # 文字列のとき => 25文字以上なら切り捨てる => 1行で表示
             item = truncate(item.hex(), 25)
             repr_str += "|%s: %s (len=%d)\n" % (prop, item, item_len)
-        elif prop_type == list and all(isinstance(x, Uint) for x in item):
+        elif issubclass(prop_type, list) and all(isinstance(x, Uint) for x in item):
+            # Uintのリストのとき => 1行で表示
             repr_str += "|%s: %s\n" % (prop, item)
-        elif issubclass(prop_type, (list, Struct)) or prop_type == object:
-            # リストかオブジェクトか構造体のとき
+        elif issubclass(prop_type, (list, Struct)):
+            # リストか構造体のとき => 複数行でインデントを付けて表示
             repr_str += "|%s:\n" % prop
             repr_str += textwrap.indent(pprint.pformat(item), prefix="    ")
             if prop_type == list: repr_str += "\n"
         elif issubclass(prop_type, Type):
-            # TLSの定数のとき
+            # TLSの定数のとき => 定数名を付けて表示
             const_name = prop_type.labels[item]
             repr_str += "|%s: %s == %s\n" % (prop, item, const_name)
-        elif prop_type == int and isinstance(item, Uint):
+        elif issubclass(prop_type, Uint):
+            # Uintのとき => 10進数に変換したものを付けて表示
             repr_str += "|%s: %s == %s\n" % (prop, getattr(obj, prop), int(item))
         else:
             repr_str += "|%s: %s\n" % (prop, getattr(obj, prop))

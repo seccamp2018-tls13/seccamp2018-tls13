@@ -68,21 +68,14 @@ class SignatureSchemeList(Struct):
     """
     def __init__(self, supported_signature_algorithms=[]):
         self.supported_signature_algorithms = supported_signature_algorithms
-        assert type(self.supported_signature_algorithms) == list
-        assert all( bool(algo in SignatureScheme.values)
-                    for algo in self.supported_signature_algorithms )
+        assert all(bool(algo in SignatureScheme.values)
+                   for algo in self.supported_signature_algorithms)
 
-    def __repr__(self):
-        props = collections.OrderedDict(supported_signature_algorithms=list)
-        return make_format(self, props)
-
-    def __len__(self):
-        return 2 + sum(map(len, self.supported_signature_algorithms))
-
-    def to_bytes(self):
-        writer = Writer()
-        writer.add_list(self.supported_signature_algorithms, length_t=Uint16)
-        return writer.bytes
+        self.struct = Members(self, [
+            Member(Listof(SignatureScheme),
+                   'supported_signature_algorithms',
+                   length_t=Uint16),
+        ])
 
     @classmethod
     def from_bytes(cls, data):
