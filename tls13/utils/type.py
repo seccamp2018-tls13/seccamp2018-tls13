@@ -10,8 +10,10 @@ class Uint:
     """
     base class
     """
-    def create(self, value):
+    def __init__(self, value):
         assert type(value) is int
+        # コンストラクタは子クラスから呼ばれることを想定している
+        assert self.__class__ != Uint
         self.value = value
 
     def __repr__(self):
@@ -57,9 +59,6 @@ class Uint8(Uint):
     """
     _size = 1
 
-    def __init__(self, value):
-        super().create(value)
-
     def __len__(self):
         return 1
 
@@ -72,9 +71,6 @@ class Uint16(Uint):
     uint8 uint24[2];
     """
     _size = 2
-
-    def __init__(self, value):
-        super().create(value)
 
     def __len__(self):
         return 2
@@ -89,9 +85,6 @@ class Uint24(Uint):
     """
     _size = 3
 
-    def __init__(self, value):
-        super().create(value)
-
     def __len__(self):
         return 3
 
@@ -104,9 +97,6 @@ class Uint32(Uint):
     uint8 uint32[4];
     """
     _size = 4
-
-    def __init__(self, value):
-        super().create(value)
 
     def __len__(self):
         return 4

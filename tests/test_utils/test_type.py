@@ -14,6 +14,12 @@ class UintTestMixin:
         self.assertEqual(self.target._size, len(self.target(0)))
 
 
+class UintTest(unittest.TestCase):
+
+    def test_raise_when_init(self):
+        self.assertRaises(Exception, lambda: Uint(8))
+
+
 class Uint8Test(unittest.TestCase, UintTestMixin):
 
     def setUp(self):
