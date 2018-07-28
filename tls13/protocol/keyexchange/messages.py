@@ -16,10 +16,13 @@ import collections
 from .supportedgroups import NamedGroup
 from .version import ProtocolVersion
 from ..ciphersuite import CipherSuite
-from ...utils import hexstr
-from ...utils.type import Uint8, Uint16, Uint24, Uint32, Type
-from ...utils.codec import Reader, Writer
-from ...utils.repr import make_format
+from ...utils import hexstr, make_format, Uint8, Uint16, Type, Reader, Writer
+
+
+def find(lst, cond):
+    assert isinstance(lst, collections.Iterable)
+    return next((x for x in lst if cond(x)), None)
+
 
 class HasExtension:
     """
@@ -27,11 +30,8 @@ class HasExtension:
     """
     def get_extension(self, extension_type):
         assert extension_type in ExtensionType.values
-        assert type(self.extensions) == list
-        for ext in self.extensions:
-            if ext.extension_type == extension_type:
-                return ext.extension_data
-        return None
+        ext = find(self.extensions, lambda ext: ext.extension_type == extension_type)
+        return getattr(ext, 'extension_data', None)
 
 
 class ClientHello(HasExtension):
@@ -410,11 +410,8 @@ class KeyShareClientHello:
 
     def get_key_exchange(self, group):
         assert group in NamedGroup.values
-        assert type(self.client_shares) == list
-        for client_share in self.client_shares:
-            if client_share.group == group:
-                return client_share.key_exchange
-        return None
+        cs = find(self.client_shares, lambda cs: cs.group == group)
+        return getattr(cs, 'key_exchange', None)
 
 
 class KeyShareHelloRetryRequest:
