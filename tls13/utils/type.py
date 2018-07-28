@@ -10,7 +10,7 @@ class Uint:
     """
     base class
     """
-    def __init__(self, value):
+    def create(self, value):
         assert type(value) is int
         self.value = value
 
@@ -39,6 +39,10 @@ class Uint:
         return self.value
 
     @staticmethod
+    def size(size):
+        return Uint.get_type(size)
+
+    @staticmethod
     def get_type(size):
         if size == 1: return Uint8
         if size == 2: return Uint16
@@ -51,6 +55,11 @@ class Uint8(Uint):
     """
     an unsigned byte
     """
+    _size = 1
+
+    def __init__(self, value):
+        super().create(value)
+
     def __len__(self):
         return 1
 
@@ -60,8 +69,13 @@ class Uint8(Uint):
 
 class Uint16(Uint):
     """
-    uint8 uint24[3];
+    uint8 uint24[2];
     """
+    _size = 2
+
+    def __init__(self, value):
+        super().create(value)
+
     def __len__(self):
         return 2
 
@@ -73,6 +87,11 @@ class Uint24(Uint):
     """
     uint8 uint24[3];
     """
+    _size = 3
+
+    def __init__(self, value):
+        super().create(value)
+
     def __len__(self):
         return 3
 
@@ -84,6 +103,11 @@ class Uint32(Uint):
     """
     uint8 uint32[4];
     """
+    _size = 4
+
+    def __init__(self, value):
+        super().create(value)
+
     def __len__(self):
         return 4
 

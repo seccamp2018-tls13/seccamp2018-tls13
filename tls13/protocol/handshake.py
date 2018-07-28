@@ -85,8 +85,8 @@ class Handshake:
         from .keyexchange.messages import ClientHello, ServerHello
         from .keyexchange.authentication import Certificate
         reader = Reader(data)
-        msg_type = Uint8(reader.get(1))
-        length   = Uint24(reader.get(3))
+        msg_type = reader.get(Uint8)
+        length   = reader.get(Uint24)
         msg      = reader.get_rest()
 
         assert length.value == len(msg)

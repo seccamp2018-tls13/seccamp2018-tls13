@@ -93,7 +93,7 @@ class ClientHello(HasExtension):
     def from_bytes(cls, data):
         from ..handshake import HandshakeType
         reader = Reader(data)
-        legacy_version    = Uint16(reader.get(2))
+        legacy_version    = reader.get(Uint16)
         random            = reader.get_fix_bytes(32)
         legacy_session_id = reader.get_var_bytes(1)
         cipher_suites = \
@@ -171,11 +171,11 @@ class ServerHello(HasExtension):
     def from_bytes(cls, data):
         from ..handshake import HandshakeType
         reader = Reader(data)
-        legacy_version         = Uint16(reader.get(2))
-        random                 = reader.get_fix_bytes(32)
-        legacy_session_id_echo = reader.get_var_bytes(1)
-        cipher_suite           = Uint16(reader.get(2))
-        legacy_compression_methods = Uint8(reader.get(1))
+        legacy_version             = reader.get(Uint16)
+        random                     = reader.get_fix_bytes(32)
+        legacy_session_id_echo     = reader.get_var_bytes(1)
+        cipher_suite               = reader.get(Uint16)
+        legacy_compression_methods = reader.get(Uint8)
 
         # Read extensions
         extensions = Extension.get_list_from_bytes(
@@ -219,7 +219,7 @@ class Extension:
     @classmethod
     def from_bytes(cls, data, msg_type=None):
         reader = Reader(data)
-        extension_type = Uint16(reader.get(2))
+        extension_type = reader.get(Uint16)
         extension_data = reader.get_var_bytes(2)
 
         ExtClass, kwargs = cls.get_extension_class(extension_type, msg_type)
@@ -242,7 +242,7 @@ class Extension:
 
         # Read extensions
         while reader.get_rest_length() != 0:
-            extension_type = Uint16(reader.get(2))
+            extension_type = reader.get(Uint16)
             extension_data = reader.get_var_bytes(2)
 
             # 拡張の種類から，拡張を表すクラスを取得する
@@ -361,7 +361,7 @@ class KeyShareEntry:
     @classmethod
     def from_bytes(cls, data):
         reader = Reader(data)
-        group = Uint16(reader.get(2))
+        group = reader.get(Uint16)
         key_exchange = reader.get_var_bytes(2)
         return cls(group=group, key_exchange=key_exchange)
 
@@ -399,7 +399,7 @@ class KeyShareClientHello:
         assert client_shares_length == reader.get_rest_length()
 
         while reader.get_rest_length() != 0:
-            group = Uint16(reader.get(2))
+            group = reader.get(Uint16)
             key_exchange = reader.get_var_bytes(2)
             client_shares.append( KeyShareEntry(group, key_exchange) )
 

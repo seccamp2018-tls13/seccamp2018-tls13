@@ -3,6 +3,9 @@ __all__ = ['Reader', 'Writer']
 
 from typing import List
 
+from .type import Uint
+
+
 class Reader:
     """
     Byte string reader
@@ -11,7 +14,14 @@ class Reader:
         self.bytes = data
         self.index = 0
 
-    def get(self, length) -> int:
+    def get(self, length) -> int or Uint:
+        if isinstance(length, int):
+            return self.get_int(length)
+        if issubclass(length, Uint):
+            return self.get_uint(length)
+        raise NotImplementedError()
+
+    def get_int(self, length) -> int:
         """
         Read a single big-endian integer value in 'length' bytes.
         """
@@ -23,6 +33,11 @@ class Reader:
             x |= self.bytes[self.index]
             self.index += 1
         return x
+
+    def get_uint(self, uint) -> Uint:
+        length = uint._size
+        x = self.get_int(length)
+        return uint(x)
 
     def get_fix_bytes(self, bytes_length) -> bytearray:
         """

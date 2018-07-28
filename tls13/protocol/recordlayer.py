@@ -80,9 +80,9 @@ class TLSPlaintext:
     def from_bytes(cls, data):
         from .handshake import Handshake
         reader = Reader(data)
-        _type                 = Uint8(reader.get(1))
-        legacy_record_version = Uint16(reader.get(2))
-        length                = Uint16(reader.get(2))
+        _type                 = reader.get(Uint8)
+        legacy_record_version = reader.get(Uint16)
+        length                = reader.get(Uint16)
         fragment              = reader.get_rest()
 
         assert length.value == len(fragment)

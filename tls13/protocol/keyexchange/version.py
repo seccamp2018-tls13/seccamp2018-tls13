@@ -83,7 +83,7 @@ class SupportedVersions:
             versions = [Uint16(x) for x in reader.get_var_list(elem_length=2, length_length=1)]
             return cls(msg_type=msg_type, versions=versions)
         elif msg_type == HandshakeType.server_hello:
-            selected_version = Uint16(reader.get(2))
+            selected_version = reader.get(Uint16)
             return cls(msg_type=msg_type, selected_version=selected_version)
         else:
             raise RuntimeError("Unkown message type: %s" % msg_type)

@@ -149,7 +149,7 @@ class CertificateVerify:
     @classmethod
     def from_bytes(cls, data):
         reader = Reader(data)
-        algorithm = Uint16(reader.get(2))
+        algorithm = reader.get(Uint16)
         signature = reader.get_var_bytes(2)
         return cls(algorithm=algorithm, signature=signature)
 
