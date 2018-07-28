@@ -6,6 +6,10 @@ from typing import List
 from .type import Uint
 
 
+class ReaderParseError(Exception):
+    pass
+
+
 class Reader:
     """
     Byte string reader
@@ -26,7 +30,7 @@ class Reader:
         Read a single big-endian integer value in 'length' bytes.
         """
         if self.index + length > len(self.bytes):
-            raise RuntimeError()
+            raise ReaderParseError()
         x = 0
         for _ in range(length):
             x <<= 8
@@ -44,7 +48,7 @@ class Reader:
         Read a string of bytes encoded in 'bytes_length' bytes.
         """
         if self.index + bytes_length > len(self.bytes):
-            raise RuntimeError()
+            raise ReaderParseError()
         bytes = self.bytes[self.index : self.index+bytes_length]
         self.index += bytes_length
         return bytes
