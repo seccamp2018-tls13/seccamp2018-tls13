@@ -25,6 +25,10 @@ def find(lst, cond):
     return next((x for x in lst if cond(x)), None)
 
 
+class Random(bytes):
+    _size = 32
+
+
 class HasExtension:
     """
     Mixin class HasExtension implements common operation about extension.
@@ -49,7 +53,7 @@ class ClientHello(Struct, HasExtension):
     def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(ProtocolVersion, 'legacy_version'),
-            Member(bytes, 'random'),
+            Member(Random, 'random'),
             Member(bytes, 'legacy_session_id', length_t=Uint8),
             Member(Listof(CipherSuite), 'cipher_suites', length_t=Uint16),
             Member(Listof(Uint8), 'legacy_compression_methods', length_t=Uint8),
@@ -99,7 +103,7 @@ class ServerHello(Struct, HasExtension):
     def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(ProtocolVersion, 'legacy_version'),
-            Member(bytes, 'random'),
+            Member(Random, 'random'),
             Member(bytes, 'legacy_session_id_echo', length_t=Uint8),
             Member(CipherSuite, 'cipher_suite'),
             Member(Uint8, 'legacy_compression_method'),
