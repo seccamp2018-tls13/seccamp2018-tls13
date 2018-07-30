@@ -70,12 +70,10 @@ class ClientHello(Struct, HasExtension):
         from ..handshake import HandshakeType
         reader = Reader(data)
         legacy_version    = reader.get(Uint16)
-        random            = reader.get_fix_bytes(32)
-        legacy_session_id = reader.get_var_bytes(1)
-        cipher_suites = \
-            reader.get_uint_var_list(elem=Uint16, length_length=2)
-        legacy_compression_methods = \
-            reader.get_uint_var_list(elem=Uint8, length_length=1)
+        random            = reader.get(Random)
+        legacy_session_id = reader.get(bytes, length_t=Uint8)
+        cipher_suites = reader.get(Listof(CipherSuite), length_t=Uint16)
+        legacy_compression_methods = reader.get(Listof(Uint8), length_t=Uint8)
 
         # Read extensions
         extensions = Extension.get_list_from_bytes(
@@ -120,8 +118,8 @@ class ServerHello(Struct, HasExtension):
         from ..handshake import HandshakeType
         reader = Reader(data)
         legacy_version             = reader.get(Uint16)
-        random                     = reader.get_fix_bytes(32)
-        legacy_session_id_echo     = reader.get_var_bytes(1)
+        random                     = reader.get(Random)
+        legacy_session_id_echo     = reader.get(bytes, length_t=Uint8)
         cipher_suite               = reader.get(Uint16)
         legacy_compression_methods = reader.get(Uint8)
 
@@ -160,7 +158,7 @@ class Extension(Struct):
             reader = Reader(data)
 
         extension_type = reader.get(Uint16)
-        extension_data = reader.get_var_bytes(2)
+        extension_data = reader.get(bytes, length_t=Uint16)
 
         ExtClass, kwargs = cls.get_extension_class(extension_type, msg_type)
 
@@ -286,7 +284,7 @@ class KeyShareEntry(Struct):
             reader = Reader(data)
 
         group = reader.get(Uint16)
-        key_exchange = reader.get_var_bytes(2)
+        key_exchange = reader.get(bytes, length_t=Uint16)
         obj = cls(group=group, key_exchange=key_exchange)
 
         if is_given_reader:

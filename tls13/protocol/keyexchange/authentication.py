@@ -52,14 +52,21 @@ class CertificateEntry(Struct):
         ])
 
     @classmethod
-    def from_bytes(self, data):
-        reader = Reader(data)
-        cert_data  = reader.get_var_bytes(3)
-        extensions = reader.get_var_bytes(2)
+    def from_bytes(cls, data=b'', reader=None):
+        is_given_reader = bool(reader)
+        if not is_given_reader:
+            reader = Reader(data)
+
+        cert_data  = reader.get(bytes, length_t=Uint24)
+        extensions = reader.get(bytes, length_t=Uint16)
 
         # extensions に入る拡張は status_request か signed_certificate_timestamp
         # extensions のバイト列はパースが面倒 & 重要度が低いので後回しにする
-        return cls(cert_data=cert_data, extensions=[])
+        obj = cls(cert_data=cert_data, extensions=[])
+
+        if is_given_reader:
+            return (obj, reader)
+        return obj
 
 
 class Certificate(Struct):
@@ -81,18 +88,13 @@ class Certificate(Struct):
     @classmethod
     def from_bytes(cls, data):
         reader = Reader(data)
-        certificate_request_context = reader.get_var_bytes(1)
-        certificate_list_bytes = reader.get_var_bytes(3)
+        certificate_request_context = reader.get(bytes, length_t=Uint8)
+        certificate_list_bytes = reader.get(bytes, length_t=Uint24)
         certificate_list = []
 
         reader = Reader(certificate_list_bytes)
         while reader.get_rest_length() > 0:
-            cert_data  = reader.get_var_bytes(3)
-            extensions = reader.get_var_bytes(2)
-
-            # extensions に入る拡張は status_request か signed_certificate_timestamp
-            # extensions のバイト列はパースが面倒 & 重要度が低いので後回しにする
-            entry = CertificateEntry(cert_data=cert_data, extensions=[])
+            entry, reader = CertificateEntry.from_bytes(reader=reader)
             certificate_list.append(entry)
 
         return cls(certificate_request_context, certificate_list)
@@ -118,7 +120,7 @@ class CertificateVerify(Struct):
     def from_bytes(cls, data):
         reader = Reader(data)
         algorithm = reader.get(Uint16)
-        signature = reader.get_var_bytes(2)
+        signature = reader.get(bytes, length_t=Uint16)
         return cls(algorithm=algorithm, signature=signature)
 
 

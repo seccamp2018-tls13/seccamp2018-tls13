@@ -51,8 +51,7 @@ class SupportedVersions(Struct):
     def from_bytes(cls, data, msg_type):
         reader = Reader(data)
         if msg_type == HandshakeType.client_hello:
-            versions = \
-                reader.get_uint_var_list(elem=Uint16, length_length=1)
+            versions = reader.get(Listof(ProtocolVersion), length_t=Uint8)
             return cls(msg_type=msg_type, versions=versions)
         elif msg_type == HandshakeType.server_hello:
             selected_version = reader.get(Uint16)

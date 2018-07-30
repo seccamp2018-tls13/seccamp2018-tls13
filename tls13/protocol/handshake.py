@@ -75,7 +75,7 @@ class Handshake(Struct):
         reader = Reader(data)
         msg_type = reader.get(Uint8)
         length   = reader.get(Uint24)
-        msg      = reader.get_rest()
+        msg      = reader.get(bytes)
 
         assert length.value == len(msg)
 

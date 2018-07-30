@@ -72,14 +72,13 @@ class SignatureSchemeList(Struct):
                    for algo in self.supported_signature_algorithms)
 
         self.struct = Members(self, [
-            Member(Listof(SignatureScheme),
-                   'supported_signature_algorithms',
+            Member(Listof(SignatureScheme), 'supported_signature_algorithms',
                    length_t=Uint16),
         ])
 
     @classmethod
     def from_bytes(cls, data):
         reader = Reader(data)
-        supported_signature_algorithms = \
-            reader.get_uint_var_list(elem=Uint16, length_length=2)
+        supported_signature_algorithms = reader.get(Listof(SignatureScheme),
+                                                    length_t=Uint16)
         return cls(supported_signature_algorithms)

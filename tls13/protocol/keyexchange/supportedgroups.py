@@ -58,6 +58,5 @@ class NamedGroupList(Struct):
     @classmethod
     def from_bytes(cls, data):
         reader = Reader(data)
-        named_group_list = \
-            reader.get_uint_var_list(elem=Uint16, length_length=2)
+        named_group_list = reader.get(Listof(NamedGroup), length_t=Uint16)
         return cls(named_group_list)

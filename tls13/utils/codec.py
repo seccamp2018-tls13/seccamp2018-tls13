@@ -3,7 +3,7 @@ __all__ = ['Reader', 'Writer']
 
 from typing import List
 
-from .type import Uint
+from .type import Uint, Type
 
 
 class ReaderParseError(Exception):
@@ -18,11 +18,31 @@ class Reader:
         self.bytes = data
         self.index = 0
 
-    def get(self, length) -> int or Uint:
-        if isinstance(length, int):
-            return self.get_int(length)
-        if issubclass(length, Uint):
-            return self.get_uint(length)
+    def get(self, type, length_t=None) -> int or Uint:
+        from .struct import Listof
+
+        if isinstance(type, int):
+            return self.get_int(type)
+
+        if isinstance(type, Listof):
+            elem_len = type.subtype._size
+            length_len = length_t._size
+            fun = lambda x: x
+            # Listof(Type) のときはリストの要素を UintN に変換する
+            if issubclass(type.subtype, (Uint, Type)):
+                fun = Uint.get_type(type.subtype._size)
+            return [fun(x) for x in self.get_var_list(elem_len, length_len)]
+
+        if issubclass(type, Uint):
+            return self.get_uint(type)
+
+        if issubclass(type, bytes):
+            if hasattr(type, '_size'):
+                return self.get_fix_bytes(type._size)
+            if length_t:
+                return self.get_var_bytes(length_t._size)
+            return self.get_rest()
+
         raise NotImplementedError()
 
     def get_int(self, length) -> int:

@@ -69,7 +69,7 @@ class TLSPlaintext(Struct):
         type                  = reader.get(Uint8)
         legacy_record_version = reader.get(Uint16)
         length                = reader.get(Uint16)
-        fragment              = reader.get_rest()
+        fragment              = reader.get(bytes)
 
         assert length.value == len(fragment)
 
