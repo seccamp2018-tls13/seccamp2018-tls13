@@ -57,13 +57,14 @@ class Handshake(Struct):
     } Handshake;
     """
     def __init__(self, **kwargs):
+        msg = kwargs.get('msg', b'')
         self.struct = Members(self, [
             Member(HandshakeType, 'msg_type'),
             Member(Uint24, 'length'),
             Member(Struct, 'msg'),
         ])
         self.struct.set_default('legacy_record_version', Uint16(0x0303))
-        self.struct.set_default('length', Uint24(len(kwargs['msg'])))
+        self.struct.set_default('length', Uint24(len(kwargs['msg'] or b'')))
         self.struct.set_args(**kwargs)
 
         assert self.msg_type in HandshakeType.values

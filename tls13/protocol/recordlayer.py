@@ -37,6 +37,7 @@ class TLSPlaintext(Struct):
     } TLSPlaintext;
     """
     def __init__(self, **kwargs):
+        fragment = kwargs.get('fragment', b'')
         self.struct = Members(self, [
             Member(ContentType, 'type'),
             Member(ProtocolVersion, 'legacy_record_version'),
@@ -44,10 +45,8 @@ class TLSPlaintext(Struct):
             Member(Struct, 'fragment'),
         ])
         self.struct.set_default('legacy_record_version', Uint16(0x0303))
-        self.struct.set_default('length', Uint16(len(kwargs['fragment'])))
+        self.struct.set_default('length', Uint16(len(fragment)))
         self.struct.set_args(**kwargs)
-
-        assert self.type in ContentType.values
 
     def __getattr__(self, name):
         """
