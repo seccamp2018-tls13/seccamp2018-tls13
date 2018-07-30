@@ -62,6 +62,7 @@ def client_cmd(argv):
                     Extension(
                         extension_type=ExtensionType.signature_algorithms,
                         extension_data=SignatureSchemeList(
+                            supported_signature_algorithms=
                             supported_signature_algorithms)),
 
                     # key_share
