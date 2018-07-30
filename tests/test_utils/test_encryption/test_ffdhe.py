@@ -1,7 +1,7 @@
 
 import unittest
 
-from tls13.protocol.keyexchange.supportedgroups import *
+from tls13.protocol import *
 from tls13.utils.encryption.ffdhe import *
 
 class FFDHETest(unittest.TestCase):
