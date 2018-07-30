@@ -41,15 +41,12 @@ class CertificateEntry(Struct):
       Extension extensions<0..2^16-1>;
     } CertificateEntry;
     """
-    def __init__(self, cert_data, extensions=[]):
-        assert type(cert_data) in (bytes, bytearray)
-        self.cert_data = bytes(cert_data)
-        self.extensions = extensions
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(bytes, 'cert_data', length_t=Uint24),
             Member(Listof(Extension), 'extensions', length_t=Uint16),
         ])
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data=b'', reader=None):
@@ -76,14 +73,13 @@ class Certificate(Struct):
       CertificateEntry certificate_list<0..2^24-1>;
     } Certificate;
     """
-    def __init__(self, certificate_request_context=b'', certificate_list=[]):
-        self.certificate_request_context = bytes(certificate_request_context)
-        self.certificate_list = certificate_list
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(bytes, 'certificate_request_context', length_t=Uint8),
             Member(Listof(CertificateEntry), 'certificate_list', length_t=Uint24),
         ])
+        self.struct.set_default('certificate_request_context', b'')
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data):
@@ -97,7 +93,8 @@ class Certificate(Struct):
             entry, reader = CertificateEntry.from_bytes(reader=reader)
             certificate_list.append(entry)
 
-        return cls(certificate_request_context, certificate_list)
+        return cls(certificate_request_context=certificate_request_context,
+                   certificate_list=certificate_list)
 
 
 class CertificateVerify(Struct):
@@ -107,14 +104,12 @@ class CertificateVerify(Struct):
       opaque signature<0..2^16-1>;
     } CertificateVerify;
     """
-    def __init__(self, algorithm, signature):
-        self.algorithm = algorithm
-        self.signature = signature
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(SignatureScheme, 'algorithm'),
             Member(bytes, 'signature', length_t=Uint16),
         ])
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data):
@@ -130,12 +125,11 @@ class Finished(Struct):
       opaque verify_data[Hash.length];
     } Finished;
     """
-    def __init__(self, verify_data):
-        self.verify_data = verify_data
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(bytes, 'verify_data'),
         ])
+        self.struct.set_args(**kwargs)
 
     # TODO: ハッシュの求め方
     #

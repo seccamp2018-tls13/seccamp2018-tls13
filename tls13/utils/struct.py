@@ -75,6 +75,7 @@ class Members:
             else:
                 value = self._get_default_from_type(member.type)
 
+            StructAssert.my_assert(member, value)
             setattr(self.obj, key, value)
 
     def set_default(self, attr_name, default_value):
@@ -171,4 +172,29 @@ class Listof:
         self.subtype = type # class
 
     def __repr__(self):
-        return "Listof({})".format(type)
+        return "Listof({})".format(self.subtype)
+
+
+class StructAssert:
+    @staticmethod
+    def my_assert(member, value):
+        if isinstance(member.type, Listof):
+            return StructAssert.assert_listof(member, value)
+
+        if issubclass(member.type, Type):
+            if not value in member.type.values:
+                raise RuntimeError('value "{}" is not in "{}"' \
+                                   .format(member.name, member.type))
+
+    def assert_listof(member, value):
+        if issubclass(member.type.subtype, Type):
+            UintN = Uint.get_type(member.type.subtype._size)
+            if all(isinstance(x, UintN) for x in value):
+                return True
+            raise RuntimeError('list "{}" elements must have type "{}"' \
+                               .format(member.name, UintN.__name__))
+
+        if all(isinstance(x, member.type.subtype) for x in value):
+            return True
+        raise RuntimeError('list "{}" elements must have type "{}"' \
+                           .format(member.name, member.type.subtype.__name__))

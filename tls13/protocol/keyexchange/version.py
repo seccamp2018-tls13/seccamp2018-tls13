@@ -34,18 +34,17 @@ class SupportedVersions(Struct):
       };
     } SupportedVersions;
     """
-    def __init__(self, msg_type, versions=[], selected_version=None):
+    def __init__(self, msg_type, **kwargs):
         self.msg_type = msg_type
         if self.msg_type == HandshakeType.client_hello:
-            self.versions = versions
             member = Member(Listof(ProtocolVersion), 'versions', length_t=Uint8)
         elif self.msg_type == HandshakeType.server_hello:
-            self.selected_version = selected_version
             member = Member(ProtocolVersion, 'selected_version')
         else:
             raise RuntimeError("Unkown message type: %s" % msg_type)
 
         self.struct = Members(self, [member])
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data, msg_type):

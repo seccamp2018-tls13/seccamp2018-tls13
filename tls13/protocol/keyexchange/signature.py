@@ -66,19 +66,16 @@ class SignatureSchemeList(Struct):
       SignatureScheme supported_signature_algorithms<2..2^16-2>;
     } SignatureSchemeList;
     """
-    def __init__(self, supported_signature_algorithms=[]):
-        self.supported_signature_algorithms = supported_signature_algorithms
-        assert all(bool(algo in SignatureScheme.values)
-                   for algo in self.supported_signature_algorithms)
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(Listof(SignatureScheme), 'supported_signature_algorithms',
                    length_t=Uint16),
         ])
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data):
         reader = Reader(data)
         supported_signature_algorithms = reader.get(Listof(SignatureScheme),
                                                     length_t=Uint16)
-        return cls(supported_signature_algorithms)
+        return cls(supported_signature_algorithms=supported_signature_algorithms)

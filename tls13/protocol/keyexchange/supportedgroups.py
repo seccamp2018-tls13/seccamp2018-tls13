@@ -48,15 +48,14 @@ class NamedGroupList(Struct):
       NamedGroup named_group_list<2..2^16-1>;
     } NamedGroupList;
     """
-    def __init__(self, named_group_list=[]):
-        self.named_group_list = named_group_list
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(Listof(NamedGroup), 'named_group_list', length_t=Uint16)
         ])
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data):
         reader = Reader(data)
         named_group_list = reader.get(Listof(NamedGroup), length_t=Uint16)
-        return cls(named_group_list)
+        return cls(named_group_list=named_group_list)

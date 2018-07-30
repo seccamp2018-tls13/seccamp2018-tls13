@@ -149,8 +149,6 @@ class Extension(Struct):
         ])
         self.struct.set_args(**kwargs)
 
-        assert self.extension_type in ExtensionType.values
-
     @classmethod
     def from_bytes(cls, data=b'', msg_type=None, reader=None):
         is_given_reader = bool(reader)
@@ -275,8 +273,6 @@ class KeyShareEntry(Struct):
         ])
         self.struct.set_args(**kwargs)
 
-        assert self.group in NamedGroup.values
-
     @classmethod
     def from_bytes(cls, data=b'', reader=None):
         is_given_reader = bool(reader)
@@ -298,13 +294,11 @@ class KeyShareClientHello(Struct):
       KeyShareEntry client_shares<0..2^16-1>;
     } KeyShareClientHello;
     """
-    def __init__(self, client_shares=[]):
-        self.client_shares = client_shares
-        assert all(type(entry) == KeyShareEntry for entry in self.client_shares)
-
+    def __init__(self, **kwargs):
         self.struct = Members(self, [
             Member(Listof(KeyShareEntry), 'client_shares', length_t=Uint16),
         ])
+        self.struct.set_args(**kwargs)
 
     @classmethod
     def from_bytes(cls, data):
@@ -319,7 +313,7 @@ class KeyShareClientHello(Struct):
             entry, reader = KeyShareEntry.from_bytes(reader=reader)
             client_shares.append(entry)
 
-        return cls(client_shares)
+        return cls(client_shares=client_shares)
 
     def get_groups(self):
         return [client_share.group for client_share in self.client_shares]
