@@ -154,6 +154,28 @@ class Members:
 
         return writer.bytes
 
+    # from_bytesのためのバイト列から構造体のフィールドを得る処理
+    #
+    #     reader = Reader(data)
+    #     type                  = reader.get(Uint8)
+    #     legacy_record_version = reader.get(Uint16)
+    #     length                = reader.get(Uint16)
+    #     fragment              = reader.get(bytes)
+    #
+    def get_props_from_bytes(self, data):
+        import inspect
+        props = {}
+        reader = Reader(data)
+        for member in self.members:
+            length_t = getattr(member, 'length_t', None)
+            type = member.type
+            if inspect.isclass(member.type) and issubclass(member.type, Type):
+                type = Uint.get_type(member.type._size)
+            value = reader.get(type, length_t=length_t)
+            props[member.name] = value
+
+        return props
+
 
 class Member:
     def __init__(self, type, name, length_t=None):

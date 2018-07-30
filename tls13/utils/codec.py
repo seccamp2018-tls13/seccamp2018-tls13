@@ -19,7 +19,7 @@ class Reader:
         self.index = 0
 
     def get(self, type, length_t=None) -> int or Uint:
-        from .struct import Listof
+        from .struct import Listof, Struct
 
         if isinstance(type, int):
             return self.get_int(type)
@@ -36,7 +36,7 @@ class Reader:
         if issubclass(type, Uint):
             return self.get_uint(type)
 
-        if issubclass(type, bytes):
+        if issubclass(type, (bytes, Struct)):
             if hasattr(type, '_size'):
                 return self.get_fix_bytes(type._size)
             if length_t:
