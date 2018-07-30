@@ -5,7 +5,7 @@ from tls13.protocol.handshake import *
 from tls13.protocol.keyexchange.messages import *
 from tls13.utils.type import *
 
-from .common import TypeTestMixin
+from .common import TypeTestMixin, StructTestMixin
 
 
 class HandshakeTypeTest(unittest.TestCase, TypeTestMixin):
@@ -14,17 +14,10 @@ class HandshakeTypeTest(unittest.TestCase, TypeTestMixin):
         self.target = HandshakeType
 
 
-class HandshakeTest(unittest.TestCase):
+class HandshakeTest(unittest.TestCase, StructTestMixin):
 
     def setUp(self):
-        self.handshake = Handshake(
+        self.target = Handshake
+        self.obj = Handshake(
             msg_type=HandshakeType.client_hello,
             msg=ClientHello())
-
-    def test_length(self):
-        obj = self.handshake
-        self.assertEqual(len(obj), len(obj.to_bytes()))
-
-    def test_restruct(self):
-        restructed = Handshake.from_bytes(self.handshake.to_bytes())
-        self.assertEqual(repr(self.handshake), repr(restructed))

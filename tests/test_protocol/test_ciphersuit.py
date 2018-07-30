@@ -3,15 +3,10 @@ import unittest
 
 from tls13.protocol.ciphersuite import *
 from tls13.utils.type import *
+from .common import TypeTestMixin
 
-class CipherSuiteTest(unittest.TestCase):
 
-    def test_size(self):
-        self.assertTrue(hasattr(CipherSuite, '_size'))
+class CipherSuiteTest(unittest.TestCase, TypeTestMixin):
 
-    def test_values(self):
-        UintN = Uint.get_type(size=CipherSuite._size)
-        self.assertTrue(all( type(v) == UintN for v in CipherSuite.values ))
-
-    def test_labels(self):
-        self.assertTrue(all( CipherSuite.labels[v] for v in CipherSuite.values ))
+    def setUp(self):
+        self.target = CipherSuite

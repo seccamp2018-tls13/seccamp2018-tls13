@@ -4,24 +4,19 @@ import unittest
 from tls13.protocol.handshake import HandshakeType
 from tls13.protocol.keyexchange.version import *
 from tls13.utils.type import Uint16, Uint
+from ..common import TypeTestMixin, StructTestMixin
 
 
-class ProtocolVersionTest(unittest.TestCase):
+class ProtocolVersionTest(unittest.TestCase, TypeTestMixin):
 
-    def test_size(self):
-        self.assertTrue(hasattr(ProtocolVersion, '_size'))
-
-    def test_values(self):
-        UintN = Uint.get_type(size=ProtocolVersion._size)
-        self.assertTrue(all( type(v) == UintN for v in ProtocolVersion.values ))
-
-    def test_labels(self):
-        self.assertTrue(all( ProtocolVersion.labels[v] for v in ProtocolVersion.values ))
+    def setUp(self):
+        self.target = ProtocolVersion
 
 
 class SupportedVersionsTest(unittest.TestCase):
 
     def setUp(self):
+        self.target = SupportedVersions
         self.supported_versions_ch = \
             SupportedVersions(msg_type=HandshakeType.client_hello,
                               versions=[Uint16(0x0303), Uint16(0x0302)])
