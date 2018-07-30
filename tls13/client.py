@@ -119,20 +119,33 @@ def client_cmd(argv):
 
     # -- HKDF ---
 
-    shared_key  # DH で得た共有鍵
-    early_secret = b'\x00'  # PSKがないときは0
-    secret = cryptomath.HKDF_extract(early_secret, shared_key)
+    hash_algo   = CipherSuite.get_hash_algo_name(server_cipher_suite)
+    secret_size = CipherSuite.get_hash_algo_size(server_cipher_suite)
+    secret = bytearray(secret_size)
+    psk    = bytearray(secret_size)
+    # early secret
+    secret = cryptomath.HKDF_extract(secret, psk, hash_algo)
+    # handshake secret
     secret = cryptomath.derive_secret(secret, b"derive", b"")
-    secret = cryptomath.HKDF_extract(b'\x00', secret)
-    client_application_traffic_secret_0 = \
+    secret = cryptomath.HKDF_extract(secret, shared_key, hash_algo)
+    server_handshake_traffic_secret = None # TODO
+    client_handshake_traffic_secret = None # TODO
+    # master secret
+    secret = cryptomath.derive_secret(secret, b"derive", b"")
+    secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
+    server_application_traffic_secret = None # TODO
+    client_application_traffic_secret = None # TODO
+
+    client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
-    server_application_traffic_secret_0 = \
+    server_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"s ap traffic", messages)
 
-    print('client_application_traffic_secret_0 =',
-        hexstr(client_application_traffic_secret_0))
-    print('server_application_traffic_secret_0 =',
-        hexstr(server_application_traffic_secret_0))
+    print('client_application_traffic_secret =',
+        hexstr(client_application_traffic_secret))
+    print('server_application_traffic_secret =',
+        hexstr(server_application_traffic_secret))
+
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
@@ -142,8 +155,6 @@ def client_cmd(argv):
 
 
     # >>> Finished >>>
-
-    hash_algorithm = CipherSuite.get_hash_algorithm(server_cipher_suite)
 
 
     # >>> Application Data <<<
