@@ -19,6 +19,7 @@ from ...utils.struct import Struct, Members, Member, Listof
 
 @Type.add_labels_and_values
 class CertificateType(Type):
+    # 証明書の種類
     """
     enum { ... } CertificateType
     """
@@ -29,6 +30,7 @@ class CertificateType(Type):
 
 
 class CertificateEntry(Struct):
+    # 証明書の内容
     """
     struct {
       select (certificate_type) {
@@ -67,6 +69,7 @@ class CertificateEntry(Struct):
 
 
 class Certificate(Struct):
+    # 証明書を送るときに使う
     """
     struct {
       opaque certificate_request_context<0..2^8-1>;
@@ -98,6 +101,7 @@ class Certificate(Struct):
 
 
 class CertificateVerify(Struct):
+    # 証明書の署名を送るときに使う
     """
     struct {
       SignatureScheme algorithm;
@@ -120,6 +124,7 @@ class CertificateVerify(Struct):
 
 
 class Finished(Struct):
+    # TLSハンドシェイクの完了を送るときに使う
     """
     struct {
       opaque verify_data[Hash.length];

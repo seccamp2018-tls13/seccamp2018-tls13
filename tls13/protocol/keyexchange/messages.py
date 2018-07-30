@@ -26,6 +26,7 @@ def find(lst, cond):
 
 
 class Random(bytes):
+    """ opaque Random[32]; """
     _size = 32
 
 

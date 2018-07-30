@@ -15,6 +15,7 @@ from ...utils.struct import Struct, Members, Member, Listof
 
 @Type.add_labels_and_values
 class ProtocolVersion(Type):
+    # TLSバージョン
     SSL3  = Uint16(0x0300)
     TLS10 = Uint16(0x0301)
     TLS11 = Uint16(0x0302)
@@ -24,6 +25,8 @@ class ProtocolVersion(Type):
 
 
 class SupportedVersions(Struct):
+    # クライアントはどのTLSバージョンをサポートしているかを示すのに使う。
+    # サーバはどのTLSバージョンで通信を行うかを示すのに使う。
     """
     struct {
       select (Handshake.msg_type) {

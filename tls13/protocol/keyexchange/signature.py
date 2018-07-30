@@ -14,6 +14,7 @@ from ...utils.struct import Struct, Members, Member, Listof
 
 @Type.add_labels_and_values
 class SignatureScheme(Type):
+    # 署名アルゴリズム
     """
     enum { ... } SignatureScheme
     """
@@ -61,6 +62,7 @@ class SignatureScheme(Type):
 
 
 class SignatureSchemeList(Struct):
+    # サポートしている署名アルゴリズムのリストを示すのに使う
     """
     struct {
       SignatureScheme supported_signature_algorithms<2..2^16-2>;

@@ -14,6 +14,7 @@ from ...utils.struct import Struct, Members, Member, Listof
 
 @Type.add_labels_and_values
 class NamedGroup(Type):
+    # 鍵交換のグループ
     """
     enum { ... } NamedGroup
     """
@@ -43,6 +44,7 @@ class NamedGroup(Type):
 
 
 class NamedGroupList(Struct):
+    # サポートしている鍵交換のグループのリストを示すのに使う
     """
     struct {
       NamedGroup named_group_list<2..2^16-1>;

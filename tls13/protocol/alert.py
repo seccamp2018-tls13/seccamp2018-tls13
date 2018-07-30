@@ -10,6 +10,7 @@ from ..utils.type import Uint8, Type
 
 @Type.add_labels_and_values
 class AlertLevel(Type):
+    # 警告レベル
     """
     enum { ... } AlertLevel
     """
@@ -20,6 +21,7 @@ class AlertLevel(Type):
 
 @Type.add_labels_and_values
 class AlertDescription(Type):
+    # 警告の説明
     """
     enum { ... } AlertDescription
     """
@@ -61,6 +63,7 @@ class AlertDescription(Type):
 
 
 class Alert:
+    # 送信内容に誤りがあるときなどで警告を送り返すときに使う
     """
     struct {
       AlertLevel level;
