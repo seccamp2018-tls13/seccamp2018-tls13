@@ -20,6 +20,7 @@ class Cipher:
     
     def __init__(self, key):
         self.key = key
+        # self.key_size 
 
     def encrypt(self, plaintext):
         assert len(plaintext) % 16 == 0
@@ -33,6 +34,7 @@ class Cipher:
 
         # DECRYPTO()
 
+
 class Chacha20Poly1305(Cipher):
 
     def __init__(self, key, nonce):
@@ -44,16 +46,11 @@ class Chacha20Poly1305(Cipher):
         if len(plaintext) % 64 != 0:
             plaintext = plaintext + bytearray(64 - len(plaintext) % 64)
 
-        ## 1. 64 [bytes] ごとに区切る
-        ## 2. さらに 64 [bytes] = 4 [bytes] * 16 [block] に区切る
-
-        # 1
         array64s = make_array(plaintext, 64, to_int=False)
 
         #cipher = b''
         cipher = bytearray(0)
         for cnt, array64 in enumerate(array64s, 1):
-            # 2
             plain_blocks = []
             for block in make_array(array64 , 4, to_int=True):
                 plain_blocks.append(block)
@@ -92,7 +89,22 @@ class Chacha20Poly1305(Cipher):
         plain = plain.rstrip(b'\x00') # remove \x00 padding
         return  plain
 
-    def authenticate(self, message):
+    def poly1305_mac(self, message, otk):
+        s, r = otk
+
+        if len(message) % 16 != 0:
+            message += bytearray(16 - len(message) % 16)
+
+        # 16 [bytes] に区切って 1 [byte] (\x01) を付加
+        coefs_messages = make_array(message, 16, to_int=False)
+        for idx in range(len(coefs_messages)):
+            coefs_messages[idx] += b'\x01'
+
+        coefs_messages = list(map(bytes_to_long, coefs_messages))
+        auth = poly1305(coefs_messages, s, r)
+        return long_to_bytes(auth)
+
+    def poly1305_key_gen(self):
         _, state = chacha20(b"\x00"*16, self.key, self.nonce, cnt=0)
         least16bytes = state[8:]
         s = least16bytes[:4]
@@ -103,16 +115,30 @@ class Chacha20Poly1305(Cipher):
 
         s = bytes_to_long(concate_s)
         r = bytes_to_long(concate_r)
-        
-        # 16 [bytes] に区切って 1 [byte] (\x01) を負荷
-        coefs_messages = make_array(message, 16, to_int=False)
-        for idx in range(len(coefs_messages)):
-            coefs_messages[idx] += b'\x01'
 
-        coefs_messages = list(map(bytes_to_long, coefs_messages))
-        auth = poly1305(coefs_messages, s, r)
-        return long_to_bytes(auth)
+        return s, r
 
-    def gen_AEAD(self):
-        pass
+    def chacha20_aead_encrypt(self, aad, plaintext):
+        """
+        chacha20_aead_encrypt(aad, key, iv, constant, plaintext):
+            nonce = constant | iv
+            otk = poly1305_key_gen(key, nonce)
+            ciphertext = chacha20_encrypt(key, 1, nonce, plaintext)
+            mac_data = aad | pad16(aad)
+            mac_data |= ciphertext | pad16(ciphertext)
+            mac_data |= num_to_4_le_bytes(aad.length)
+            mac_data |= num_to_4_le_bytes(ciphertext.length)
+            tag = poly1305_mac(mac_data, otk)
+            return (ciphertext, tag)
+        """
+        otk = self.poly1305_key_gen()
+        ciphertext = self.encrypt(plaintext)
 
+        mac_data = aad
+        if len(mac_data) % 16 != 0:
+            mac_data += bytearray(16 - len(mac_data) % 16)
+        mac_data += ciphertext
+        mac_data += bytearray(len(aad) + len(ciphertext))
+
+        tag = self.poly1305_mac(mac_data, otk)
+        return ciphertext, tag
