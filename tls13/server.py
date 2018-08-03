@@ -107,13 +107,14 @@ def server_cmd(argv):
     # handshake secret
     secret = cryptomath.derive_secret(secret, b"derive", b"")
     secret = cryptomath.HKDF_extract(secret, shared_key, hash_algo)
-    server_handshake_traffic_secret = None # TODO
-    client_handshake_traffic_secret = None # TODO
+    client_handshake_traffic_secret = \
+        cryptomath.derive_secret(secret, b"c hs traffic", messages)
+    server_handshake_traffic_secret = \
+        cryptomath.derive_secret(secret, b"s hs traffic", messages)
+
     # master secret
     secret = cryptomath.derive_secret(secret, b"derive", b"")
     secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
-    server_application_traffic_secret = None # TODO
-    client_application_traffic_secret = None # TODO
 
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
