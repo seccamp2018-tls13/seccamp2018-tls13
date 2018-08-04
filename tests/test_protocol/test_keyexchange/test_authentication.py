@@ -54,6 +54,8 @@ class FinishedTest(unittest.TestCase):
         self.assertEqual(len(self.obj), len(self.obj.to_bytes()))
 
     def test_restruct(self):
+        from tls13.protocol.keyexchange.authentication import Hash
         hash_size = 32
-        restructed = self.target.from_bytes(self.obj.to_bytes(), hash_size)
+        Hash.set_size(hash_size)
+        restructed = self.target.from_bytes(self.obj.to_bytes())
         self.assertEqual(repr(self.obj), repr(restructed))

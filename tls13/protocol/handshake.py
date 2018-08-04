@@ -72,7 +72,7 @@ class Handshake(Struct):
     @classmethod
     def from_bytes(cls, data):
         from .keyexchange.messages import ClientHello, ServerHello
-        from .keyexchange.authentication import Certificate, CertificateVerify, \
+        from .keyexchange.authentication import Certificate, CertificateVerify,\
             Finished
         reader = Reader(data)
         msg_type = reader.get(Uint8)
@@ -81,15 +81,15 @@ class Handshake(Struct):
 
         assert length.value == len(msg)
 
-        if msg_type == HandshakeType.client_hello:
-            return cls(msg_type=msg_type, msg=ClientHello.from_bytes(msg))
-        elif msg_type == HandshakeType.server_hello:
-            return cls(msg_type=msg_type, msg=ServerHello.from_bytes(msg))
-        elif msg_type == HandshakeType.certificate:
-            return cls(msg_type=msg_type, msg=Certificate.from_bytes(msg))
-        elif msg_type == HandshakeType.certificate_verify:
-            return cls(msg_type=msg_type, msg=CertificateVerify.from_bytes(msg))
-        elif msg_type == HandshakeType.finished:
-            return cls(msg_type=msg_type, msg=Finished.from_bytes(msg))
-        else:
+        from_bytes_mapper = {
+            HandshakeType.client_hello      : ClientHello.from_bytes,
+            HandshakeType.server_hello      : ServerHello.from_bytes,
+            HandshakeType.certificate       : Certificate.from_bytes,
+            HandshakeType.certificate_verify: CertificateVerify.from_bytes,
+            HandshakeType.finished          : Finished.from_bytes,
+        }
+
+        if not msg_type in from_bytes_mapper.keys():
             raise NotImplementedError()
+        from_bytes = from_bytes_mapper[msg_type]
+        return cls(msg_type=msg_type, msg=from_bytes(msg))

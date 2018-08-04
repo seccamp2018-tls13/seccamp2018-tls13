@@ -8,7 +8,7 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     ProtocolVersion, SupportedVersions, \
     NamedGroup, NamedGroupList, \
     SignatureScheme, SignatureSchemeList, \
-    Certificate, CertificateEntry, CertificateVerify, Finished
+    Certificate, CertificateEntry, CertificateVerify, Finished, Hash
 
 # Crypto
 from .utils.encryption.ffdhe import FFDHE
@@ -178,6 +178,7 @@ def server_cmd(argv):
     # server_handshake_traffic_secret を使って finished_key を作成する
     hash_algo = CipherSuite.get_hash_algo_name(cipher_suite)
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
+    Hash.set_size(hash_size)
     finished_key = cryptomath.HKDF_expand_label(
         server_handshake_traffic_secret, b'finished', b'', hash_size, hash_algo)
     verify_data = cryptomath.secureHMAC(

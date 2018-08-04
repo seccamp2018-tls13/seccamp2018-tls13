@@ -4,7 +4,7 @@
 
 __all__ = [
     'CertificateType', 'CertificateEntry', 'Certificate',
-    'CertificateVerify', 'Finished',
+    'CertificateVerify', 'Finished', 'Hash',
 ]
 
 import collections
@@ -123,6 +123,14 @@ class CertificateVerify(Struct):
         return cls(algorithm=algorithm, signature=signature)
 
 
+class Hash(bytes):
+    _size = 32
+
+    @classmethod
+    def set_size(cls, size):
+        cls._size = size
+
+
 class Finished(Struct):
     # TLSハンドシェイクの完了を送るときに使う
     """
@@ -132,14 +140,14 @@ class Finished(Struct):
     """
     def __init__(self, **kwargs):
         self.struct = Members(self, [
-            Member(bytes, 'verify_data'),
+            Member(Hash, 'verify_data'),
         ])
         self.struct.set_args(**kwargs)
 
     @classmethod
-    def from_bytes(cls, data, hash_size=32):
+    def from_bytes(cls, data):
         reader = Reader(data)
-        verify_data = reader.get_fix_bytes(hash_size)
+        verify_data = reader.get(Hash)
         return cls(verify_data=verify_data)
 
     # TODO: ハッシュの求め方

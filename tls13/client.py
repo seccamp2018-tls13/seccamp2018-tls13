@@ -8,7 +8,7 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     ProtocolVersion, SupportedVersions, \
     NamedGroup, NamedGroupList, \
     SignatureScheme, SignatureSchemeList, \
-    Finished
+    Finished, Hash
 
 # Crypto
 from .utils.encryption.ffdhe import FFDHE
@@ -160,6 +160,7 @@ def client_cmd(argv):
 
     # <<< recv Finished <<<
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
+    Hash.set_size(hash_size)
     data = client_conn.recv_msg()
     recv_finished = TLSPlaintext.from_bytes(data)
     messages.append(recv_finished.fragment)
