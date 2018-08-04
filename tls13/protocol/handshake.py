@@ -72,7 +72,8 @@ class Handshake(Struct):
     @classmethod
     def from_bytes(cls, data):
         from .keyexchange.messages import ClientHello, ServerHello
-        from .keyexchange.authentication import Certificate
+        from .keyexchange.authentication import Certificate, CertificateVerify, \
+            Finished
         reader = Reader(data)
         msg_type = reader.get(Uint8)
         length   = reader.get(Uint24)
@@ -86,5 +87,9 @@ class Handshake(Struct):
             return cls(msg_type=msg_type, msg=ServerHello.from_bytes(msg))
         elif msg_type == HandshakeType.certificate:
             return cls(msg_type=msg_type, msg=Certificate.from_bytes(msg))
+        elif msg_type == HandshakeType.certificate_verify:
+            return cls(msg_type=msg_type, msg=CertificateVerify.from_bytes(msg))
+        elif msg_type == HandshakeType.finished:
+            return cls(msg_type=msg_type, msg=Finished.from_bytes(msg))
         else:
             raise NotImplementedError()

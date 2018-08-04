@@ -44,5 +44,16 @@ class CertificateVerifyTest(unittest.TestCase, StructTestMixin):
 
 
 class FinishedTest(unittest.TestCase):
-    pass
-    # TODO:
+
+    def setUp(self):
+        self.target = Finished
+        self.obj = Finished(
+            verify_data=b'012345678901234567890123456789ab')
+
+    def test_length(self):
+        self.assertEqual(len(self.obj), len(self.obj.to_bytes()))
+
+    def test_restruct(self):
+        hash_size = 32
+        restructed = self.target.from_bytes(self.obj.to_bytes(), hash_size)
+        self.assertEqual(repr(self.obj), repr(restructed))

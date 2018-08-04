@@ -136,6 +136,12 @@ class Finished(Struct):
         ])
         self.struct.set_args(**kwargs)
 
+    @classmethod
+    def from_bytes(cls, data, hash_size=32):
+        reader = Reader(data)
+        verify_data = reader.get_fix_bytes(hash_size)
+        return cls(verify_data=verify_data)
+
     # TODO: ハッシュの求め方
     #
     # Hash = SignatureSchemeにあるハッシュ関数
@@ -164,3 +170,19 @@ class Finished(Struct):
     # verify_data = HMAC(finished_key,
     #                    Transcript-Hash(Handshake Context,
     #                                    Certificate*, CertificateVerify*))
+    #
+    # +-----------+----------------------------+--------------------------+
+    # | Mode      | Handshake Context          | Base Key                 |
+    # +-----------+----------------------------+--------------------------+
+    # | Server    | ClientHello ... later of E | server_handshake_traffic |
+    # |           | ncryptedExtensions/Certifi | _secret                  |
+    # |           | cateRequest                |                          |
+    # |           |                            |                          |
+    # | Client    | ClientHello ... later of   | client_handshake_traffic |
+    # |           | server                     | _secret                  |
+    # |           | Finished/EndOfEarlyData    |                          |
+    # |           |                            |                          |
+    # | Post-     | ClientHello ... client     | client_application_traff |
+    # | Handshake | Finished +                 | ic_secret_N              |
+    # |           | CertificateRequest         |                          |
+    # +-----------+----------------------------+--------------------------+

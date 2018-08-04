@@ -7,7 +7,8 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     KeyShareEntry, KeyShareClientHello, \
     ProtocolVersion, SupportedVersions, \
     NamedGroup, NamedGroupList, \
-    SignatureScheme, SignatureSchemeList
+    SignatureScheme, SignatureSchemeList, \
+    Finished
 
 # Crypto
 from .utils.encryption.ffdhe import FFDHE
@@ -152,12 +153,40 @@ def client_cmd(argv):
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
-    plain_restructed = TLSPlaintext.from_bytes(data)
-    messages.append(plain_restructed.fragment)
-    print(plain_restructed)
+    certificate = TLSPlaintext.from_bytes(data)
+    messages.append(certificate.fragment)
+    print(certificate)
+
+    # <<< server CertificateVerify <<<
+    data = client_conn.recv_msg()
+    cert_verify = TLSPlaintext.from_bytes(data)
+    messages.append(cert_verify.fragment)
+    print(cert_verify)
+
+    # <<< Finished <<<
+    hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
+    data = client_conn.recv_msg()
+    server_finished = TLSPlaintext.from_bytes(data)
+    messages.append(server_finished.fragment)
+    print(server_finished)
 
 
     # >>> Finished >>>
+    # client_handshake_traffic_secret を使って finished_key を作成する
+    hash_algo = CipherSuite.get_hash_algo_name(cipher_suite)
+    hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
+    finished_key = cryptomath.HKDF_expand_label(
+        client_application_traffic_secret, b'finished', b'', hash_size, hash_algo)
+    verify_data = cryptomath.secureHMAC(
+        finished_key, cryptomath.transcript_hash(messages, hash_algo), hash_algo)
+    finished = TLSPlaintext(
+        type=ContentType.handshake,
+        fragment=Handshake(
+            msg_type=HandshakeType.finished,
+            msg=Finished(verify_data=verify_data) ))
 
+    print(finished)
+    client_conn.send_msg(finished.to_bytes())
+    messages.append(finished.fragment)
 
     # >>> Application Data <<<
