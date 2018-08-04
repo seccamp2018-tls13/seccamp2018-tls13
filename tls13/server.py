@@ -23,23 +23,23 @@ def server_cmd(argv):
     # <<< ClientHello <<<
     server_conn = socket.ServerConnection()
     data = server_conn.recv_msg()
-    ch_plain_restructed = TLSPlaintext.from_bytes(data)
-    messages.append(ch_plain_restructed.fragment)
-    print(ch_plain_restructed)
+    recved_clienthello = TLSPlaintext.from_bytes(data)
+    messages.append(recved_clienthello.fragment)
+    print(recved_clienthello)
 
     # >>> ServerHello >>>
 
     # select params
 
-    client_session_id = ch_plain_restructed.legacy_session_id
-    client_cipher_suites = ch_plain_restructed.cipher_suites
-    client_key_share_groups = ch_plain_restructed \
+    client_session_id = recved_clienthello.legacy_session_id
+    client_cipher_suites = recved_clienthello.cipher_suites
+    client_key_share_groups = recved_clienthello \
         .get_extension(ExtensionType.key_share) \
         .get_groups()
-    client_signature_scheme_list = ch_plain_restructed \
+    client_signature_scheme_list = recved_clienthello \
         .get_extension(ExtensionType.signature_algorithms) \
         .supported_signature_algorithms
-    client_key_share = ch_plain_restructed \
+    client_key_share = recved_clienthello \
         .get_extension(ExtensionType.key_share)
 
     # パラメータの決定と shared_key の作成
@@ -61,7 +61,7 @@ def server_cmd(argv):
 
     selected_version = ProtocolVersion.TLS13
 
-    sh_plain = TLSPlaintext(
+    serverhello = TLSPlaintext(
         type=ContentType.handshake,
         fragment=Handshake(
             msg_type=HandshakeType.server_hello,
@@ -86,14 +86,9 @@ def server_cmd(argv):
                 ] )))
 
     # ServerHello が入っている TLSPlaintext
-    print(sh_plain)
-
-    # print("ServerHello bytes:")
-    sh_bytes = sh_plain.to_bytes()
-    # print(hexdump(sh_bytes))
-
-    server_conn.send_msg(sh_bytes)
-    messages.append(sh_plain.fragment)
+    print(serverhello)
+    server_conn.send_msg(serverhello.to_bytes())
+    messages.append(serverhello.fragment)
 
 
     # -- HKDF ---
@@ -135,7 +130,7 @@ def server_cmd(argv):
         cert_data = ''.join(f.readlines()[1:-1]).replace('\n', '')
         cert_data = bytes(cert_data, 'ascii')
 
-    cert_plain = TLSPlaintext(
+    certificate = TLSPlaintext(
         type=ContentType.handshake,
         fragment=Handshake(
             msg_type=HandshakeType.certificate,
@@ -145,15 +140,9 @@ def server_cmd(argv):
                     CertificateEntry(cert_data=cert_data)
                 ])))
 
-    print(cert_plain)
-    # print(cert_plain.to_bytes())
-
-    # print("server Certificate bytes:")
-    cert_bytes = cert_plain.to_bytes()
-    # print(hexdump(sh_bytes))
-
-    server_conn.send_msg(cert_bytes)
-    messages.append(cert_plain.fragment)
+    print(certificate)
+    server_conn.send_msg(certificate.to_bytes())
+    messages.append(certificate.fragment)
 
 
     # >>> CertificateVerify >>>
@@ -206,8 +195,8 @@ def server_cmd(argv):
     # <<< recv Finished <<<
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     data = server_conn.recv_msg()
-    client_finished = TLSPlaintext.from_bytes(data)
-    messages.append(client_finished.fragment)
-    print(client_finished)
+    recved_finished = TLSPlaintext.from_bytes(data)
+    messages.append(recved_finished.fragment)
+    print(recved_finished)
 
     # >>> Application Data <<<

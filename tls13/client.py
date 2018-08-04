@@ -39,7 +39,7 @@ def client_cmd(argv):
 
     # >>> ClientHello >>>
 
-    ch_plain = TLSPlaintext(
+    clienthello = TLSPlaintext(
         type=ContentType.handshake,
         fragment=Handshake(
             msg_type=HandshakeType.client_hello,
@@ -73,34 +73,29 @@ def client_cmd(argv):
                             client_shares=client_shares )),
                 ] )))
 
-    # ClientHello が入っている TLSPlaintext
-    print(ch_plain)
-
-    # print("ClientHello bytes:")
-    ch_bytes = ch_plain.to_bytes()
-    # print(hexdump(ch_bytes))
-
     # Server に ClientHello のバイト列を送信する
     print("[INFO] Connecting to server...")
     client_conn = socket.ClientConnection()
-    client_conn.send_msg(ch_bytes)
-    messages.append(ch_plain.fragment)
+    # ClientHello が入っている TLSPlaintext
+    print(clienthello)
+    client_conn.send_msg(clienthello.to_bytes())
+    messages.append(clienthello.fragment)
 
     # <<< ServerHello <<<
     data = client_conn.recv_msg()
-    sh_plain_restructed = TLSPlaintext.from_bytes(data)
-    messages.append(sh_plain_restructed.fragment)
-    print(sh_plain_restructed)
+    recved_serverhello = TLSPlaintext.from_bytes(data)
+    messages.append(recved_serverhello.fragment)
+    print(recved_serverhello)
 
     # パラメータの決定
-    server_cipher_suite = sh_plain_restructed.cipher_suite
-    server_selected_version = sh_plain_restructed \
+    server_cipher_suite = recved_serverhello.cipher_suite
+    server_selected_version = recved_serverhello \
         .get_extension(ExtensionType.supported_versions) \
         .selected_version
-    server_key_share_group = sh_plain_restructed \
+    server_key_share_group = recved_serverhello \
         .get_extension(ExtensionType.key_share) \
         .get_group()
-    server_key_share_key_exchange = sh_plain_restructed \
+    server_key_share_key_exchange = recved_serverhello \
         .get_extension(ExtensionType.key_share) \
         .get_key_exchange()
 
@@ -153,22 +148,22 @@ def client_cmd(argv):
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
-    certificate = TLSPlaintext.from_bytes(data)
-    messages.append(certificate.fragment)
-    print(certificate)
+    recved_certificate = TLSPlaintext.from_bytes(data)
+    messages.append(recved_certificate.fragment)
+    print(recved_certificate)
 
     # <<< server CertificateVerify <<<
     data = client_conn.recv_msg()
-    cert_verify = TLSPlaintext.from_bytes(data)
-    messages.append(cert_verify.fragment)
-    print(cert_verify)
+    recved_cert_verify = TLSPlaintext.from_bytes(data)
+    messages.append(recved_cert_verify.fragment)
+    print(recved_cert_verify)
 
-    # <<< Finished <<<
+    # <<< recv Finished <<<
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     data = client_conn.recv_msg()
-    server_finished = TLSPlaintext.from_bytes(data)
-    messages.append(server_finished.fragment)
-    print(server_finished)
+    recv_finished = TLSPlaintext.from_bytes(data)
+    messages.append(recv_finished.fragment)
+    print(recv_finished)
 
 
     # >>> Finished >>>
