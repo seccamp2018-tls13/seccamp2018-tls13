@@ -5,7 +5,7 @@ import secrets
 from tls13.protocol import *
 from tls13.utils.type import *
 
-from .common import TypeTestMixin
+from .common import TypeTestMixin, StructTestMixin
 
 
 class ContentTypeTest(unittest.TestCase, TypeTestMixin):
@@ -131,3 +131,21 @@ class TLSPlaintextTest(unittest.TestCase):
     def test_getattr_with_no_msg_obj(self):
         self.ch_plain.fragment.msg = None
         self.assertRaises(AttributeError, lambda: self.ch_plain.cipher_suite)
+
+
+class TLSInnerPlaintextTest(unittest.TestCase, StructTestMixin):
+
+    def setUp(self):
+        self.target = TLSInnerPlaintext
+        self.obj = TLSInnerPlaintext(
+            content=b'foobar',
+            type=ContentType.application_data,
+            length_of_padding=13)
+
+
+class TLSCiphertextTest(unittest.TestCase, StructTestMixin):
+
+    def setUp(self):
+        self.target = TLSCiphertext
+        self.obj = TLSCiphertext(
+            encrypted_record=b'foobar')

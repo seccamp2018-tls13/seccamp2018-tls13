@@ -92,6 +92,24 @@ class TLSInnerPlaintext(Struct):
         self.zeros = b'\x00' * length_of_padding
         self._length_of_padding = length_of_padding
 
+        self.struct = Members(self, [
+            Member(bytes, 'content'),
+            Member(ContentType, 'type'),
+            Member(bytes, 'zeros'),
+        ])
+
+    @classmethod
+    def from_bytes(cls, data):
+        content, type, zeros = cls.split_pad(data)
+        return cls(content=content, type=type, length_of_padding=len(zeros))
+
+    @staticmethod
+    def split_pad(data):
+        for pos, value in zip(reversed(range(len(data))), reversed(data)):
+            if value != 0:
+                break
+        return (data[:pos], Uint8(value), data[pos+1:]) # content, type, zeros
+
 
 class TLSCiphertext(Struct):
     """
@@ -102,8 +120,25 @@ class TLSCiphertext(Struct):
       opaque encrypted_record[TLSCiphertext.length];
     } TLSCiphertext;
     """
-    def __init__(self, length, encrypted_record):
-        self.opaque_type = 23
-        self.legacy_record_version = Uint16(0x0303)
-        self.length = length
-        self.encrypted_record = encrypted_record
+    def __init__(self, **kwargs):
+        encrypted_record = kwargs.get('encrypted_record', b'')
+        self.struct = Members(self, [
+            Member(ContentType, 'opaque_type'),
+            Member(ProtocolVersion, 'legacy_record_version'),
+            Member(Uint16, 'length'),
+            Member(bytes, 'encrypted_record'),
+        ])
+        self.struct.set_default('opaque_type', ContentType.application_data)
+        self.struct.set_default('legacy_record_version', ProtocolVersion.TLS12)
+        self.struct.set_default('length', Uint16(len(encrypted_record)))
+        self.struct.set_args(**kwargs)
+
+    @classmethod
+    def from_bytes(cls, data):
+        reader = Reader(data)
+        opaque_type           = reader.get(Uint8)
+        legacy_record_version = reader.get(Uint16)
+        length                = reader.get(Uint16)
+        encrypted_record      = reader.get(bytes)
+        assert int(length) == len(encrypted_record)
+        return cls(length=length, encrypted_record=encrypted_record)
