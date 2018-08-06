@@ -36,6 +36,11 @@ class Cipher:
 
 
 class Chacha20Poly1305(Cipher):
+    key_size = 32
+    nonce_size = 12
+    # keyとnonceをHKDFで生成するときに
+    # HKDF_expand_label(Master Secret, b"key", b"", Chacha20Poly1305.key_size)
+    # のようにできるようにしておく
 
     def __init__(self, key, nonce):
         #super(Chacha20Poly1305, self).__init__(key)
@@ -48,7 +53,6 @@ class Chacha20Poly1305(Cipher):
 
         array64s = make_array(plaintext, 64, to_int=False)
 
-        #cipher = b''
         cipher = bytearray(0)
         for cnt, array64 in enumerate(array64s, 1):
             plain_blocks = []
@@ -71,7 +75,6 @@ class Chacha20Poly1305(Cipher):
 
         array64s = make_array(ciphertext, 64, to_int=False)
 
-        #plain = b''
         plain = bytearray(0)
         for cnt, array64 in enumerate(array64s, 1):
             cipher_blocks = []
