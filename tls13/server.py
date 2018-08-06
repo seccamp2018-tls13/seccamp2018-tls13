@@ -12,6 +12,7 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
 
 # Crypto
 from .utils.encryption.ffdhe import FFDHE
+from .utils.encryption import Cipher
 
 from .utils import cryptomath, hexdump, hexstr
 
@@ -120,6 +121,18 @@ def server_cmd(argv):
         hexstr(client_application_traffic_secret))
     print('server_application_traffic_secret =',
         hexstr(server_application_traffic_secret))
+
+    # [Haruka 8/6] TEST chacha20poly1305
+    server_write_key = cryptomath.HKDF_expand_label(secret, b'key', 
+            b'', Cipher.Chacha20Poly1305.key_size)
+    server_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv', 
+            b'', Cipher.Chacha20Poly1305.nonce_size)
+
+    print('server_write_key = ', server_write_key)
+    print('server_write_iv = ', server_write_iv)
+
+    chachaPoly = Cipher.Chacha20Poly1305(key=server_write_key, 
+                                        nonce=server_write_iv) 
 
     # >>> EncryptedExtensions >>>
 
