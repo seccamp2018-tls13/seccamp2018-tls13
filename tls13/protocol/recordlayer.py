@@ -3,7 +3,8 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.1
 
 __all__ = [
-    'ContentType', 'TLSPlaintext', 'TLSInnerPlaintext', 'TLSCiphertext'
+    'ContentType', 'TLSPlaintext', 'TLSInnerPlaintext', 'TLSCiphertext',
+    'Data',
 ]
 
 import collections
@@ -13,6 +14,7 @@ from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ..utils.codec import Reader
 from ..utils.repr import make_format
 from ..utils.struct import Struct, Members, Member, Listof
+
 
 @Type.add_labels_and_values
 class ContentType(Type):
@@ -78,6 +80,35 @@ class TLSPlaintext(Struct):
             raise NotImplementedError()
 
 
+class Data(Struct):
+    # TLSPlaintext.fragment にはTLS構造体や送信するデータなどが入るが Members で、
+    # Member(Struct, 'fragment') と書いているので、Struct しか受け付けないように
+    # なっていて、fragment に送信するデータ（バイト列）を入れるとエラーになる。
+    # そこで、Struct を継承した Data というクラスを作る。
+    # 使い方は：
+    #
+    #   TLSPlaintext(
+    #       type=ContentType.application_data,
+    #       fragment=Data(b'GET /index.html')
+    #   )
+    #
+    def __init__(self, data):
+        self.data = data
+
+    def __repr__(self):
+        return self.data.decode('utf-8')
+
+    def __len__(self):
+        return len(self.data)
+
+    def to_bytes(self):
+        return self.data
+
+    @classmethod
+    def from_bytes(self, data):
+        return data
+
+
 class TLSInnerPlaintext(Struct):
     """
     struct {
@@ -109,6 +140,13 @@ class TLSInnerPlaintext(Struct):
             if value != 0:
                 break
         return (data[:pos], Uint8(value), data[pos+1:]) # content, type, zeros
+
+    @classmethod
+    def create(cls, tlsplaintext, length_of_padding=0):
+        return cls(
+            content=tlsplaintext.fragment,
+            type=tlsplaintext.type,
+            length_of_padding=length_of_padding)
 
 
 class TLSCiphertext(Struct):

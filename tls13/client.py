@@ -8,12 +8,13 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     ProtocolVersion, SupportedVersions, \
     NamedGroup, NamedGroupList, \
     SignatureScheme, SignatureSchemeList, \
-    Finished, Hash
+    Finished, Hash, \
+    TLSInnerPlaintext, TLSCiphertext, Data
 
 # Crypto
 from .utils.encryption.ffdhe import FFDHE
 
-from .utils import cryptomath, hexdump, hexstr
+from .utils import cryptomath, hexdump, hexstr, Uint16
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
@@ -186,3 +187,28 @@ def client_cmd(argv):
     messages.append(finished.fragment)
 
     # >>> Application Data <<<
+
+    # chacha/poly
+    key_length = 32
+    iv_length = 12
+    client_write_key = cryptomath.HKDF_expand_label(
+        client_application_traffic_secret, b'key', b'', key_length, hash_algo)
+    client_write_iv = cryptomath.HKDF_expand_label(
+        client_application_traffic_secret, b'iv', b'', iv_length, hash_algo)
+
+    app_data = TLSPlaintext(
+        type=ContentType.application_data,
+        fragment=Data(b'GET /index.html\n'))
+    app_data_inner = TLSInnerPlaintext.create(app_data)
+
+    # additional_data = TLSCiphertext.opaque_type || .legacy_record_version || .length
+    additional_data = b'\x23\x03\x03' + Uint16(len(app_data_inner)).to_bytes()
+
+    # chacha/poly
+    from .utils.encryption.Cipher import Chacha20Poly1305
+    chachapoly = Chacha20Poly1305(key=client_write_key, nonce=client_write_iv)
+
+    print(app_data)
+    encrypted_record = chachapoly.encrypt(app_data.to_bytes())
+    app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)
+    print(app_data_cipher)

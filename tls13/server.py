@@ -201,3 +201,14 @@ def server_cmd(argv):
     print(recved_finished)
 
     # >>> Application Data <<<
+
+    # chacha/poly
+    key_length = 32
+    iv_length = 12
+    server_write_key = cryptomath.HKDF_expand_label(
+        server_application_traffic_secret, b'key', b'', key_length, hash_algo)
+    server_write_iv = cryptomath.HKDF_expand_label(
+        server_application_traffic_secret, b'iv', b'', iv_length, hash_algo)
+
+    from .utils.encryption.Cipher import Chacha20Poly1305
+    chachapoly = Chacha20Poly1305(key=server_write_key, nonce=server_write_iv)
