@@ -37,7 +37,10 @@ def client_cmd(argv):
             group=NamedGroup.ffdhe2048,
             key_exchange=ffdhe2048_key_exchange),
     ]
-    cipher_suites = [ CipherSuite.TLS_AES_128_GCM_SHA256 ]
+    cipher_suites = [
+        CipherSuite.TLS_AES_128_GCM_SHA256,
+        CipherSuite.TLS_CHACHA20_POLY1305_SHA256,
+    ]
 
     # >>> ClientHello >>>
 
@@ -132,32 +135,25 @@ def client_cmd(argv):
         cryptomath.derive_secret(secret, b"c hs traffic", messages)
     server_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"s hs traffic", messages)
-
     # master secret
     secret = cryptomath.derive_secret(secret, b"derive", b"")
     secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
-
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
     server_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"s ap traffic", messages)
 
-    print('client_application_traffic_secret =',
-        hexstr(client_application_traffic_secret))
-    print('server_application_traffic_secret =',
-        hexstr(server_application_traffic_secret))
-
     # [Haruka 8/6] TEST chacha20poly1305
     client_write_key = cryptomath.HKDF_expand_label(secret, b'key',
-            b'', Cipher.Chacha20Poly1305.key_size)
+            b'', Cipher.Chacha20Poly1305.key_size, hash_algo)
     client_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv',
-            b'', Cipher.Chacha20Poly1305.nonce_size)
+            b'', Cipher.Chacha20Poly1305.nonce_size, hash_algo)
 
     print('client_write_key = ', client_write_key)
     print('client_write_iv = ', client_write_iv)
 
     chachaPoly = Cipher.Chacha20Poly1305(key=client_write_key,
-                                        nonce=client_write_iv)
+                                         nonce=client_write_iv)
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
@@ -200,14 +196,6 @@ def client_cmd(argv):
 
     # >>> Application Data <<<
 
-    # chacha/poly
-    key_length = 32
-    iv_length = 12
-    client_write_key = cryptomath.HKDF_expand_label(
-        client_application_traffic_secret, b'key', b'', key_length, hash_algo)
-    client_write_iv = cryptomath.HKDF_expand_label(
-        client_application_traffic_secret, b'iv', b'', iv_length, hash_algo)
-
     app_data = TLSPlaintext(
         type=ContentType.application_data,
         fragment=Data(b'GET /index.html\n'))
@@ -216,11 +204,7 @@ def client_cmd(argv):
     # additional_data = TLSCiphertext.opaque_type || .legacy_record_version || .length
     additional_data = b'\x23\x03\x03' + Uint16(len(app_data_inner)).to_bytes()
 
-    # chacha/poly
-    from .utils.encryption.Cipher import Chacha20Poly1305
-    chachapoly = Chacha20Poly1305(key=client_write_key, nonce=client_write_iv)
-
     print(app_data)
-    encrypted_record = chachapoly.encrypt(app_data.to_bytes())
+    encrypted_record = chachaPoly.encrypt(app_data.to_bytes())
     app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)
     print(app_data_cipher)

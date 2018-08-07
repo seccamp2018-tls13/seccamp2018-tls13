@@ -45,7 +45,10 @@ def server_cmd(argv):
 
     # パラメータの決定と shared_key の作成
     # 暗号化：受け取ったClientHelloの暗号スイートから選ぶ
-    cipher_suite = client_cipher_suites[0] # TODO: 暗号スイート実装してから優先順位を決める
+    if CipherSuite.TLS_CHACHA20_POLY1305_SHA256 in client_cipher_suites:
+        cipher_suite = CipherSuite.TLS_CHACHA20_POLY1305_SHA256
+    else:
+        raise NotImplementedError()
 
     # 鍵共有：ClientHelloのKeyShareEntryを見てどの方法で鍵共有するか決めてから、
     # パラメータ（group, key_exchange）を決める
@@ -107,26 +110,25 @@ def server_cmd(argv):
         cryptomath.derive_secret(secret, b"c hs traffic", messages)
     server_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"s hs traffic", messages)
-
     # master secret
     secret = cryptomath.derive_secret(secret, b"derive", b"")
     secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
-
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
     server_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"s ap traffic", messages)
 
-    print('client_application_traffic_secret =',
-        hexstr(client_application_traffic_secret))
-    print('server_application_traffic_secret =',
-        hexstr(server_application_traffic_secret))
+    if cipher_suite == CipherSuite.TLS_CHACHA20_POLY1305_SHA256:
+        key_size   = Cipher.Chacha20Poly1305.key_size
+        nonce_size = Cipher.Chacha20Poly1305.nonce_size
+    else:
+        raise NotImplementedError()
 
     # [Haruka 8/6] TEST chacha20poly1305
     server_write_key = cryptomath.HKDF_expand_label(secret, b'key',
-            b'', Cipher.Chacha20Poly1305.key_size)
+            b'', Cipher.Chacha20Poly1305.key_size, hash_algo)
     server_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv',
-            b'', Cipher.Chacha20Poly1305.nonce_size)
+            b'', Cipher.Chacha20Poly1305.nonce_size, hash_algo)
 
     print('server_write_key = ', server_write_key)
     print('server_write_iv = ', server_write_iv)
@@ -214,14 +216,3 @@ def server_cmd(argv):
     print(recved_finished)
 
     # >>> Application Data <<<
-
-    # chacha/poly
-    key_length = 32
-    iv_length = 12
-    server_write_key = cryptomath.HKDF_expand_label(
-        server_application_traffic_secret, b'key', b'', key_length, hash_algo)
-    server_write_iv = cryptomath.HKDF_expand_label(
-        server_application_traffic_secret, b'iv', b'', iv_length, hash_algo)
-
-    from .utils.encryption.Cipher import Chacha20Poly1305
-    chachapoly = Chacha20Poly1305(key=server_write_key, nonce=server_write_iv)
