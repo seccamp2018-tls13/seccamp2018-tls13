@@ -123,16 +123,16 @@ def server_cmd(argv):
         hexstr(server_application_traffic_secret))
 
     # [Haruka 8/6] TEST chacha20poly1305
-    server_write_key = cryptomath.HKDF_expand_label(secret, b'key', 
+    server_write_key = cryptomath.HKDF_expand_label(secret, b'key',
             b'', Cipher.Chacha20Poly1305.key_size)
-    server_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv', 
+    server_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv',
             b'', Cipher.Chacha20Poly1305.nonce_size)
 
     print('server_write_key = ', server_write_key)
     print('server_write_iv = ', server_write_iv)
 
-    chachaPoly = Cipher.Chacha20Poly1305(key=server_write_key, 
-                                        nonce=server_write_iv) 
+    chachaPoly = Cipher.Chacha20Poly1305(key=server_write_key,
+                                         nonce=server_write_iv)
 
     # >>> EncryptedExtensions >>>
 
@@ -164,12 +164,10 @@ def server_cmd(argv):
     # 秘密鍵 .ssh/server.key を使って署名する
     from Crypto.Hash import SHA256
     from Crypto.PublicKey import RSA
-    key = RSA.import_key(open('.ssh/server.key').read())
-    #key = RSA.importKey(open('.ssh/server.key').read())
+    key = RSA.importKey(open('.ssh/server.key').read())
     if SignatureScheme.rsa_pkcs1_sha256 in client_signature_scheme_list:
         server_signature_scheme = SignatureScheme.rsa_pkcs1_sha256
-        from Crypto.Signature import pkcs1_15
-        #from Crypto.Signature import PKCS1_v1_5 as pkcs1_15
+        from Crypto.Signature import PKCS1_v1_5 as pkcs1_15
         message = b'\x20' * 64 + b'TLS 1.3, server CertificateVerify' + b'\x00' + cert_data
         h = SHA256.new(message)
         certificate_signature = pkcs1_15.new(key).sign(h)

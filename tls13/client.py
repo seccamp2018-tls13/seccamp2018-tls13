@@ -148,9 +148,9 @@ def client_cmd(argv):
         hexstr(server_application_traffic_secret))
 
     # [Haruka 8/6] TEST chacha20poly1305
-    client_write_key = cryptomath.HKDF_expand_label(secret, b'key', 
+    client_write_key = cryptomath.HKDF_expand_label(secret, b'key',
             b'', Cipher.Chacha20Poly1305.key_size)
-    client_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv', 
+    client_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv',
             b'', Cipher.Chacha20Poly1305.nonce_size)
 
     print('client_write_key = ', client_write_key)
