@@ -171,9 +171,10 @@ def client_cmd(argv):
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     Hash.set_size(hash_size)
     data = client_conn.recv_msg()
-    recv_finished = TLSPlaintext.from_bytes(data)
-    messages.append(recv_finished.fragment)
-    print(recv_finished)
+    recved_finished = TLSPlaintext.from_bytes(data)
+    messages.append(recved_finished.fragment)
+    print(recved_finished)
+    assert isinstance(recved_finished.fragment.msg, Finished)
 
 
     # >>> Finished >>>
@@ -194,7 +195,9 @@ def client_cmd(argv):
     client_conn.send_msg(finished.to_bytes())
     messages.append(finished.fragment)
 
+
     # >>> Application Data <<<
+    print("=== Application Data ===")
 
     app_data = TLSPlaintext(
         type=ContentType.application_data,
@@ -205,6 +208,9 @@ def client_cmd(argv):
     additional_data = b'\x23\x03\x03' + Uint16(len(app_data_inner)).to_bytes()
 
     print(app_data)
-    encrypted_record = chachaPoly.encrypt(app_data.to_bytes())
+    print(app_data_inner)
+    encrypted_record = chachaPoly.encrypt(app_data_inner.to_bytes())
     app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)
     print(app_data_cipher)
+
+    client_conn.send_msg(app_data_cipher.to_bytes())

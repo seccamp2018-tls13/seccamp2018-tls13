@@ -76,6 +76,8 @@ class TLSPlaintext(Struct):
 
         if type == ContentType.handshake:
             return cls(type=type, fragment=Handshake.from_bytes(fragment))
+        elif type == ContentType.application_data:
+            return cls(type=type, fragment=Data(fragment))
         else:
             raise NotImplementedError()
 
@@ -100,6 +102,9 @@ class Data(Struct):
 
     def __len__(self):
         return len(self.data)
+
+    def hex(self):
+        return self.data.hex()
 
     def to_bytes(self):
         return self.data
@@ -142,9 +147,9 @@ class TLSInnerPlaintext(Struct):
         return (data[:pos], Uint8(value), data[pos+1:]) # content, type, zeros
 
     @classmethod
-    def create(cls, tlsplaintext, length_of_padding=0):
+    def create(cls, tlsplaintext, length_of_padding=8):
         return cls(
-            content=tlsplaintext.fragment,
+            content=tlsplaintext.to_bytes(),
             type=tlsplaintext.type,
             length_of_padding=length_of_padding)
 

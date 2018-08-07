@@ -8,7 +8,8 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     ProtocolVersion, SupportedVersions, \
     NamedGroup, NamedGroupList, \
     SignatureScheme, SignatureSchemeList, \
-    Certificate, CertificateEntry, CertificateVerify, Finished, Hash
+    Certificate, CertificateEntry, CertificateVerify, Finished, Hash, \
+    TLSInnerPlaintext, TLSCiphertext, Data
 
 # Crypto
 from .utils.encryption.ffdhe import FFDHE
@@ -214,5 +215,19 @@ def server_cmd(argv):
     recved_finished = TLSPlaintext.from_bytes(data)
     messages.append(recved_finished.fragment)
     print(recved_finished)
+    assert isinstance(recved_finished.fragment.msg, Finished)
+
 
     # >>> Application Data <<<
+    print("=== Application Data ===")
+
+    data = server_conn.recv_msg()
+    recved_app_data_cipher = TLSCiphertext.from_bytes(data)
+    print(recved_app_data_cipher)
+
+    recved_app_data_inner_bytes = \
+        chachaPoly.decrypt(recved_app_data_cipher.encrypted_record)
+    recved_app_data_inner = TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
+    print(recved_app_data_inner)
+    recved_app_data = TLSPlaintext.from_bytes(recved_app_data_inner.content)
+    print(recved_app_data)
