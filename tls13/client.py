@@ -13,6 +13,7 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
 
 # Crypto
 from .utils.encryption.ffdhe import FFDHE
+from .utils.encryption import Cipher
 
 from .utils import cryptomath, hexdump, hexstr, Uint16
 
@@ -146,6 +147,17 @@ def client_cmd(argv):
     print('server_application_traffic_secret =',
         hexstr(server_application_traffic_secret))
 
+    # [Haruka 8/6] TEST chacha20poly1305
+    client_write_key = cryptomath.HKDF_expand_label(secret, b'key', 
+            b'', Cipher.Chacha20Poly1305.key_size)
+    client_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv', 
+            b'', Cipher.Chacha20Poly1305.nonce_size)
+
+    print('client_write_key = ', client_write_key)
+    print('client_write_iv = ', client_write_iv)
+
+    chachaPoly = Cipher.Chacha20Poly1305(key=client_write_key,
+                                        nonce=client_write_iv)
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
