@@ -12,6 +12,8 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     TLSInnerPlaintext, TLSCiphertext, Data
 
 # Crypto
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
+    X25519PublicKey
 from .utils.encryption.ffdhe import FFDHE
 from .utils.encryption import Cipher
 
@@ -41,8 +43,7 @@ def server_cmd(argv):
     client_signature_scheme_list = recved_clienthello \
         .get_extension(ExtensionType.signature_algorithms) \
         .supported_signature_algorithms
-    client_key_share = recved_clienthello \
-        .get_extension(ExtensionType.key_share)
+    client_key_share = recved_clienthello.get_extension(ExtensionType.key_share)
 
     # パラメータの決定と shared_key の作成
     # 暗号化：受け取ったClientHelloの暗号スイートから選ぶ
@@ -59,6 +60,13 @@ def server_cmd(argv):
         ffdhe2048 = FFDHE(server_share_group)
         server_key_share_key_exchange = ffdhe2048.gen_public_key()
         shared_key = ffdhe2048.gen_shared_key(client_key_exchange)
+    elif NamedGroup.x25519 in client_key_share_groups:
+        server_share_group = NamedGroup.x25519
+        client_key_exchange = client_key_share.get_key_exchange(server_share_group)
+        x25519 = X25519PrivateKey.generate()
+        server_key_share_key_exchange = x25519.public_key().public_bytes()
+        shared_key = \
+            x25519.exchange(X25519PublicKey.from_public_bytes(client_key_exchange))
     else:
         raise NotImplementedError()
 
