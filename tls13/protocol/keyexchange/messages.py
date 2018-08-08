@@ -10,6 +10,7 @@ __all__ = [
     'PskIdentity', 'OfferedPsks', 'PreSharedKeyExtension'
 ]
 
+import sys
 import secrets
 import collections
 
@@ -160,10 +161,12 @@ class Extension(Struct):
         extension_data = reader.get(bytes, length_t=Uint16)
 
         ExtClass, kwargs = cls.get_extension_class(extension_type, msg_type)
-
-        obj = cls(
-            extension_type=extension_type,
-            extension_data=ExtClass.from_bytes(extension_data, **kwargs))
+        if ExtClass is None:
+            obj = None
+        else:
+            obj = cls(
+                extension_type=extension_type,
+                extension_data=ExtClass.from_bytes(extension_data, **kwargs))
 
         if is_given_reader:
             return (obj, reader)
@@ -182,6 +185,7 @@ class Extension(Struct):
         # Read extensions
         while reader.get_rest_length() != 0:
             ext, reader = cls.from_bytes(reader=reader, msg_type=msg_type)
+            if ext is None: continue
             extensions.append(ext)
 
         return extensions
@@ -223,7 +227,11 @@ class Extension(Struct):
                 raise RuntimeError("must be set msg_type to get_extension_class()")
 
         else:
-            raise NotImplementedError()
+            output = 'Extension: unknown extension: %s' % extension_type
+            if extension_type in ExtensionType.labels:
+                output += ' == %s' % ExtensionType.labels[extension_type]
+            print(output, file=sys.stdout)
+            return (None, None)
 
         return (ExtClass, kwargs)
 
