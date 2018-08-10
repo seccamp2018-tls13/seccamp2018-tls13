@@ -1,10 +1,14 @@
 import binascii
+import hashlib
 from .chacha20poly1305 import *
 
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 
 ## NOTE : 今後のためにファイル分けとかも考えた方が良さそう?
 ##          chacha20poly1305だけならまだ大丈夫かも
+
+## NOTE : Cipherを継承したそれぞれのアルゴリズムでの
+##        AEAD(MAC)の生成関数の名前を統一した方が良さそう
 
 def make_array(text, n_bytes=16, to_int=False):
     if to_int:
@@ -145,3 +149,54 @@ class Chacha20Poly1305(Cipher):
 
         tag = self.poly1305_mac(mac_data, otk)
         return ciphertext, tag
+
+# http://inaz2.hatenablog.com/entry/2013/11/30/233649
+#
+class RC4(Cipher):
+    """
+    USAGE:
+        key = HKDF_expand_label(secret, b'key', b'', Cipher.RC4.key_size)
+        rc4 = Cipher.RC4(key=key)
+
+        cipher, tag = rc4.encrypt_with_mac(plain)
+    """
+    key_size = 32
+
+    def __init__(self, key):
+        self.key = key
+
+    def KSA(self):
+        S = [i for i in range(256)]
+        j = 0
+        for i in range(256):
+            j = (j + S[i] + self.key[i % len(self.key)]) % 256
+            S[i], S[j] = S[j], S[i]
+        return S
+
+    def PRGA(self, S):
+        i, j = 0, 0
+        while True:
+            i = (i + 1) % 256
+            j = (j + S[i]) % 256
+            S[i], S[j] = S[j], S[i]
+            K = S[(S[i] + S[j]) % 256]
+            yield K
+
+    def encrypt(self, plaintext):
+        S = self.KSA()
+        gen = self.PRGA(S)
+        ciphertext = bytearray(c ^ n for c, n in zip(plaintext, gen))
+        return ciphertext
+
+    def decrypt(self, ciphertext):
+        return self.encrypt(ciphertext)
+
+    def gen_mac(self, auth_data):
+        hash_ = hashlib.sha256(self.key + auth_data).digest()
+        return hash_
+
+    def encrypt_with_mac(self, plaintext):
+        ciphertext = self.encrypt(plaintext)
+        mac = bytearray(self.gen_mac(plaintext))
+
+        return ciphertext, mac
