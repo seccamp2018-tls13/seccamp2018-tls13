@@ -203,23 +203,32 @@ class TLSCiphertext(Struct):
         else:
             raise TypeError()
         app_data_inner = TLSInnerPlaintext.create(tlsplaintext)
-        encrypted_record = crypto.encrypt(app_data_inner.to_bytes())
+
+        # additional_data =
+        #   TLSCiphertext.opaque_type || .legacy_record_version || .length
+        length = len(crypto.encrypt(app_data_inner.to_bytes()))
+        aad = b'\x23\x03\x03' + Uint16(length).to_bytes()
+        # print(aad)
+
+        encrypted_record = crypto.aead_encrypt(aad, app_data_inner.to_bytes())
         app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)
         return app_data_cipher
 
     @classmethod
     def restore(cls, data, crypto, mode=None) -> (TLSPlaintext, bytes):
-        recved_app_data_cipher = cls.from_bytes(data)
+        recved_app_data_cipher = TLSCiphertext.from_bytes(data)
+
+        # additional_data =
+        #   TLSCiphertext.opaque_type || .legacy_record_version || .length
+        length = recved_app_data_cipher.length.value - 16 # ??? 16 引かないと一致しない
+        aad = b'\x23\x03\x03' + Uint16(length).to_bytes()
+        # print(aad)
+
         recved_app_data_inner_bytes = \
-            crypto.decrypt(recved_app_data_cipher.encrypted_record)
+            crypto.aead_decrypt(aad, recved_app_data_cipher.encrypted_record)
         recved_app_data_inner = \
             TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
         recved_app_data = \
             TLSPlaintext.from_bytes(recved_app_data_inner.content, mode=mode)
 
-        # additional_data =
-        #   TLSCiphertext.opaque_type || .legacy_record_version || .length
-        additional_data = \
-            b'\x23\x03\x03' + Uint16(len(recved_app_data_inner)).to_bytes()
-
-        return recved_app_data, additional_data
+        return recved_app_data

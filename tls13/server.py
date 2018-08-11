@@ -238,7 +238,6 @@ def server_cmd(argv):
     print("=== Application Data ===")
 
     data = server_conn.recv_msg()
-    recved_app_data, additional_data = \
-        TLSCiphertext.restore(data, crypto=app_data_crypto)
+    recved_app_data = TLSCiphertext.restore(data, crypto=app_data_crypto)
 
     print(recved_app_data)

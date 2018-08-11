@@ -170,7 +170,7 @@ def client_cmd(argv):
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
     # recved_certificate = TLSPlaintext.from_bytes(data)
-    recved_certificate, additional_data = \
+    recved_certificate = \
         TLSCiphertext.restore(data, crypto=traffic_crypto, mode=ContentType.handshake)
     messages.append(recved_certificate.fragment)
     print(recved_certificate)
