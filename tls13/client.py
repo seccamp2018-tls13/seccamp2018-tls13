@@ -144,34 +144,30 @@ def client_cmd(argv):
         cryptomath.derive_secret(secret, b"s ap traffic", messages)
 
     if cipher_suite == CipherSuite.TLS_CHACHA20_POLY1305_SHA256:
-        key_size   = Cipher.Chacha20Poly1305.key_size
-        nonce_size = Cipher.Chacha20Poly1305.nonce_size
+        cipher_class = Cipher.Chacha20Poly1305
+        key_size     = Cipher.Chacha20Poly1305.key_size
+        nonce_size   = Cipher.Chacha20Poly1305.nonce_size
     else:
         raise NotImplementedError()
 
     server_write_key, server_write_iv = \
         cryptomath.gen_key_and_iv(server_application_traffic_secret,
                                   key_size, nonce_size, hash_algo)
-    traffic_crypto = Cipher.Chacha20Poly1305(key=server_write_key,
-                                             nonce=server_write_iv)
+    s_traffic_crypto = cipher_class(key=server_write_key, nonce=server_write_iv)
 
-    # [Haruka 8/6] TEST chacha20poly1305
-    client_write_key = cryptomath.HKDF_expand_label(secret, b'key',
-            b'', Cipher.Chacha20Poly1305.key_size, hash_algo)
-    client_write_iv  = cryptomath.HKDF_expand_label(secret, b'iv',
-            b'', Cipher.Chacha20Poly1305.nonce_size, hash_algo)
+    client_write_key, client_write_iv = \
+        cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
 
     print('client_write_key = ', client_write_key)
     print('client_write_iv = ', client_write_iv)
 
-    app_data_crypto = Cipher.Chacha20Poly1305(key=client_write_key,
-                                              nonce=client_write_iv)
+    app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
     # recved_certificate = TLSPlaintext.from_bytes(data)
-    recved_certificate = \
-        TLSCiphertext.restore(data, crypto=traffic_crypto, mode=ContentType.handshake)
+    recved_certificate = TLSCiphertext.restore(data,
+            crypto=s_traffic_crypto, mode=ContentType.handshake)
     messages.append(recved_certificate.fragment)
     print(recved_certificate)
 
