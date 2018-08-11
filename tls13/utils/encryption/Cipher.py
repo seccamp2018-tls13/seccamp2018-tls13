@@ -21,10 +21,10 @@ def concatenate_bytes(array:list) -> bytes:
     return con_bytes
 
 class Cipher:
-    
+
     def __init__(self, key):
         self.key = key
-        # self.key_size 
+        # self.key_size
 
     def encrypt(self, plaintext):
         assert len(plaintext) % 16 == 0
@@ -149,6 +149,66 @@ class Chacha20Poly1305(Cipher):
 
         tag = self.poly1305_mac(mac_data, otk)
         return ciphertext, tag
+
+    # [Mako 8/11]
+    # AEAD-Encrypt と AEAD-Decrypt の追加
+    # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#page-84
+    # AEADなアルゴリズムを実装するクラスは全て aead_encrypt と aead_decrypt という
+    # メソッドを持つようにして、インターフェースを統一したい。
+
+    def aead_encrypt(self, aad, plaintext):
+        """
+        Encrypts and authenticates plaintext using nonce and data. Returns the
+        ciphertext, consisting of the encrypted plaintext and tag concatenated.
+        """
+        ciphertext, tag = self.chacha20_aead_encrypt(aad, plaintext)
+        return ciphertext + tag
+
+    def aead_decrypt(self, aad, ciphertext):
+        """
+        Decrypts and authenticates ciphertext using nonce and aad. If the
+        tag is valid, the plaintext is returned. If the tag is invalid,
+        returns None.
+        """
+        import struct
+
+        # if len(self.nonce) != 12:
+        #     raise ValueError("Nonce must be 96 bit long")
+
+        if len(ciphertext) < 16:
+            return None
+
+        expected_tag = ciphertext[-16:]
+        ciphertext = ciphertext[:-16]
+
+        otk = self.poly1305_key_gen()
+        mac_data = aad + self.pad16(aad)
+        mac_data += ciphertext + self.pad16(ciphertext)
+        mac_data += bytearray(len(aad) + len(ciphertext))
+        tag = self.poly1305_mac(mac_data, otk)
+
+        if not self.ct_compare_digest(tag, expected_tag):
+            return None
+
+        return self.decrypt(ciphertext)
+
+    @staticmethod
+    def pad16(data):
+        """Return padding for the Associated Authenticated Data"""
+        if len(data) % 16 == 0: return bytearray(0)
+        return bytearray(16 - (len(data) % 16))
+
+    @staticmethod
+    def ct_compare_digest(a, b):
+        """Compares if string like objects are equal. Constant time."""
+        # この関数は a == b の結果を返すが、
+        # 内容に基づく短絡的な振る舞いを避けることで、タイミング分析を防ぐ
+        if len(a) != len(b): return False
+        result = 0
+        for x, y in zip(a, b):
+            result |= x ^ y
+        return result == 0
+
 
 # http://inaz2.hatenablog.com/entry/2013/11/30/233649
 #

@@ -41,9 +41,21 @@ class Chacha20Poly1305Test(unittest.TestCase):
         dec = polychacha2.decrypt(enc)
         self.assertNotEqual(self.plain, dec)
 
-    def test_aued(self):
+    def test_aead(self):
         polychacha = Chacha20Poly1305(self.key, self.nonce)
         enc, tag = polychacha.chacha20_aead_encrypt(self.auth_data, self.plain)
         enc2, tag2 = polychacha.chacha20_aead_encrypt(self.auth_data2, self.plain)
         self.assertEqual(enc, enc2)
         self.assertNotEqual(tag, tag2)
+
+    def test_aead_enc_dec(self):
+        polychacha = Chacha20Poly1305(self.key, self.nonce)
+        ciphertext = polychacha.aead_encrypt(self.auth_data, self.plain)
+        plaintext = polychacha.aead_decrypt(self.auth_data, ciphertext)
+        self.assertEqual(self.plain, plaintext)
+
+    def test_aead_enc_dec__diff_auth(self):
+        polychacha = Chacha20Poly1305(self.key, self.nonce)
+        ciphertext = polychacha.aead_encrypt(self.auth_data, self.plain)
+        plaintext = polychacha.aead_decrypt(self.auth_data2, ciphertext)
+        self.assertTrue(plaintext is None)
