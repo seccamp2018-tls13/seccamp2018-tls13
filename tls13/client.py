@@ -143,6 +143,18 @@ def client_cmd(argv):
     server_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"s ap traffic", messages)
 
+    if cipher_suite == CipherSuite.TLS_CHACHA20_POLY1305_SHA256:
+        key_size   = Cipher.Chacha20Poly1305.key_size
+        nonce_size = Cipher.Chacha20Poly1305.nonce_size
+    else:
+        raise NotImplementedError()
+
+    server_write_key, server_write_iv = \
+        cryptomath.gen_key_and_iv(server_application_traffic_secret,
+                                  key_size, nonce_size, hash_algo)
+    traffic_crypto = Cipher.Chacha20Poly1305(key=server_write_key,
+                                             nonce=server_write_iv)
+
     # [Haruka 8/6] TEST chacha20poly1305
     client_write_key = cryptomath.HKDF_expand_label(secret, b'key',
             b'', Cipher.Chacha20Poly1305.key_size, hash_algo)
@@ -152,12 +164,14 @@ def client_cmd(argv):
     print('client_write_key = ', client_write_key)
     print('client_write_iv = ', client_write_iv)
 
-    chachaPoly = Cipher.Chacha20Poly1305(key=client_write_key,
-                                         nonce=client_write_iv)
+    app_data_crypto = Cipher.Chacha20Poly1305(key=client_write_key,
+                                              nonce=client_write_iv)
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
-    recved_certificate = TLSPlaintext.from_bytes(data)
+    # recved_certificate = TLSPlaintext.from_bytes(data)
+    recved_certificate, additional_data = \
+        TLSCiphertext.restore(data, crypto=traffic_crypto, mode=ContentType.handshake)
     messages.append(recved_certificate.fragment)
     print(recved_certificate)
 
@@ -199,18 +213,8 @@ def client_cmd(argv):
     # >>> Application Data <<<
     print("=== Application Data ===")
 
-    app_data = TLSPlaintext(
-        type=ContentType.application_data,
-        fragment=Data(b'GET /index.html\n'))
-    app_data_inner = TLSInnerPlaintext.create(app_data)
-
-    # additional_data = TLSCiphertext.opaque_type || .legacy_record_version || .length
-    additional_data = b'\x23\x03\x03' + Uint16(len(app_data_inner)).to_bytes()
-
-    print(app_data)
-    print(app_data_inner)
-    encrypted_record = chachaPoly.encrypt(app_data_inner.to_bytes())
-    app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)
+    app_data_cipher = \
+        TLSCiphertext.create(Data(b'GET /index.html\n'), crypto=app_data_crypto)
     print(app_data_cipher)
 
     client_conn.send_msg(app_data_cipher.to_bytes())

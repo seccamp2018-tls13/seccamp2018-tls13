@@ -10,6 +10,7 @@ __all__ = [
 import collections
 
 from .keyexchange.version import ProtocolVersion
+from .alert import Alert
 from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ..utils.codec import Reader
 from ..utils.repr import make_format
@@ -64,20 +65,23 @@ class TLSPlaintext(Struct):
         return getattr(self.fragment.msg, name)
 
     @classmethod
-    def from_bytes(cls, data):
+    def from_bytes(cls, data, mode=None):
         from .handshake import Handshake
         reader = Reader(data)
         type                  = reader.get(Uint8)
         legacy_record_version = reader.get(Uint16)
-        length                = reader.get(Uint16)
-        fragment              = reader.get(bytes)
+        fragment              = reader.get(bytes, length_t=Uint16)
+        length = Uint16(len(fragment))
 
-        assert length.value == len(fragment)
+        if mode:
+            type = mode # e.g. mode=ContentType.handshake
 
         if type == ContentType.handshake:
             return cls(type=type, fragment=Handshake.from_bytes(fragment))
         elif type == ContentType.application_data:
             return cls(type=type, fragment=Data(fragment))
+        elif type == ContentType.alert:
+            return cls(type=type, fragment=Alert.from_bytes(fragment))
         else:
             raise NotImplementedError()
 
@@ -147,7 +151,9 @@ class TLSInnerPlaintext(Struct):
         return (data[:pos], Uint8(value), data[pos+1:]) # content, type, zeros
 
     @classmethod
-    def create(cls, tlsplaintext, length_of_padding=8):
+    def create(cls, tlsplaintext, length_of_padding=None):
+        if length_of_padding is None:
+            length_of_padding = 16 - len(tlsplaintext) % 16
         return cls(
             content=tlsplaintext.to_bytes(),
             type=tlsplaintext.type,
@@ -181,7 +187,39 @@ class TLSCiphertext(Struct):
         reader = Reader(data)
         opaque_type           = reader.get(Uint8)
         legacy_record_version = reader.get(Uint16)
-        length                = reader.get(Uint16)
-        encrypted_record      = reader.get(bytes)
-        assert int(length) == len(encrypted_record)
+        encrypted_record      = reader.get(bytes, length_t=Uint16)
+        length = Uint16(len(encrypted_record))
         return cls(length=length, encrypted_record=encrypted_record)
+
+    @classmethod
+    def create(cls, fragment, crypto):
+        # TLSPlaintext から TLSCiphertext を作るまでの処理
+        if isinstance(fragment, Data):
+            tlsplaintext = TLSPlaintext(
+                type=ContentType.application_data,
+                fragment=fragment)
+        elif isinstance(fragment, TLSPlaintext):
+            tlsplaintext = fragment
+        else:
+            raise TypeError()
+        app_data_inner = TLSInnerPlaintext.create(tlsplaintext)
+        encrypted_record = crypto.encrypt(app_data_inner.to_bytes())
+        app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)
+        return app_data_cipher
+
+    @classmethod
+    def restore(cls, data, crypto, mode=None) -> (TLSPlaintext, bytes):
+        recved_app_data_cipher = cls.from_bytes(data)
+        recved_app_data_inner_bytes = \
+            crypto.decrypt(recved_app_data_cipher.encrypted_record)
+        recved_app_data_inner = \
+            TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
+        recved_app_data = \
+            TLSPlaintext.from_bytes(recved_app_data_inner.content, mode=mode)
+
+        # additional_data =
+        #   TLSCiphertext.opaque_type || .legacy_record_version || .length
+        additional_data = \
+            b'\x23\x03\x03' + Uint16(len(recved_app_data_inner)).to_bytes()
+
+        return recved_app_data, additional_data

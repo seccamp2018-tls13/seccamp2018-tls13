@@ -47,4 +47,3 @@ class Chacha20Poly1305Test(unittest.TestCase):
         enc2, tag2 = polychacha.chacha20_aead_encrypt(self.auth_data2, self.plain)
         self.assertEqual(enc, enc2)
         self.assertNotEqual(tag, tag2)
-

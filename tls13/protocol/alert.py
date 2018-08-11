@@ -7,6 +7,9 @@ __all__ = [
 ]
 
 from ..utils.type import Uint8, Type
+from ..utils.codec import Reader
+from ..utils.struct import Struct, Members, Member
+
 
 @Type.add_labels_and_values
 class AlertLevel(Type):
@@ -62,7 +65,7 @@ class AlertDescription(Type):
     _size = 1 # byte
 
 
-class Alert:
+class Alert(Struct):
     # 送信内容に誤りがあるときなどで警告を送り返すときに使う
     """
     struct {
@@ -70,6 +73,16 @@ class Alert:
       AlertDescription description;
     } Alert;
     """
-    def __init__(self, level, description):
-        self.level = level
-        self.description = description
+    def __init__(self, **kwargs):
+        self.struct = Members(self, [
+            Member(AlertLevel, 'level'),
+            Member(AlertDescription, 'description'),
+        ])
+        self.struct.set_args(**kwargs)
+
+    @classmethod
+    def from_bytes(cls, data):
+        reader = Reader(data)
+        level       = reader.get(Uint8)
+        description = reader.get(Uint8)
+        return cls(level=level, description=description)

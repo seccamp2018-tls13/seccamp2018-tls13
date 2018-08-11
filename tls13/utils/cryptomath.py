@@ -176,6 +176,12 @@ def transcript_hash(messages, hash_algorithm='sha256') -> bytearray:
     return secureHash(data, hash_algorithm)
 
 
+def gen_key_and_iv(secret, key_size, nonce_size, hash_algo='sha256'):
+    write_key = HKDF_expand_label(secret, b'key', b'', key_size,   hash_algo)
+    write_iv  = HKDF_expand_label(secret, b'iv',  b'', nonce_size, hash_algo)
+    return write_key, write_iv
+
+
 # FFDHEで使用するSecretKeyの生成(乱数)に使用する関数たち
 
 def getRandomBytes(howMany):

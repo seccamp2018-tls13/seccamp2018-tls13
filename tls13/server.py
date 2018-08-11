@@ -133,6 +133,12 @@ def server_cmd(argv):
     else:
         raise NotImplementedError()
 
+    server_write_key, server_write_iv = \
+        cryptomath.gen_key_and_iv(server_application_traffic_secret,
+                                  key_size, nonce_size, hash_algo)
+    traffic_crypto = Cipher.Chacha20Poly1305(key=server_write_key,
+                                             nonce=server_write_iv)
+
     # [Haruka 8/6] TEST chacha20poly1305
     server_write_key = cryptomath.HKDF_expand_label(secret, b'key',
             b'', Cipher.Chacha20Poly1305.key_size, hash_algo)
@@ -142,8 +148,8 @@ def server_cmd(argv):
     print('server_write_key = ', server_write_key)
     print('server_write_iv = ', server_write_iv)
 
-    chachaPoly = Cipher.Chacha20Poly1305(key=server_write_key,
-                                         nonce=server_write_iv)
+    app_data_crypto = Cipher.Chacha20Poly1305(key=server_write_key,
+                                              nonce=server_write_iv)
 
     # >>> EncryptedExtensions >>>
 
@@ -165,7 +171,9 @@ def server_cmd(argv):
                 ])))
 
     print(certificate)
-    server_conn.send_msg(certificate.to_bytes())
+    # server_conn.send_msg(certificate.to_bytes())
+    certificate_cipher = TLSCiphertext.create(certificate, crypto=traffic_crypto)
+    server_conn.send_msg(certificate_cipher.to_bytes())
     messages.append(certificate.fragment)
 
 
@@ -230,12 +238,7 @@ def server_cmd(argv):
     print("=== Application Data ===")
 
     data = server_conn.recv_msg()
-    recved_app_data_cipher = TLSCiphertext.from_bytes(data)
-    print(recved_app_data_cipher)
+    recved_app_data, additional_data = \
+        TLSCiphertext.restore(data, crypto=app_data_crypto)
 
-    recved_app_data_inner_bytes = \
-        chachaPoly.decrypt(recved_app_data_cipher.encrypted_record)
-    recved_app_data_inner = TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
-    print(recved_app_data_inner)
-    recved_app_data = TLSPlaintext.from_bytes(recved_app_data_inner.content)
     print(recved_app_data)
