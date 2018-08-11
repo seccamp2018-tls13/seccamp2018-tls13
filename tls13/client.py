@@ -156,6 +156,11 @@ def client_cmd(argv):
     s_traffic_crypto = cipher_class(key=server_write_key, nonce=server_write_iv)
 
     client_write_key, client_write_iv = \
+        cryptomath.gen_key_and_iv(client_application_traffic_secret,
+                                  key_size, nonce_size, hash_algo)
+    c_traffic_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
+
+    client_write_key, client_write_iv = \
         cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
 
     print('client_write_key = ', client_write_key)
@@ -173,7 +178,9 @@ def client_cmd(argv):
 
     # <<< server CertificateVerify <<<
     data = client_conn.recv_msg()
-    recved_cert_verify = TLSPlaintext.from_bytes(data)
+    # recved_cert_verify = TLSPlaintext.from_bytes(data)
+    recved_cert_verify = TLSCiphertext.restore(data,
+            crypto=s_traffic_crypto, mode=ContentType.handshake)
     messages.append(recved_cert_verify.fragment)
     print(recved_cert_verify)
 
@@ -181,7 +188,9 @@ def client_cmd(argv):
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     Hash.set_size(hash_size)
     data = client_conn.recv_msg()
-    recved_finished = TLSPlaintext.from_bytes(data)
+    # recved_finished = TLSPlaintext.from_bytes(data)
+    recved_finished = TLSCiphertext.restore(data,
+            crypto=s_traffic_crypto, mode=ContentType.handshake)
     messages.append(recved_finished.fragment)
     print(recved_finished)
     assert isinstance(recved_finished.fragment.msg, Finished)
@@ -202,7 +211,9 @@ def client_cmd(argv):
             msg=Finished(verify_data=verify_data) ))
 
     print(finished)
-    client_conn.send_msg(finished.to_bytes())
+    # client_conn.send_msg(finished.to_bytes())
+    finished_cipher = TLSCiphertext.create(finished, crypto=c_traffic_crypto)
+    client_conn.send_msg(finished_cipher.to_bytes())
     messages.append(finished.fragment)
 
 

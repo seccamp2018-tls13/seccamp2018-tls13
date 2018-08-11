@@ -139,6 +139,11 @@ def server_cmd(argv):
                                   key_size, nonce_size, hash_algo)
     s_traffic_crypto = cipher_class(key=server_write_key, nonce=server_write_iv)
 
+    client_write_key, client_write_iv = \
+        cryptomath.gen_key_and_iv(client_application_traffic_secret,
+                                  key_size, nonce_size, hash_algo)
+    c_traffic_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
+
     server_write_key, server_write_iv = \
         cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
     app_data_crypto = cipher_class(key=server_write_key, nonce=server_write_iv)
@@ -197,7 +202,9 @@ def server_cmd(argv):
                 signature=certificate_signature )))
 
     print(cert_verify)
-    server_conn.send_msg(cert_verify.to_bytes())
+    # server_conn.send_msg(cert_verify.to_bytes())
+    cert_verify_cipher = TLSCiphertext.create(cert_verify, crypto=s_traffic_crypto)
+    server_conn.send_msg(cert_verify_cipher.to_bytes())
     messages.append(cert_verify.fragment)
 
 
@@ -217,13 +224,16 @@ def server_cmd(argv):
             msg=Finished(verify_data=verify_data) ))
 
     print(finished)
-    server_conn.send_msg(finished.to_bytes())
+    # server_conn.send_msg(finished.to_bytes())
+    finished_cipher = TLSCiphertext.create(finished, crypto=s_traffic_crypto)
+    server_conn.send_msg(finished_cipher.to_bytes())
     messages.append(finished.fragment)
 
     # <<< recv Finished <<<
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     data = server_conn.recv_msg()
-    recved_finished = TLSPlaintext.from_bytes(data)
+    # recved_finished = TLSPlaintext.from_bytes(data)
+    recved_finished = TLSCiphertext.restore(data, crypto=c_traffic_crypto)
     messages.append(recved_finished.fragment)
     print(recved_finished)
     assert isinstance(recved_finished.fragment.msg, Finished)
