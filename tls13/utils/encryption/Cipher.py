@@ -69,8 +69,8 @@ class Chacha20Poly1305(Cipher):
         self.nonce = make_array(nonce, 4, to_int=True)  # 12 [bytes] = 4 [bytes] * 3 [block]
 
     def encrypt(self, plaintext):
-        #if len(plaintext) % 64 != 0:
-            #plaintext = plaintext + bytearray(64 - len(plaintext) % 64)
+        if len(plaintext) % 64 != 0:
+            raise ValueError("Input strings must be a multipul of 64 in length")
 
         array64s = make_array(plaintext, 64, to_int=False)
 
@@ -110,7 +110,6 @@ class Chacha20Poly1305(Cipher):
                 dt = binascii.unhexlify(hex_c)
                 plain += dt
 
-        #plain = plain.rstrip(b'\x00') # remove \x00 padding
         return  plain
 
     def poly1305_mac(self, message, otk):
