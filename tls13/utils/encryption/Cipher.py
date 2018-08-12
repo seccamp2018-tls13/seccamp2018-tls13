@@ -38,6 +38,23 @@ class Cipher:
 
         # DECRYPTO()
 
+    @staticmethod
+    def pad16(data):
+        """Return padding for the Associated Authenticated Data"""
+        if len(data) % 16 == 0: return bytearray(0)
+        return bytearray(16 - (len(data) % 16))
+
+    @staticmethod
+    def ct_compare_digest(a, b):
+        """Compares if string like objects are equal. Constant time."""
+        # この関数は a == b の結果を返すが、
+        # 内容に基づく短絡的な振る舞いを避けることで、タイミング分析を防ぐ
+        if len(a) != len(b): return False
+        result = 0
+        for x, y in zip(a, b):
+            result |= x ^ y
+        return result == 0
+
 
 class Chacha20Poly1305(Cipher):
     key_size = 32
@@ -141,10 +158,8 @@ class Chacha20Poly1305(Cipher):
         otk = self.poly1305_key_gen()
         ciphertext = self.encrypt(plaintext)
 
-        mac_data = aad
-        if len(mac_data) % 16 != 0:
-            mac_data += bytearray(16 - len(mac_data) % 16)
-        mac_data += ciphertext
+        mac_data = aad + self.pad16(aad)
+        mac_data += ciphertext + self.pad16(ciphertext)
         mac_data += bytearray(len(aad) + len(ciphertext))
 
         tag = self.poly1305_mac(mac_data, otk)
@@ -191,23 +206,6 @@ class Chacha20Poly1305(Cipher):
             return None
 
         return self.decrypt(ciphertext)
-
-    @staticmethod
-    def pad16(data):
-        """Return padding for the Associated Authenticated Data"""
-        if len(data) % 16 == 0: return bytearray(0)
-        return bytearray(16 - (len(data) % 16))
-
-    @staticmethod
-    def ct_compare_digest(a, b):
-        """Compares if string like objects are equal. Constant time."""
-        # この関数は a == b の結果を返すが、
-        # 内容に基づく短絡的な振る舞いを避けることで、タイミング分析を防ぐ
-        if len(a) != len(b): return False
-        result = 0
-        for x, y in zip(a, b):
-            result |= x ^ y
-        return result == 0
 
 
 # http://inaz2.hatenablog.com/entry/2013/11/30/233649
