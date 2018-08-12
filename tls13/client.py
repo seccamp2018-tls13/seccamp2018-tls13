@@ -129,14 +129,14 @@ def client_cmd(argv):
     # early secret
     secret = cryptomath.HKDF_extract(secret, psk, hash_algo)
     # handshake secret
-    secret = cryptomath.derive_secret(secret, b"derive", b"")
+    secret = cryptomath.derive_secret(secret, b"derived", b"")
     secret = cryptomath.HKDF_extract(secret, shared_key, hash_algo)
     client_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"c hs traffic", messages)
     server_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"s hs traffic", messages)
     # master secret
-    secret = cryptomath.derive_secret(secret, b"derive", b"")
+    secret = cryptomath.derive_secret(secret, b"derived", b"")
     secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
