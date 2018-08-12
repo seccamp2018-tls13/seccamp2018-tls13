@@ -206,9 +206,10 @@ class TLSCiphertext(Struct):
 
         # additional_data =
         #   TLSCiphertext.opaque_type || .legacy_record_version || .length
-        length = len(crypto.encrypt(app_data_inner.to_bytes()))
-        aad = b'\x23\x03\x03' + Uint16(length).to_bytes()
-        # print(aad)
+        length = len(crypto.encrypt(app_data_inner.to_bytes())) + 16
+        print(length)
+        aad = b'\x17\x03\x03' + Uint16(length).to_bytes()
+        print('AAD:', aad)
 
         encrypted_record = crypto.aead_encrypt(aad, app_data_inner.to_bytes())
         app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)

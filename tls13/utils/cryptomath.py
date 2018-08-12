@@ -171,8 +171,11 @@ def transcript_hash(messages, hash_algorithm='sha256') -> bytearray:
     Transcript-Hash(M1, M2, ... MN) = Hash(M1 || M2 ... MN)
     """
     # Record層（TLSPlaintext）は含めないで Handshake の部分だけを結合してハッシュを求める
-    assert all(type(m) == Handshake for m in messages)
-    data = b''.join(m.to_bytes() for m in messages)
+    assert all(type(m) == Handshake for m in messages) or isinstance(messages, bytes)
+    if isinstance(messages, bytes):
+        data = messages
+    else:
+        data = b''.join(m.to_bytes() for m in messages)
     return secureHash(data, hash_algorithm)
 
 

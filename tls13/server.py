@@ -29,7 +29,9 @@ def server_cmd(argv):
     data = server_conn.recv_msg()
     recved_clienthello = TLSPlaintext.from_bytes(data)
     messages.append(recved_clienthello.fragment)
+    print("ClientHello: " + recved_clienthello.to_bytes().hex())
     print(recved_clienthello)
+    hash_data = data[5:]
 
     # >>> ServerHello >>>
 
@@ -103,6 +105,7 @@ def server_cmd(argv):
     server_conn.send_msg(serverhello.to_bytes())
     messages.append(serverhello.fragment)
 
+    hash_data += serverhello.fragment.to_bytes()
 
     # -- HKDF ---
 
@@ -110,11 +113,19 @@ def server_cmd(argv):
     secret_size = CipherSuite.get_hash_algo_size(cipher_suite)
     secret = bytearray(secret_size)
     psk    = bytearray(secret_size)
+    import hashlib
+    h = hashlib.sha256()
+    print(hash_data.hex())
+    h.update(hash_data)
+    print("Hash: " + h.hexdigest())
+    messages = hash_data
     # early secret
     secret = cryptomath.HKDF_extract(secret, psk, hash_algo)
+    print('early secret =', secret.hex())
     # handshake secret
     secret = cryptomath.derive_secret(secret, b"derived", b"")
     secret = cryptomath.HKDF_extract(secret, shared_key, hash_algo)
+    print('handshake secret =', secret.hex())
     client_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"c hs traffic", messages)
     server_handshake_traffic_secret = \
@@ -122,6 +133,7 @@ def server_cmd(argv):
     # master secret
     secret = cryptomath.derive_secret(secret, b"derived", b"")
     secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
+    print('master secret =', secret.hex())
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
     server_application_traffic_secret = \
@@ -135,21 +147,23 @@ def server_cmd(argv):
         raise NotImplementedError()
 
     server_write_key, server_write_iv = \
-        cryptomath.gen_key_and_iv(server_application_traffic_secret,
+        cryptomath.gen_key_and_iv(server_handshake_traffic_secret,
                                   key_size, nonce_size, hash_algo)
     s_traffic_crypto = cipher_class(key=server_write_key, nonce=server_write_iv)
 
     client_write_key, client_write_iv = \
-        cryptomath.gen_key_and_iv(client_application_traffic_secret,
+        cryptomath.gen_key_and_iv(client_handshake_traffic_secret,
                                   key_size, nonce_size, hash_algo)
     c_traffic_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
 
-    server_write_key, server_write_iv = \
+    server_app_write_key, server_app_write_iv = \
         cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
-    app_data_crypto = cipher_class(key=server_write_key, nonce=server_write_iv)
+    app_data_crypto = cipher_class(key=server_app_write_key, nonce=server_app_write_iv)
 
-    print('server_write_key = ', server_write_key)
-    print('server_write_iv = ', server_write_iv)
+    print('server_write_key =', server_write_key.hex())
+    print('server_write_iv =', server_write_iv.hex())
+    print('client_write_key =', client_write_key.hex())
+    print('client_write_iv =', client_write_iv.hex())
 
     # >>> EncryptedExtensions >>>
 
@@ -174,6 +188,10 @@ def server_cmd(argv):
     # server_conn.send_msg(certificate.to_bytes())
     certificate_cipher = TLSCiphertext.create(certificate, crypto=s_traffic_crypto)
     server_conn.send_msg(certificate_cipher.to_bytes())
+
+    import time
+    time.sleep(3)
+    0/0
     messages.append(certificate.fragment)
 
 
