@@ -110,14 +110,15 @@ class Chacha20Poly1305(Cipher):
                 dt = binascii.unhexlify(hex_c)
                 plain += dt
 
-        plain = plain.rstrip(b'\x00') # remove \x00 padding
+        #plain = plain.rstrip(b'\x00') # remove \x00 padding
         return  plain
 
     def poly1305_mac(self, message, otk):
         s, r = otk
 
-        if len(message) % 16 != 0:
-            message += bytearray(16 - len(message) % 16)
+        massage = message + self.pad16(message)
+        #if len(message) % 16 != 0:
+            #message += bytearray(16 - len(message) % 16)
 
         # 16 [bytes] に区切って 1 [byte] (\x01) を付加
         coefs_messages = make_array(message, 16, to_int=False)
