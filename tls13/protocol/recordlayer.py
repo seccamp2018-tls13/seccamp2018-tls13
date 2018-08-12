@@ -153,7 +153,7 @@ class TLSInnerPlaintext(Struct):
     @classmethod
     def create(cls, tlsplaintext, length_of_padding=None):
         if length_of_padding is None:
-            length_of_padding = 16 - len(tlsplaintext) % 16
+            length_of_padding = 64 - len(tlsplaintext) % 64 - 1
         return cls(
             content=tlsplaintext.to_bytes(),
             type=tlsplaintext.type,
