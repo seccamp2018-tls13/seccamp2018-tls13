@@ -163,8 +163,8 @@ def client_cmd(argv):
     client_write_key, client_write_iv = \
         cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
 
-    print('client_write_key = ', client_write_key)
-    print('client_write_iv = ', client_write_iv)
+    print('client_write_key = ', client_write_key.hex())
+    print('client_write_iv = ', client_write_iv.hex())
 
     app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
 

@@ -32,7 +32,7 @@ def server_cmd(argv):
     # TLSPlaintext.fragment のバイト列を得るために
     # len(ContentType + ProtocolVersion + length) == 5 より後ろのバイト列を取る
     messages += data[5:]
-    print("ClientHello: " + recved_clienthello.to_bytes().hex())
+    # print("ClientHello: " + recved_clienthello.to_bytes().hex())
     print(recved_clienthello)
     # hash_data = data[5:]
 
@@ -231,6 +231,10 @@ def server_cmd(argv):
     server_conn.send_msg(cert_verify_cipher.to_bytes())
     # messages.append(cert_verify.fragment)
     messages += cert_verify.fragment.to_bytes()
+
+    # import time
+    # time.sleep(3)
+    # 0/0
 
 
     # >>> Finished >>>

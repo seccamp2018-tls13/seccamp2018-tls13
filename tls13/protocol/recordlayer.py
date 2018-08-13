@@ -153,7 +153,7 @@ class TLSInnerPlaintext(Struct):
     @classmethod
     def create(cls, tlsplaintext, length_of_padding=None):
         if length_of_padding is None:
-            length_of_padding = 16 - len(tlsplaintext) % 16
+            length_of_padding = 64 - len(tlsplaintext) % 64
         return cls(
             content=tlsplaintext.to_bytes(),
             type=tlsplaintext.type,
@@ -189,6 +189,8 @@ class TLSCiphertext(Struct):
         legacy_record_version = reader.get(Uint16)
         encrypted_record      = reader.get(bytes, length_t=Uint16)
         length = Uint16(len(encrypted_record))
+        # length                = reader.get(Uint16)
+        # encrypted_record      = reader.get(bytes)
         return cls(length=length, encrypted_record=encrypted_record)
 
     @classmethod
@@ -212,6 +214,8 @@ class TLSCiphertext(Struct):
         print('AAD:', aad.hex())
 
         encrypted_record = crypto.aead_encrypt(aad, app_data_inner.to_bytes())
+        print('encrypted_record:')
+        print(encrypted_record.hex())
         app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)
         return app_data_cipher
 
@@ -222,11 +226,15 @@ class TLSCiphertext(Struct):
         # additional_data =
         #   TLSCiphertext.opaque_type || .legacy_record_version || .length
         length = recved_app_data_cipher.length.value - 16 # ??? 16 引かないと一致しない
-        aad = b'\x23\x03\x03' + Uint16(length).to_bytes()
-        # print(aad)
+        print(length)
+        aad = b'\x17\x03\x03' + Uint16(length).to_bytes()
+        print('AAD:', aad.hex())
+        # print('encrypted_record:', recved_app_data_cipher.encrypted_record.hex())
 
         recved_app_data_inner_bytes = \
             crypto.aead_decrypt(aad, recved_app_data_cipher.encrypted_record)
+        # if recved_app_data_inner_bytes is None:
+        #     raise RuntimeError('aead_decrypt Error')
         recved_app_data_inner = \
             TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
         recved_app_data = \
