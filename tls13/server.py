@@ -116,26 +116,27 @@ def server_cmd(argv):
     secret_size = CipherSuite.get_hash_algo_size(cipher_suite)
     secret = bytearray(secret_size)
     psk    = bytearray(secret_size)
-    # import hashlib
-    # h = hashlib.sha256()
-    # print(hash_data.hex())
-    # h.update(hash_data)
-    # print("Hash: " + h.hexdigest())
-    # messages = hash_data
+
+    print("messages hash = " + cryptomath.secureHash(messages, 'sha256').hex())
+    print()
 
     # early secret
     secret = cryptomath.HKDF_extract(secret, psk, hash_algo)
     print('early secret =', secret.hex())
     # handshake secret
     secret = cryptomath.derive_secret(secret, b"derived", b"")
+    print('derive_secret =', secret.hex())
     secret = cryptomath.HKDF_extract(secret, shared_key, hash_algo)
     print('handshake secret =', secret.hex())
     client_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"c hs traffic", messages)
+    print('client_handshake_traffic_secret =', client_handshake_traffic_secret.hex())
     server_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"s hs traffic", messages)
+    print('server_handshake_traffic_secret =', server_handshake_traffic_secret.hex())
     # master secret
     secret = cryptomath.derive_secret(secret, b"derived", b"")
+    print('derive_secret =', secret.hex())
     secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
     print('master secret =', secret.hex())
     client_application_traffic_secret = \
