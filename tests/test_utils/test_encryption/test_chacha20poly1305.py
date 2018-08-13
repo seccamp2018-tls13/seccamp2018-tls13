@@ -7,7 +7,8 @@ from tls13.utils.encryption.Cipher import Chacha20Poly1305
 class Chacha20Poly1305Test(unittest.TestCase):
 
     def setUp(self):
-        self.plain = b"The quick brown fox jumps over the lazy dog"
+        self.plain = (b"The quick brown fox jumps over the lazy dog"*2)[:64]
+        # chacha20.encrypt内でのpaddingをやめたので強制的に64bytes長へ
         self.key = binascii.unhexlify(
             '4cb0aa43afc90d99919b0cad160a26fe976285570d0eefea3884cca9a5366705')
         self.key2 = binascii.unhexlify(
@@ -59,3 +60,14 @@ class Chacha20Poly1305Test(unittest.TestCase):
         ciphertext = polychacha.aead_encrypt(self.auth_data, self.plain)
         plaintext = polychacha.aead_decrypt(self.auth_data2, ciphertext)
         self.assertTrue(plaintext is None)
+
+    def test_idempotence(self):
+        import os
+        m = os.urandom(64*2)
+        polychacha = Chacha20Poly1305(self.key, self.nonce)
+        c = polychacha.aead_encrypt(self.auth_data, m)
+        self.assertEqual(m, 
+                polychacha.aead_decrypt(self.auth_data, c))
+        self.assertEqual(m, 
+                polychacha.aead_decrypt(self.auth_data, 
+                    polychacha.aead_encrypt(self.auth_data, m)))
