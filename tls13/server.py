@@ -22,16 +22,19 @@ from .utils import cryptomath, hexdump, hexstr
 def server_cmd(argv):
     print("server_cmd({})".format(", ".join(argv)))
 
-    messages = []
+    messages = bytearray(0)
 
     # <<< ClientHello <<<
     server_conn = socket.ServerConnection()
     data = server_conn.recv_msg()
     recved_clienthello = TLSPlaintext.from_bytes(data)
-    messages.append(recved_clienthello.fragment)
+    # messages.append(recved_clienthello.fragment)
+    # TLSPlaintext.fragment のバイト列を得るために
+    # len(ContentType + ProtocolVersion + length) == 5 より後ろのバイト列を取る
+    messages += data[5:]
     print("ClientHello: " + recved_clienthello.to_bytes().hex())
     print(recved_clienthello)
-    hash_data = data[5:]
+    # hash_data = data[5:]
 
     # >>> ServerHello >>>
 
@@ -103,9 +106,9 @@ def server_cmd(argv):
     # ServerHello が入っている TLSPlaintext
     print(serverhello)
     server_conn.send_msg(serverhello.to_bytes())
-    messages.append(serverhello.fragment)
-
-    hash_data += serverhello.fragment.to_bytes()
+    # messages.append(serverhello.fragment)
+    messages += serverhello.fragment.to_bytes()
+    # hash_data += serverhello.fragment.to_bytes()
 
     # -- HKDF ---
 
@@ -113,12 +116,13 @@ def server_cmd(argv):
     secret_size = CipherSuite.get_hash_algo_size(cipher_suite)
     secret = bytearray(secret_size)
     psk    = bytearray(secret_size)
-    import hashlib
-    h = hashlib.sha256()
-    print(hash_data.hex())
-    h.update(hash_data)
-    print("Hash: " + h.hexdigest())
-    messages = hash_data
+    # import hashlib
+    # h = hashlib.sha256()
+    # print(hash_data.hex())
+    # h.update(hash_data)
+    # print("Hash: " + h.hexdigest())
+    # messages = hash_data
+
     # early secret
     secret = cryptomath.HKDF_extract(secret, psk, hash_algo)
     print('early secret =', secret.hex())
@@ -192,7 +196,8 @@ def server_cmd(argv):
     import time
     time.sleep(3)
     0/0
-    messages.append(certificate.fragment)
+    # messages.append(certificate.fragment)
+    messages += certificate.fragment.to_bytes()
 
 
     # >>> CertificateVerify >>>
@@ -223,7 +228,8 @@ def server_cmd(argv):
     # server_conn.send_msg(cert_verify.to_bytes())
     cert_verify_cipher = TLSCiphertext.create(cert_verify, crypto=s_traffic_crypto)
     server_conn.send_msg(cert_verify_cipher.to_bytes())
-    messages.append(cert_verify.fragment)
+    # messages.append(cert_verify.fragment)
+    messages += cert_verify.fragment.to_bytes()
 
 
     # >>> Finished >>>
@@ -245,14 +251,16 @@ def server_cmd(argv):
     # server_conn.send_msg(finished.to_bytes())
     finished_cipher = TLSCiphertext.create(finished, crypto=s_traffic_crypto)
     server_conn.send_msg(finished_cipher.to_bytes())
-    messages.append(finished.fragment)
+    # messages.append(finished.fragment)
+    messages += finished.fragment.to_bytes()
 
     # <<< recv Finished <<<
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     data = server_conn.recv_msg()
     # recved_finished = TLSPlaintext.from_bytes(data)
     recved_finished = TLSCiphertext.restore(data, crypto=c_traffic_crypto)
-    messages.append(recved_finished.fragment)
+    # messages.append(recved_finished.fragment)
+    messages += recved_finished.fragment.to_bytes()
     print(recved_finished)
     assert isinstance(recved_finished.fragment.msg, Finished)
 
