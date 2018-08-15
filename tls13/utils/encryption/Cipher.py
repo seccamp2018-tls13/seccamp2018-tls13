@@ -134,12 +134,10 @@ class Chacha20Poly1305(Cipher):
         s, r = otk
 
         # 16 [bytes] に区切って 1 [byte] (\x01) を付加
-        massage = message + self.pad16(message)
         coefs_messages = make_array(message, 16, to_int=False)
         for idx in range(len(coefs_messages)):
             coefs_messages[idx] += b'\x01'
             coefs_messages[idx] = int(coefs_messages[idx][::-1].hex(), 16)
-        #coefs_messages = list(map(le_num, coefs_messages))
 
         # r -> リトルエンディアンにした後 cramp(r)
         # s -> リトルエンディアン
@@ -222,8 +220,9 @@ class Chacha20Poly1305(Cipher):
 
         # if len(self.nonce) != 12:
         #     raise ValueError("Nonce must be 96 bit long")
-
+        print("[DEBUG] ciphertext : ", ciphertext)
         if len(ciphertext) < 16:
+            print("NOOOOOOOOOOOOOOOO")
             return None
 
         expected_tag = ciphertext[-16:]
