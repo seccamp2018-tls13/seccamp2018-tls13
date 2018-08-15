@@ -12,7 +12,7 @@ def poly1305(coefs, s, r):
     x = 0
     for i, Ci in enumerate(coefs[::-1], 1):
         x += (Ci % MOD)*pow(r, i, MOD) % MOD
-    
+
     return (x + s) & 0xffffffffffffffffffffffffffffffff
 
 def plus(x, y):
@@ -42,9 +42,11 @@ def chacha20(text, key, nonce, cnt=0):
     """
 
     ## initialize ##
-    const = [0x64787061, 0x6e642033, 0x322d6279, 0x7465206b]
+    const = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
     count = [0 + cnt]
     state = const + key + count + nonce
+    state_orig = list(state)
+    # print(state)
 
     for _ in range(10):
         # Columns
@@ -60,8 +62,14 @@ def chacha20(text, key, nonce, cnt=0):
         state[3], state[4], state[9], state[14] = QuarterRound(state[3], state[4], state[9], state[14])
 
     results = [0]*16
+    state = list(map(lambda x: plus(x[0], x[1]), zip(state, state_orig)))
+    # print("="*16)
+    # print(b''.join(map(lambda x: long_to_bytes(x)[::-1].ljust(4, b'\x00'), text)).hex())
     for i in range(16):
         results[i] = text[i] ^ state[i]
+
+    # print(b''.join(map(lambda x: long_to_bytes(x)[::-1].ljust(4, b'\x00'), results)).hex())
+    # print("="*16)
 
     return results, state
 
@@ -71,4 +79,4 @@ def chacha20(text, key, nonce, cnt=0):
 #        みたいな感じにしてencrypt内で16bytesに区切って暗号化
 #
 # TODO : Nonceの生成. NonceはTLSのシーケンス番号(8 [byte])に0パディングして12 [byte]長にしてから
-#        Master Secret によって生成される12 [byte]のWriteIVとXORをとって生成. 
+#        Master Secret によって生成される12 [byte]のWriteIVとXORをとって生成.

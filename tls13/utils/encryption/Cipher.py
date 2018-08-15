@@ -12,7 +12,8 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 
 def make_array(text, n_bytes=16, to_int=False):
     if to_int:
-        return [bytes_to_long(text[i:i+n_bytes]) for i in range(0, len(text), n_bytes)]
+        # Little endian
+        return [bytes_to_long(text[i:i+n_bytes][::-1]) for i in range(0, len(text), n_bytes)]
     else:
         return [text[i:i+n_bytes] for i in range(0, len(text), n_bytes)]
 
@@ -67,8 +68,12 @@ class Chacha20Poly1305(Cipher):
         #super(Chacha20Poly1305, self).__init__(key)
         self.key = make_array(key, 4, to_int=True)      # 32 [bytes] = 4 [bytes] * 8 [block]
         self.nonce = make_array(nonce, 4, to_int=True)  # 12 [bytes] = 4 [bytes] * 3 [block]
+        self.key_raw = key
+        self.nonce_raw = nonce
 
     def encrypt(self, plaintext):
+        # print("[+] key", self.key_raw.hex(), self.key)
+        # print("[+] nonce", self.nonce_raw.hex(), self.nonce)
         if len(plaintext) % 64 != 0:
             raise ValueError("Input strings must be a multipul of 64 in length")
 
@@ -85,7 +90,7 @@ class Chacha20Poly1305(Cipher):
                 hex_c = hex(_c)[2:]
                 if len(hex_c) != 8:
                     hex_c = '0' * (8-len(hex_c)) + hex_c
-                dt = binascii.unhexlify(hex_c)
+                dt = binascii.unhexlify(hex_c)[::-1]
                 cipher += dt
 
         return cipher
