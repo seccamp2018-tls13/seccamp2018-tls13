@@ -226,7 +226,7 @@ class TLSCiphertext(Struct):
 
         # additional_data =
         #   TLSCiphertext.opaque_type || .legacy_record_version || .length
-        length = recved_app_data_cipher.length.value - 16 # ??? 16 引かないと一致しない
+        length = recved_app_data_cipher.length.value
         print(length)
         aad = b'\x17\x03\x03' + Uint16(length).to_bytes()
         print('AAD:', aad.hex())
@@ -234,8 +234,8 @@ class TLSCiphertext(Struct):
 
         recved_app_data_inner_bytes = \
             crypto.aead_decrypt(aad, recved_app_data_cipher.encrypted_record)
-        # if recved_app_data_inner_bytes is None:
-        #     raise RuntimeError('aead_decrypt Error')
+        if recved_app_data_inner_bytes is None:
+            raise RuntimeError('aead_decrypt Error')
         recved_app_data_inner = \
             TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
         recved_app_data = \
