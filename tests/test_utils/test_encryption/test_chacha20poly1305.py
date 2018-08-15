@@ -2,7 +2,8 @@
 import unittest
 import binascii
 
-from tls13.utils.encryption.Cipher import Chacha20Poly1305
+from tls13.utils.encryption.Cipher import Chacha20Poly1305, make_array
+from tls13.utils.encryption.chacha20poly1305 import *
 
 class Chacha20Poly1305Test(unittest.TestCase):
 
@@ -66,8 +67,30 @@ class Chacha20Poly1305Test(unittest.TestCase):
         m = os.urandom(64*2)
         polychacha = Chacha20Poly1305(self.key, self.nonce)
         c = polychacha.aead_encrypt(self.auth_data, m)
-        self.assertEqual(m, 
+        self.assertEqual(m,
                 polychacha.aead_decrypt(self.auth_data, c))
-        self.assertEqual(m, 
-                polychacha.aead_decrypt(self.auth_data, 
+        self.assertEqual(m,
+                polychacha.aead_decrypt(self.auth_data,
                     polychacha.aead_encrypt(self.auth_data, m)))
+
+    def test_chacha20_block_function(self):
+        key = binascii.unhexlify(
+            '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')
+        nonce = binascii.unhexlify(
+            '000000090000004a00000000')
+
+        key   = make_array(key, 4, to_int=True)
+        nonce = make_array(nonce, 4, to_int=True)
+
+        plain_blocks = [0x0] * 16
+
+        c, state = chacha20(plain_blocks, key, nonce, cnt=1)
+
+        expected = [
+            0xe4e7f110, 0x15593bd1, 0x1fdd0f50, 0xc47120a3,
+            0xc7f4d1c7, 0x0368c033, 0x9aaa2204, 0x4e6cd4c3,
+            0x466482d2, 0x09aa9f07, 0x05d7c214, 0xa2028bd9,
+            0xd19c12b5, 0xb94e16de, 0xe883d0cb, 0x4e3c50a2,
+        ]
+        actual = state
+        self.assertEqual(expected, actual)
