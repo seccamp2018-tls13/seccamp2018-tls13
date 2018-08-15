@@ -112,7 +112,7 @@ class Chacha20Poly1305(Cipher):
                 hex_c = hex(_c)[2:]
                 if len(hex_c) != 8:
                     hex_c = '0' * (8-len(hex_c)) + hex_c
-                dt = binascii.unhexlify(hex_c)
+                dt = binascii.unhexlify(hex_c)[::-1]
                 plain += dt
 
         return  plain
