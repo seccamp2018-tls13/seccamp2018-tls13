@@ -194,9 +194,6 @@ def server_cmd(argv):
     certificate_cipher = TLSCiphertext.create(certificate, crypto=s_traffic_crypto)
     server_conn.send_msg(certificate_cipher.to_bytes())
 
-    import time
-    time.sleep(3)
-    0/0
     # messages.append(certificate.fragment)
     messages += certificate.fragment.to_bytes()
 
