@@ -118,20 +118,48 @@ class Chacha20Poly1305(Cipher):
         return  plain
 
     def poly1305_mac(self, message, otk):
+
+        def cramp(r):
+            return r & 0x0ffffffc0ffffffc0ffffffc0fffffff
+
+
+        def le_num(n : int):
+            print(n)
+            dt = hex(n)[2:].encode()
+            if len(dt) % 2 != 0:
+                dt = b'0' + dt
+            dt = b"".join([dt[i:i+2] for i in range(len(dt)-2, -1, -2)])
+            return int(dt, 16)
+
         s, r = otk
 
-        massage = message + self.pad16(message)
-        #if len(message) % 16 != 0:
-            #message += bytearray(16 - len(message) % 16)
-
         # 16 [bytes] に区切って 1 [byte] (\x01) を付加
+        massage = message + self.pad16(message)
         coefs_messages = make_array(message, 16, to_int=False)
         for idx in range(len(coefs_messages)):
             coefs_messages[idx] += b'\x01'
+            coefs_messages[idx] = int(coefs_messages[idx][::-1].hex(), 16)
+        #coefs_messages = list(map(le_num, coefs_messages))
 
-        coefs_messages = list(map(bytes_to_long, coefs_messages))
-        auth = poly1305(coefs_messages, s, r)
-        return long_to_bytes(auth)
+        # r -> リトルエンディアンにした後 cramp(r)
+        # s -> リトルエンディアン
+        r = le_num(r)
+        r = cramp(r)
+        s = le_num(s)
+
+        p = 2**130 - 5
+        accumulator = 0
+        for i, Ci in enumerate(coefs_messages, 1):
+            #print("[DEBUG] i, accumulator : ", i, accumulator)
+            #accumulator += (Ci % p) * pow(r, i, p) % p
+            accumulator = ((Ci + accumulator) % p ) * r % p
+            print(hex(Ci), hex(accumulator))
+
+        print(hex(accumulator + s))
+        print(hex(((accumulator + s) % p) % 2**128))
+        accumulator = ((accumulator + s) % p) % 2**128
+        return long_to_bytes(accumulator)[::-1]<Paste>
+
 
     def poly1305_key_gen(self):
         _, state = chacha20(b"\x00"*16, self.key, self.nonce, cnt=0)
