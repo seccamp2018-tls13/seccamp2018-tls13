@@ -194,8 +194,11 @@ def server_cmd(argv):
     # >>> server Certificate >>>
 
     with open('.ssh/server.crt', 'r') as f:
-        cert_data = ''.join(f.readlines()[1:-1]).replace('\n', '')
-        cert_data = bytes(cert_data, 'ascii')
+        # cert_data = ''.join(f.readlines()[1:-1]).replace('\n', '')
+        # cert_data = bytes(cert_data, 'ascii')
+        import ssl
+        bytes_DER_encoded = ssl.PEM_cert_to_DER_cert(f.read())
+        cert_data = bytes_DER_encoded
 
     certificate = TLSPlaintext(
         type=ContentType.handshake,
