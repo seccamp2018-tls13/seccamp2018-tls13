@@ -158,7 +158,7 @@ class Chacha20Poly1305(Cipher):
         print(hex(accumulator + s))
         print(hex(((accumulator + s) % p) % 2**128))
         accumulator = ((accumulator + s) % p) % 2**128
-        return long_to_bytes(accumulator)[::-1]<Paste>
+        return long_to_bytes(accumulator)[::-1]
 
 
     def poly1305_key_gen(self):
