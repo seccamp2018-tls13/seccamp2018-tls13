@@ -175,6 +175,9 @@ def client_cmd(argv):
 
     app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
 
+    # <<< EncryptedExtensions <<<
+    # TODO:
+
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
     # recved_certificate = TLSPlaintext.from_bytes(data)

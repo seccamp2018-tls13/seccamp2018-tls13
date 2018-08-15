@@ -9,7 +9,8 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     NamedGroup, NamedGroupList, \
     SignatureScheme, SignatureSchemeList, \
     Certificate, CertificateEntry, CertificateVerify, Finished, Hash, \
-    TLSInnerPlaintext, TLSCiphertext, Data
+    TLSInnerPlaintext, TLSCiphertext, Data, \
+    EncryptedExtensions
 
 # Crypto
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
@@ -172,6 +173,20 @@ def server_cmd(argv):
 
     # >>> EncryptedExtensions >>>
 
+    encrypted_extensions = TLSPlaintext(
+        type=ContentType.handshake,
+        fragment=Handshake(
+            msg_type=HandshakeType.encrypted_extensions,
+            msg=EncryptedExtensions(extensions=[]) ))
+
+    print(encrypted_extensions)
+    # server_conn.send_msg(encrypted_extensions.to_bytes())
+    encrypted_extensions_cipher = \
+        TLSCiphertext.create(encrypted_extensions, crypto=s_traffic_crypto)
+    server_conn.send_msg(encrypted_extensions_cipher.to_bytes())
+
+    # messages.append(encrypted_extensions.fragment)
+    messages += encrypted_extensions.fragment.to_bytes()
 
     # >>> server Certificate >>>
 

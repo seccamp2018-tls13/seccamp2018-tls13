@@ -7,7 +7,9 @@ __all__ = [
     'PostHandshakeAuth', 'EncryptedExtensions', 'CertificateRequest',
 ]
 
+from .messages import Extension
 from ...utils.struct import Struct, Members, Member, Listof
+from ...utils.type import Uint16
 
 
 class CertificateAuthoritiesExtension:
@@ -34,6 +36,10 @@ class EncryptedExtensions(Struct):
     """
     def __init__(self, extensions):
         self.extensions = extensions
+
+        self.struct = Members(self, [
+            Member(Listof(Extension), 'extensions', length_t=Uint16),
+        ])
 
 
 class CertificateRequest:
