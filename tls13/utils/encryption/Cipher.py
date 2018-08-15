@@ -68,11 +68,12 @@ class Chacha20Poly1305(Cipher):
     def __init__(self, key, nonce):
         #super(Chacha20Poly1305, self).__init__(key)
         self.key = make_array(key, 4, to_int=True)      # 32 [bytes] = 4 [bytes] * 8 [block]
-        self.nonce = make_array(nonce, 4, to_int=True)  # 12 [bytes] = 4 [bytes] * 3 [block]
+        self.iv = make_array(nonce, 4, to_int=True)  # 12 [bytes] = 4 [bytes] * 3 [block]
         self.key_raw = key
         self.nonce_raw = nonce
+        self.seq_number = 0
 
-    def encrypt(self, plaintext):
+    def encrypt(self, plaintext, nonce):
         # print("[+] key", self.key_raw.hex(), self.key)
         # print("[+] nonce", self.nonce_raw.hex(), self.nonce)
         if len(plaintext) % 64 != 0:
@@ -86,7 +87,7 @@ class Chacha20Poly1305(Cipher):
             for block in make_array(array64 , 4, to_int=True):
                 plain_blocks.append(block)
 
-            c, state = chacha20(plain_blocks, self.key, self.nonce, cnt=cnt)
+            c, state = chacha20(plain_blocks, self.key, nonce, cnt=cnt)
             for _c in c:
                 hex_c = hex(_c)[2:]
                 if len(hex_c) != 8:
@@ -96,7 +97,7 @@ class Chacha20Poly1305(Cipher):
 
         return cipher
 
-    def decrypt(self, ciphertext):
+    def decrypt(self, ciphertext, nonce):
         if len(ciphertext) % 64 != 0:
             raise ValueError("Input strings must be a multipul of 64 in length")
 
@@ -108,7 +109,7 @@ class Chacha20Poly1305(Cipher):
             for block in make_array(array64 , 4, to_int=True):
                 cipher_blocks.append(block)
 
-            c, state = chacha20(cipher_blocks, self.key, self.nonce, cnt=cnt)
+            c, state = chacha20(cipher_blocks, self.key, nonce, cnt=cnt)
             for _c in c:
                 hex_c = hex(_c)[2:]
                 if len(hex_c) != 8:
@@ -163,11 +164,11 @@ class Chacha20Poly1305(Cipher):
         return long_to_bytes(accumulator)[::-1]
 
 
-    def poly1305_key_gen(self):
-        _, state = chacha20(b"\x00"*16, self.key, self.nonce, cnt=0)
+    def poly1305_key_gen(self, nonce):
+        _, state = chacha20(b"\x00"*16, self.key, nonce, cnt=0)
         r = state[0:4]
         s = state[4:8]
-        
+
         r = b''.join(map(lambda x: struct.pack("<I", x), r))
         s = b''.join(map(lambda x: struct.pack("<I", x), s))
 
@@ -176,7 +177,7 @@ class Chacha20Poly1305(Cipher):
 
         return s, r
 
-    def chacha20_aead_encrypt(self, aad, plaintext):
+    def chacha20_aead_encrypt(self, aad, plaintext, nonce):
         """
         chacha20_aead_encrypt(aad, key, iv, constant, plaintext):
             nonce = constant | iv
@@ -189,8 +190,8 @@ class Chacha20Poly1305(Cipher):
             tag = poly1305_mac(mac_data, otk)
             return (ciphertext, tag)
         """
-        otk = self.poly1305_key_gen()
-        ciphertext = self.encrypt(plaintext)
+        otk = self.poly1305_key_gen(nonce)
+        ciphertext = self.encrypt(plaintext, nonce)
 
         mac_data = aad + self.pad16(aad)
         mac_data += ciphertext + self.pad16(ciphertext)
@@ -211,7 +212,12 @@ class Chacha20Poly1305(Cipher):
         Encrypts and authenticates plaintext using nonce and data. Returns the
         ciphertext, consisting of the encrypted plaintext and tag concatenated.
         """
-        ciphertext, tag = self.chacha20_aead_encrypt(aad, plaintext)
+        print("self.iv:", self.iv)
+        nonce = self.get_nonce()
+        nonce = make_array(nonce, 4, to_int=True)
+        print("nonce:", nonce)
+
+        ciphertext, tag = self.chacha20_aead_encrypt(aad, plaintext, nonce)
         return ciphertext + tag
 
     def aead_decrypt(self, aad, ciphertext):
@@ -229,10 +235,15 @@ class Chacha20Poly1305(Cipher):
             print("NOOOOOOOOOOOOOOOO")
             return None
 
+        print("self.iv:", self.iv)
+        nonce = self.get_nonce()
+        nonce = make_array(nonce, 4, to_int=True)
+        print("nonce:", nonce)
+
         expected_tag = ciphertext[-16:]
         ciphertext = ciphertext[:-16]
 
-        otk = self.poly1305_key_gen()
+        otk = self.poly1305_key_gen(nonce)
         mac_data = aad + self.pad16(aad)
         mac_data += ciphertext + self.pad16(ciphertext)
         mac_data += struct.pack("<Q", len(aad))
@@ -243,6 +254,22 @@ class Chacha20Poly1305(Cipher):
             return None
 
         return self.decrypt(ciphertext)
+
+    def get_nonce(self):
+        print("seq_number:", self.seq_number)
+        # res = self.iv
+        iv = b''.join(map(lambda x: struct.pack("<I", x), self.iv))
+
+        # iv_len = len(iv)
+        seq = long_to_bytes(self.seq_number)
+        seq = seq.rjust(16, b'\x00')
+        # print('iv:', iv)
+        # print('seq:', seq)
+        res = b''.join(map(lambda x: bytearray([x[0] ^ x[1]]), zip(iv, seq)))
+        # print("res:", res)
+        self.nonce = res
+        self.seq_number += 1
+        return res
 
 
 # http://inaz2.hatenablog.com/entry/2013/11/30/233649

@@ -11,6 +11,7 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     Certificate, CertificateEntry, CertificateVerify, Finished, Hash, \
     TLSInnerPlaintext, TLSCiphertext, Data, \
     EncryptedExtensions
+from .protocol import recordlayer
 
 # Crypto
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
@@ -151,6 +152,8 @@ def server_cmd(argv):
         nonce_size   = Cipher.Chacha20Poly1305.nonce_size
     else:
         raise NotImplementedError()
+
+    # recordlayer.seq_number
 
     server_write_key, server_write_iv = \
         cryptomath.gen_key_and_iv(server_handshake_traffic_secret,

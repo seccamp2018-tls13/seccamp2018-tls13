@@ -209,7 +209,7 @@ class TLSCiphertext(Struct):
 
         # additional_data =
         #   TLSCiphertext.opaque_type || .legacy_record_version || .length
-        length = len(crypto.encrypt(app_data_inner.to_bytes())) + 16
+        length = len(crypto.encrypt(app_data_inner.to_bytes(), nonce=crypto.iv)) + 16
         print(length)
         aad = b'\x17\x03\x03' + Uint16(length).to_bytes()
         print('AAD:', aad.hex())
@@ -234,7 +234,7 @@ class TLSCiphertext(Struct):
 
         # TODO: length から Alert かどうか判断する
         if length == 2:
-            raise RuntimeError("")
+            raise RuntimeError("Alert!")
 
         recved_app_data_inner_bytes = \
             crypto.aead_decrypt(aad, recved_app_data_cipher.encrypted_record)
