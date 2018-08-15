@@ -154,9 +154,9 @@ class TLSInnerPlaintext(Struct):
     def create(cls, tlsplaintext, length_of_padding=None):
         if length_of_padding is None:
             # length_of_padding = 64 - len(tlsplaintext) % 64
-            length_of_padding = 64 - len(tlsplaintext) % 64 - 1
+            length_of_padding = 64 - len(tlsplaintext.fragment) % 64 - 1
         return cls(
-            content=tlsplaintext.to_bytes(),
+            content=tlsplaintext.fragment.to_bytes(),
             type=tlsplaintext.type,
             length_of_padding=length_of_padding)
 
@@ -205,8 +205,7 @@ class TLSCiphertext(Struct):
             tlsplaintext = fragment
         else:
             raise TypeError()
-        # app_data_inner = TLSInnerPlaintext.create(tlsplaintext)
-        app_data_inner = TLSInnerPlaintext.create(tlsplaintext.fragment)
+        app_data_inner = TLSInnerPlaintext.create(tlsplaintext)
 
         # additional_data =
         #   TLSCiphertext.opaque_type || .legacy_record_version || .length
