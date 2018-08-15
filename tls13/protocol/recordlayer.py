@@ -205,7 +205,8 @@ class TLSCiphertext(Struct):
             tlsplaintext = fragment
         else:
             raise TypeError()
-        app_data_inner = TLSInnerPlaintext.create(tlsplaintext)
+        # app_data_inner = TLSInnerPlaintext.create(tlsplaintext)
+        app_data_inner = TLSInnerPlaintext.create(tlsplaintext.fragment)
 
         # additional_data =
         #   TLSCiphertext.opaque_type || .legacy_record_version || .length
