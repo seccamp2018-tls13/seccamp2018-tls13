@@ -1,5 +1,6 @@
 import binascii
 import hashlib
+import struct
 from .chacha20poly1305 import *
 
 from Crypto.Util.number import bytes_to_long, long_to_bytes
@@ -145,6 +146,9 @@ class Chacha20Poly1305(Cipher):
         r = cramp(r)
         s = le_num(s)
 
+        print("[DEBUG] Poly1305 r :", r)
+        print("[DEBUG] Poly1305 s :", s)
+
         p = 2**130 - 5
         accumulator = 0
         for i, Ci in enumerate(coefs_messages, 1):
@@ -161,15 +165,14 @@ class Chacha20Poly1305(Cipher):
 
     def poly1305_key_gen(self):
         _, state = chacha20(b"\x00"*16, self.key, self.nonce, cnt=0)
-        least16bytes = state[8:]
-        s = least16bytes[:4]
-        r = least16bytes[4:]
+        r = state[0:4]
+        s = state[4:8]
+        
+        r = b''.join(map(lambda x: struct.pack("<I", x), r))
+        s = b''.join(map(lambda x: struct.pack("<I", x), s))
 
-        concate_s = concatenate_bytes(s)
-        concate_r = concatenate_bytes(r)
-
-        s = bytes_to_long(concate_s)
-        r = bytes_to_long(concate_r)
+        s = bytes_to_long(s)
+        r = bytes_to_long(r)
 
         return s, r
 
@@ -191,7 +194,8 @@ class Chacha20Poly1305(Cipher):
 
         mac_data = aad + self.pad16(aad)
         mac_data += ciphertext + self.pad16(ciphertext)
-        mac_data += bytearray(len(aad) + len(ciphertext))
+        mac_data += struct.pack("<Q", len(aad))
+        mac_data += struct.pack("<Q", len(ciphertext))
 
         tag = self.poly1305_mac(mac_data, otk)
         return ciphertext, tag
@@ -231,7 +235,8 @@ class Chacha20Poly1305(Cipher):
         otk = self.poly1305_key_gen()
         mac_data = aad + self.pad16(aad)
         mac_data += ciphertext + self.pad16(ciphertext)
-        mac_data += bytearray(len(aad) + len(ciphertext))
+        mac_data += struct.pack("<Q", len(aad))
+        mac_data += struct.pack("<Q", len(ciphertext))
         tag = self.poly1305_mac(mac_data, otk)
 
         if not self.ct_compare_digest(tag, expected_tag):
