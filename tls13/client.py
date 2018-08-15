@@ -20,7 +20,7 @@ from .utils import cryptomath, hexdump, hexstr, Uint16
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
 
-    messages = []
+    messages = bytearray(0)
 
     # params
 
@@ -84,12 +84,14 @@ def client_cmd(argv):
     # ClientHello が入っている TLSPlaintext
     print(clienthello)
     client_conn.send_msg(clienthello.to_bytes())
-    messages.append(clienthello.fragment)
+    # messages.append(clienthello.fragment)
+    messages += clienthello.fragment.to_bytes()
 
     # <<< ServerHello <<<
     data = client_conn.recv_msg()
     recved_serverhello = TLSPlaintext.from_bytes(data)
-    messages.append(recved_serverhello.fragment)
+    # messages.append(recved_serverhello.fragment)
+    messages += data[5:]
     print(recved_serverhello)
 
     # パラメータの決定
@@ -119,6 +121,9 @@ def client_cmd(argv):
     print("shared_key: %s" % hexstr(shared_key))
 
     # -- HKDF ---
+
+    print("messages hash = " + cryptomath.secureHash(messages, 'sha256').hex())
+    print()
 
     cipher_suite = server_cipher_suite
 
@@ -163,8 +168,10 @@ def client_cmd(argv):
     client_write_key, client_write_iv = \
         cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
 
-    print('client_write_key = ', client_write_key.hex())
-    print('client_write_iv = ', client_write_iv.hex())
+    print('server_write_key =', server_write_key.hex())
+    print('server_write_iv =', server_write_iv.hex())
+    print('client_write_key =', client_write_key.hex())
+    print('client_write_iv =', client_write_iv.hex())
 
     app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
 
@@ -173,7 +180,8 @@ def client_cmd(argv):
     # recved_certificate = TLSPlaintext.from_bytes(data)
     recved_certificate = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages.append(recved_certificate.fragment)
+    # messages.append(recved_certificate.fragment)
+    messages += data[5:]
     print(recved_certificate)
 
     # <<< server CertificateVerify <<<
@@ -181,7 +189,8 @@ def client_cmd(argv):
     # recved_cert_verify = TLSPlaintext.from_bytes(data)
     recved_cert_verify = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages.append(recved_cert_verify.fragment)
+    # messages.append(recved_cert_verify.fragment)
+    messages += data[5:]
     print(recved_cert_verify)
 
     # <<< recv Finished <<<
@@ -191,7 +200,8 @@ def client_cmd(argv):
     # recved_finished = TLSPlaintext.from_bytes(data)
     recved_finished = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages.append(recved_finished.fragment)
+    # messages.append(recved_finished.fragment)
+    messages += data[5:]
     print(recved_finished)
     assert isinstance(recved_finished.fragment.msg, Finished)
 
@@ -214,7 +224,8 @@ def client_cmd(argv):
     # client_conn.send_msg(finished.to_bytes())
     finished_cipher = TLSCiphertext.create(finished, crypto=c_traffic_crypto)
     client_conn.send_msg(finished_cipher.to_bytes())
-    messages.append(finished.fragment)
+    # messages.append(finished.fragment)
+    messages += finished.fragment.to_bytes()
 
 
     # >>> Application Data <<<
