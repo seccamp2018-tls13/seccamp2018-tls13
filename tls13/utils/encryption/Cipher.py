@@ -74,8 +74,8 @@ class Chacha20Poly1305(Cipher):
         self.seq_number = 0
 
     def encrypt(self, plaintext, nonce):
-        # print("[+] key", self.key_raw.hex(), self.key)
-        # print("[+] nonce", self.nonce_raw.hex(), self.nonce)
+        print("[+] key", self.key_raw.hex(), self.key)
+        print("[+] nonce", self.nonce_raw.hex(), nonce)
         if len(plaintext) % 64 != 0:
             raise ValueError("Input strings must be a multipul of 64 in length")
 
@@ -256,14 +256,13 @@ class Chacha20Poly1305(Cipher):
         # res = self.iv
         iv = b''.join(map(lambda x: struct.pack("<I", x), self.iv))
 
-        # iv_len = len(iv)
+        iv_len = len(iv)
         seq = long_to_bytes(self.seq_number)
-        seq = seq.rjust(16, b'\x00')
-        # print('iv:', iv)
-        # print('seq:', seq)
+        seq = seq.rjust(iv_len, b'\x00')
+        print('iv: ', iv.hex())
+        print('seq:', seq.hex())
         res = b''.join(map(lambda x: bytearray([x[0] ^ x[1]]), zip(iv, seq)))
-        # print("res:", res)
-        self.nonce = res
+        print("res:", res.hex())
         self.seq_number += 1
         return res
 
