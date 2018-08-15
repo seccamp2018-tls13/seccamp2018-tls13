@@ -95,6 +95,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
         actual = state
         self.assertEqual(expected, actual)
 
+    # https://tools.ietf.org/html/rfc7539#section-2.5.2
     def test_poly1305(self):
         key = binascii.unhexlify(
             '85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b')
@@ -108,3 +109,55 @@ class Chacha20Poly1305Test(unittest.TestCase):
         tag = polychacha.poly1305_mac(message, (s,r))
 
         self.assertEqual(expected_tag, tag)
+
+    # https://tools.ietf.org/html/rfc7539#section-2.6.2
+    def test_vector_for_POLY1305_key_generation(self):
+        key = binascii.unhexlify(
+            '808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f')
+        nonce = binascii.unhexlify(
+            '000000000001020304050607')
+        polychacha = Chacha20Poly1305(key, nonce)
+
+        s, r = polychacha.poly1305_key_gen()
+        expected_r = 0x8ad5a08b905f81cc815040274ab29471
+        expected_s = 0xa833b637e3fd0da508dbb8e2fdd1a646
+        self.assertEqual(r, expected_r)
+        self.assertEqual(s, expected_s)
+
+    # https://tools.ietf.org/html/rfc7539#section-2.8.2
+    def test_Vector_for_AEAD_CHACHA20_POLY1305(self):
+        plaintext = \
+        b'Ladies and Gentl' + \
+        b'emen of the clas' + \
+        b"s of '99: If I c" + \
+        b'ould offer you o' + \
+        b'nly one tip for ' + \
+        b'the future, suns' + \
+        b'creen would be i' + \
+        b't.'
+        aad = binascii.unhexlify('50515253c0c1c2c3c4c5c6c7')
+        key = binascii.unhexlify(''.join('''
+            80 81 82 83 84 85 86 87 88 89 8a 8b 8c 8d 8e 8f
+            90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f
+        '''.split()))
+        nonce = binascii.unhexlify('070000004041424344454647')
+        
+        polychacha = Chacha20Poly1305(key, nonce)
+        s, r = polychacha.poly1305_key_gen()
+        self.assertEqual(r, 0x7bac2b252db447af09b67a55a4e95584)
+        self.assertEqual(s, 0x0ae1d6731075d9eb2a9375783ed553ff)
+
+        c = polychacha.encrypt(plaintext + bytearray(64 - len(plaintext) % 64))
+
+        expected_c = binascii.unhexlify("".join("""
+            d3 1a 8d 34 64 8e 60 db 7b 86 af bc 53 ef 7e c2
+            a4 ad ed 51 29 6e 08 fe a9 e2 b5 a7 36 ee 62 d6
+            3d be a4 5e 8c a9 67 12 82 fa fb 69 da 92 72 8b
+            1a 71 de 0a 9e 06 0b 29 05 d6 a5 b6 7e cd 3b 36
+            92 dd bd 7f 2d 77 8b 8c 98 03 ae e3 28 09 1b 58 
+            fa b3 24 e4 fa d6 75 94 55 85 80 8b 48 31 d7 bc
+            3f f4 de f0 8e 4b 7a 9d e5 76 d2 65 86 ce c6 4b
+            61 16
+        """.split()))
+        self.assertEqual(c[:len(plaintext)], expected_c[:len(plaintext)])
+        
