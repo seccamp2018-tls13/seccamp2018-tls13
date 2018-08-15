@@ -3,7 +3,7 @@ import unittest
 import binascii
 
 from tls13.utils.encryption.Cipher import Chacha20Poly1305, make_array
-from tls13.utils.encryption.chacha20poly1305 import *
+from tls13.utils.encryption.chacha20poly1305 import chacha20
 
 class Chacha20Poly1305Test(unittest.TestCase):
 
@@ -94,3 +94,17 @@ class Chacha20Poly1305Test(unittest.TestCase):
         ]
         actual = state
         self.assertEqual(expected, actual)
+
+    def test_poly1305(self):
+        key = binascii.unhexlify(
+            '85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b')
+        s = int('0103808afb0db2fd4abff6af4149f51b', 16)
+        r = int('85d6be7857556d337f4452fe42d506a8', 16)
+        message = b'Cryptographic Forum Research Group'
+
+        expected_tag = binascii.unhexlify('a8061dc1305136c6c22b8baf0c0127a9')
+
+        polychacha = Chacha20Poly1305(key, self.nonce)
+        tag = polychacha.poly1305_mac(message, (s,r))
+
+        self.assertEqual(expected_tag, tag)
