@@ -126,7 +126,6 @@ class Chacha20Poly1305(Cipher):
 
 
         def le_num(n : int):
-            print(n)
             dt = hex(n)[2:].encode()
             if len(dt) % 2 != 0:
                 dt = b'0' + dt
@@ -147,19 +146,17 @@ class Chacha20Poly1305(Cipher):
         r = cramp(r)
         s = le_num(s)
 
-        print("[DEBUG] Poly1305 r :", r)
-        print("[DEBUG] Poly1305 s :", s)
+        print("[+] Poly1305 r :", hex(r))
+        print("[+] Poly1305 s :", hex(s))
 
         p = 2**130 - 5
         accumulator = 0
         for i, Ci in enumerate(coefs_messages, 1):
-            #print("[DEBUG] i, accumulator : ", i, accumulator)
-            #accumulator += (Ci % p) * pow(r, i, p) % p
             accumulator = ((Ci + accumulator) % p ) * r % p
-            print(hex(Ci), hex(accumulator))
+            print("[+] Ci, ACC :", hex(Ci), hex(accumulator))
 
-        print(hex(accumulator + s))
-        print(hex(((accumulator + s) % p) % 2**128))
+        print("[+] ACC + S :", hex(accumulator + s))
+        print("[+] (ACC + S) % p :", hex(((accumulator + s) % p) % 2**128))
         accumulator = ((accumulator + s) % p) % 2**128
         return long_to_bytes(accumulator)[::-1]
 
@@ -230,9 +227,8 @@ class Chacha20Poly1305(Cipher):
 
         # if len(self.nonce) != 12:
         #     raise ValueError("Nonce must be 96 bit long")
-        print("[DEBUG] ciphertext : ", ciphertext)
+        print("[+] ciphertext : ", ciphertext)
         if len(ciphertext) < 16:
-            print("NOOOOOOOOOOOOOOOO")
             return None
 
         print("self.iv:", self.iv)
