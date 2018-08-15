@@ -232,6 +232,10 @@ class TLSCiphertext(Struct):
         print('AAD:', aad.hex())
         # print('encrypted_record:', recved_app_data_cipher.encrypted_record.hex())
 
+        # TODO: length から Alert かどうか判断する
+        if length == 2:
+            raise RuntimeError("")
+
         recved_app_data_inner_bytes = \
             crypto.aead_decrypt(aad, recved_app_data_cipher.encrypted_record)
         if recved_app_data_inner_bytes is None:
