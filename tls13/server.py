@@ -18,7 +18,6 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
     X25519PublicKey
 from .utils.encryption.ffdhe import FFDHE
 from .utils.encryption import Cipher
-from .utils.encryption.Cipher import Chacha20Poly1305
 
 from .utils import cryptomath, hexdump, hexstr
 
@@ -293,7 +292,7 @@ def server_cmd(argv):
     print(hexdump(data))
 
     # recved_finished = TLSPlaintext.from_bytes(data)
-    Chacha20Poly1305.seq_number = 1
+    Cipher.Cipher.seq_number = 1
     recved_finished = TLSCiphertext.restore(data, crypto=c_traffic_crypto)
     # messages.append(recved_finished.fragment)
     messages += recved_finished.fragment.to_bytes()
@@ -303,7 +302,7 @@ def server_cmd(argv):
     # >>> Application Data <<<
     print("=== Application Data ===")
 
-    Chacha20Poly1305.seq_number = 0
+    Cipher.Cipher.seq_number = 0
 
     test_data = TLSPlaintext(
         type=ContentType.handshake,

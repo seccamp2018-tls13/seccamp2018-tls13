@@ -61,7 +61,7 @@ class Cipher:
 
 
 class Chacha20Poly1305(Cipher):
-    seq_number = 0
+    # seq_number = 0
     key_size = 32
     nonce_size = 12
     # keyとnonceをHKDFで生成するときに
@@ -255,18 +255,18 @@ class Chacha20Poly1305(Cipher):
         return self.decrypt(ciphertext, nonce)
 
     def get_nonce(self):
-        print("seq_number:", Chacha20Poly1305.seq_number)
+        print("seq_number:", Cipher.seq_number)
         # res = self.iv
         iv = b''.join(map(lambda x: struct.pack("<I", x), self.iv))
 
         iv_len = len(iv)
-        seq = long_to_bytes(Chacha20Poly1305.seq_number)
+        seq = long_to_bytes(Cipher.seq_number)
         seq = seq.rjust(iv_len, b'\x00')
         print('iv: ', iv.hex())
         print('seq:', seq.hex())
         res = b''.join(map(lambda x: bytearray([x[0] ^ x[1]]), zip(iv, seq)))
         print("res:", res.hex())
-        Chacha20Poly1305.seq_number += 1
+        Cipher.seq_number += 1
         return res
 
 
