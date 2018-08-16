@@ -25,28 +25,34 @@ class Chacha20Poly1305Test(unittest.TestCase):
 
     def test_enc_dec(self):
         polychacha = Chacha20Poly1305(self.key, self.nonce)
-        enc = polychacha.encrypt(self.plain)
-        dec = polychacha.decrypt(enc)
+        nonce = make_array(self.nonce, 4, to_int=True)
+        enc = polychacha.encrypt(self.plain, nonce)
+        dec = polychacha.decrypt(enc, nonce)
         self.assertEqual(self.plain, dec)
 
     def test_enc_dec__diff_keys(self):
         polychacha = Chacha20Poly1305(self.key, self.nonce)
         polychacha2 = Chacha20Poly1305(self.key2, self.nonce)
-        enc = polychacha.encrypt(self.plain)
-        dec = polychacha2.decrypt(enc)
+        nonce = make_array(self.nonce, 4, to_int=True)
+        nonce2 = make_array(self.nonce2, 4, to_int=True)
+        enc = polychacha.encrypt(self.plain, nonce)
+        dec = polychacha2.decrypt(enc, nonce2)
         self.assertNotEqual(self.plain, dec)
 
     def test_enc_dec__diff_nonce(self):
         polychacha = Chacha20Poly1305(self.key, self.nonce)
         polychacha2 = Chacha20Poly1305(self.key, self.nonce2)
-        enc = polychacha.encrypt(self.plain)
-        dec = polychacha2.decrypt(enc)
+        nonce = make_array(self.nonce, 4, to_int=True)
+        nonce2 = make_array(self.nonce2, 4, to_int=True)
+        enc = polychacha.encrypt(self.plain, nonce)
+        dec = polychacha2.decrypt(enc, nonce2)
         self.assertNotEqual(self.plain, dec)
 
     def test_aead(self):
         polychacha = Chacha20Poly1305(self.key, self.nonce)
-        enc, tag = polychacha.chacha20_aead_encrypt(self.auth_data, self.plain)
-        enc2, tag2 = polychacha.chacha20_aead_encrypt(self.auth_data2, self.plain)
+        nonce = make_array(self.nonce, 4, to_int=True)
+        enc, tag = polychacha.chacha20_aead_encrypt(self.auth_data, self.plain, nonce)
+        enc2, tag2 = polychacha.chacha20_aead_encrypt(self.auth_data2, self.plain, nonce)
         self.assertEqual(enc, enc2)
         self.assertNotEqual(tag, tag2)
 
@@ -118,7 +124,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
             '000000000001020304050607')
         polychacha = Chacha20Poly1305(key, nonce)
 
-        s, r = polychacha.poly1305_key_gen()
+        s, r = polychacha.poly1305_key_gen(make_array(nonce, 4, to_int=True))
         expected_r = 0x8ad5a08b905f81cc815040274ab29471
         expected_s = 0xa833b637e3fd0da508dbb8e2fdd1a646
         self.assertEqual(r, expected_r)
@@ -143,11 +149,12 @@ class Chacha20Poly1305Test(unittest.TestCase):
         nonce = binascii.unhexlify('070000004041424344454647')
         
         polychacha = Chacha20Poly1305(key, nonce)
-        s, r = polychacha.poly1305_key_gen()
+        nonce = make_array(nonce, 4, to_int=True)
+        s, r = polychacha.poly1305_key_gen(nonce)
         self.assertEqual(r, 0x7bac2b252db447af09b67a55a4e95584)
         self.assertEqual(s, 0x0ae1d6731075d9eb2a9375783ed553ff)
 
-        c = polychacha.encrypt(plaintext + bytearray(64 - len(plaintext) % 64))
+        c = polychacha.encrypt(plaintext + bytearray(64 - len(plaintext) % 64), nonce)
 
         expected_c = binascii.unhexlify("".join("""
             d3 1a 8d 34 64 8e 60 db 7b 86 af bc 53 ef 7e c2
