@@ -325,8 +325,8 @@ def server_cmd(argv):
 
     import time
 
-    server_seq_num = 1
-    client_seq_num = 3
+    server_seq_num = 3
+    client_seq_num = 1
 
     Cipher.Cipher.seq_number = server_seq_num
     server_seq_num += 1
