@@ -249,7 +249,7 @@ class Chacha20Poly1305(Cipher):
         if not self.ct_compare_digest(tag, expected_tag):
             return None
 
-        return self.decrypt(ciphertext)
+        return self.decrypt(ciphertext, nonce)
 
     def get_nonce(self):
         print("seq_number:", self.seq_number)
