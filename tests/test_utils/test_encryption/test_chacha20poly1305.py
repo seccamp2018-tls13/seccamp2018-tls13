@@ -154,7 +154,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
         self.assertEqual(r, 0x7bac2b252db447af09b67a55a4e95584)
         self.assertEqual(s, 0x0ae1d6731075d9eb2a9375783ed553ff)
 
-        c = polychacha.encrypt(plaintext + bytearray(64 - len(plaintext) % 64), nonce)
+        c = polychacha.encrypt(plaintext, nonce)
 
         expected_c = binascii.unhexlify("".join("""
             d3 1a 8d 34 64 8e 60 db 7b 86 af bc 53 ef 7e c2
@@ -166,5 +166,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
             3f f4 de f0 8e 4b 7a 9d e5 76 d2 65 86 ce c6 4b
             61 16
         """.split()))
-        self.assertEqual(c[:len(plaintext)], expected_c[:len(plaintext)])
+
+        self.assertEqual(len(c), len(expected_c))
+        self.assertEqual(c, expected_c)
         

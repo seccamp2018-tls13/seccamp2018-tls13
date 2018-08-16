@@ -237,10 +237,12 @@ class TLSCiphertext(Struct):
             print(TLSPlaintext.from_bytes(data))
             raise RuntimeError("Alert!")
 
+        print("restore before:", recved_app_data_cipher.encrypted_record.hex())
         recved_app_data_inner_bytes = \
             crypto.aead_decrypt(aad, recved_app_data_cipher.encrypted_record)
         if recved_app_data_inner_bytes is None:
             raise RuntimeError('aead_decrypt Error')
+        print("restore after:", recved_app_data_inner_bytes.hex())
         recved_app_data_inner = \
             TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
         recved_app_data = \
