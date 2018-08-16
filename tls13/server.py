@@ -18,6 +18,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
     X25519PublicKey
 from .utils.encryption.ffdhe import FFDHE
 from .utils.encryption import Cipher
+from .utils.encryption.Cipher import Chacha20Poly1305
 
 from .utils import cryptomath, hexdump, hexstr
 
@@ -243,6 +244,7 @@ def server_cmd(argv):
                 algorithm=server_signature_scheme,
                 signature=certificate_signature )))
 
+    print("=== CertificateVerify ===")
     print(cert_verify)
     # server_conn.send_msg(cert_verify.to_bytes())
     cert_verify_cipher = TLSCiphertext.create(cert_verify, crypto=s_traffic_crypto)
@@ -270,6 +272,7 @@ def server_cmd(argv):
             msg_type=HandshakeType.finished,
             msg=Finished(verify_data=verify_data) ))
 
+    print("=== Finished ===")
     print(finished)
     # server_conn.send_msg(finished.to_bytes())
     finished_cipher = TLSCiphertext.create(finished, crypto=s_traffic_crypto)
@@ -278,18 +281,35 @@ def server_cmd(argv):
     messages += finished.fragment.to_bytes()
 
     # <<< recv Finished <<<
+    print("=== recv Finished ===")
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     data = server_conn.recv_msg()
+    print(hexdump(data))
+    if len(data) == 7: # TODO: Alertのとき
+        print(TLSPlaintext.from_bytes(data))
+        raise RuntimeError("Alert!")
+    data = data[6:] # change cipher spec (14 03 03 00 01 01) を取り除く
+    print("remove: change cipher spec")
+    print(hexdump(data))
+
     # recved_finished = TLSPlaintext.from_bytes(data)
+    Chacha20Poly1305.seq_number = 1
     recved_finished = TLSCiphertext.restore(data, crypto=c_traffic_crypto)
     # messages.append(recved_finished.fragment)
     messages += recved_finished.fragment.to_bytes()
     print(recved_finished)
     assert isinstance(recved_finished.fragment.msg, Finished)
 
-
     # >>> Application Data <<<
     print("=== Application Data ===")
+
+    Chacha20Poly1305.seq_number = 0
+
+    test_data = TLSPlaintext(
+        type=ContentType.handshake,
+        fragment=Data(b'AAAAAAAA'))
+    test_data_cipher = TLSCiphertext.create(test_data, crypto=app_data_crypto)
+    server_conn.send_msg(test_data_cipher.to_bytes())
 
     data = server_conn.recv_msg()
     recved_app_data = TLSCiphertext.restore(data, crypto=app_data_crypto)
