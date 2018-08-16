@@ -146,6 +146,8 @@ def server_cmd(argv):
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
     server_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"s ap traffic", messages)
+    print('client_application_traffic_secret =', client_application_traffic_secret.hex())
+    print('server_application_traffic_secret =', server_application_traffic_secret.hex())
 
     if cipher_suite == CipherSuite.TLS_CHACHA20_POLY1305_SHA256:
         cipher_class = Cipher.Chacha20Poly1305
@@ -165,10 +167,6 @@ def server_cmd(argv):
         cryptomath.gen_key_and_iv(client_handshake_traffic_secret,
                                   key_size, nonce_size, hash_algo)
     c_traffic_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
-
-    server_app_write_key, server_app_write_iv = \
-        cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
-    app_data_crypto = cipher_class(key=server_app_write_key, nonce=server_app_write_iv)
 
     print('server_write_key =', server_write_key.hex())
     print('server_write_iv =', server_write_iv.hex())
@@ -280,6 +278,27 @@ def server_cmd(argv):
     # messages.append(finished.fragment)
     messages += finished.fragment.to_bytes()
 
+    client_application_traffic_secret = \
+        cryptomath.derive_secret(secret, b"c ap traffic", messages)
+    server_application_traffic_secret = \
+        cryptomath.derive_secret(secret, b"s ap traffic", messages)
+
+    server_app_write_key, server_app_write_iv = \
+        cryptomath.gen_key_and_iv(server_application_traffic_secret, key_size, nonce_size, hash_algo)
+    server_app_data_crypto = cipher_class(key=server_app_write_key, nonce=server_app_write_iv)
+    client_app_write_key, client_app_write_iv = \
+        cryptomath.gen_key_and_iv(client_application_traffic_secret, key_size, nonce_size, hash_algo)
+    client_app_data_crypto = cipher_class(key=client_app_write_key, nonce=client_app_write_iv)
+
+    print('client_application_traffic_secret =', client_application_traffic_secret.hex())
+    print('server_application_traffic_secret =', server_application_traffic_secret.hex())
+    print('server_app_write_key =', server_app_write_key.hex())
+    print('server_app_write_iv =', server_app_write_iv.hex())
+
+    print('client_app_write_key =', client_app_write_key.hex())
+    print('client_app_write_iv =', client_app_write_iv.hex())
+
+
     # <<< recv Finished <<<
     print("=== recv Finished ===")
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
@@ -293,7 +312,7 @@ def server_cmd(argv):
     print(hexdump(data))
 
     # recved_finished = TLSPlaintext.from_bytes(data)
-    Chacha20Poly1305.seq_number = 1
+    Chacha20Poly1305.seq_number = 0
     recved_finished = TLSCiphertext.restore(data, crypto=c_traffic_crypto)
     # messages.append(recved_finished.fragment)
     messages += recved_finished.fragment.to_bytes()
