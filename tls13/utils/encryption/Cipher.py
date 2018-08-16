@@ -1,6 +1,7 @@
 import binascii
 import hashlib
 import struct
+import math
 from .chacha20poly1305 import *
 
 from Crypto.Util.number import bytes_to_long, long_to_bytes
@@ -61,7 +62,7 @@ class Cipher:
 
 
 class Chacha20Poly1305(Cipher):
-    seq_number = 0
+    # seq_number = 0
     key_size = 32
     nonce_size = 12
     # keyとnonceをHKDFで生成するときに
@@ -78,49 +79,61 @@ class Chacha20Poly1305(Cipher):
     def encrypt(self, plaintext, nonce):
         print("[+] key", self.key_raw.hex(), self.key)
         print("[+] nonce", self.nonce_raw.hex(), nonce)
+
+        counter = 1
+        #encrypted_message = bytearray(0)
+        encrypted_message = b''
+        for j in range(0, math.floor(len(plaintext)//64)):
+            _, key_stream = chacha20(b'\x00'*64, self.key, nonce, cnt=counter+j)
+            block = plaintext[(j*64):(j*64+64)]
+            key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
+
+            print("[+] block :", block)
+            print("[+] key_stream :", key_stream)
+
+            # encrypted_message +=  block ^ key_stream
+            encrypted_message += bytes([
+                x ^ y for x, y in zip(block, key_stream)])
+
         if len(plaintext) % 64 != 0:
-            raise ValueError("Input strings must be a multipul of 64 in length")
+            j = math.floor(len(plaintext)//64)
+            _, key_stream = chacha20(b'\x00'*64, self.key, nonce, cnt=counter+j)
+            key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
+            block = plaintext[(j*64):len(plaintext)]
 
-        array64s = make_array(plaintext, 64, to_int=False)
+            # encrypted_message += (block^key_stream)[0..len(plaintext)%64]
+            encrypted_message += bytes([
+                x ^ y for x, y in zip(block, key_stream)])
 
-        cipher = bytearray(0)
-        for cnt, array64 in enumerate(array64s, 1):
-            plain_blocks = []
-            for block in make_array(array64 , 4, to_int=True):
-                plain_blocks.append(block)
-
-            c, state = chacha20(plain_blocks, self.key, nonce, cnt=cnt)
-            for _c in c:
-                hex_c = hex(_c)[2:]
-                if len(hex_c) != 8:
-                    hex_c = '0' * (8-len(hex_c)) + hex_c
-                dt = binascii.unhexlify(hex_c)[::-1]
-                cipher += dt
-
-        return cipher
+        return encrypted_message
 
     def decrypt(self, ciphertext, nonce):
-        print("len(ciphertext)", len(ciphertext))
-        # if len(ciphertext) % 64 != 0:
-        #     raise ValueError("Input strings must be a multipul of 64 in length")
+        counter = 1
+        #decrypted_message = bytearray(0)
+        decrypted_message = b''
+        for j in range(0, math.floor(len(ciphertext)//64)):
+            _, key_stream = chacha20(b'\x00'*64, self.key, nonce, cnt=counter+j)
+            block = ciphertext[(j*64):(j*64+64)]
+            key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
 
-        array64s = make_array(ciphertext, 64, to_int=False)
+            print("[+] block :", block)
+            print("[+] key_stream :", key_stream)
 
-        plain = bytearray(0)
-        for cnt, array64 in enumerate(array64s, 1):
-            cipher_blocks = []
-            for block in make_array(array64 , 4, to_int=True):
-                cipher_blocks.append(block)
+            # decrypted_message +=  block ^ key_stream
+            decrypted_message += bytes([
+                x ^ y for x, y in zip(block, key_stream)])
 
-            c, state = chacha20(cipher_blocks, self.key, nonce, cnt=cnt)
-            for _c in c:
-                hex_c = hex(_c)[2:]
-                if len(hex_c) != 8:
-                    hex_c = '0' * (8-len(hex_c)) + hex_c
-                dt = binascii.unhexlify(hex_c)[::-1]
-                plain += dt
+        if len(ciphertext) % 64 != 0:
+            j = math.floor(len(ciphertext)//64)
+            _, key_stream = chacha20(b'\x00'*64, self.key, nonce, cnt=counter+j)
+            key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
+            block = ciphertext[(j*64):len(ciphertext)]
 
-        return  plain
+            # decrypted_message += (block^key_stream)[0..len(plaintext)%64]
+            decrypted_message += bytes([
+                x ^ y for x, y in zip(block, key_stream)])
+
+        return decrypted_message
 
     def poly1305_mac(self, message, otk):
 
@@ -255,18 +268,18 @@ class Chacha20Poly1305(Cipher):
         return self.decrypt(ciphertext, nonce)
 
     def get_nonce(self):
-        print("seq_number:", Chacha20Poly1305.seq_number)
+        print("seq_number:", Cipher.seq_number)
         # res = self.iv
         iv = b''.join(map(lambda x: struct.pack("<I", x), self.iv))
 
         iv_len = len(iv)
-        seq = long_to_bytes(Chacha20Poly1305.seq_number)
+        seq = long_to_bytes(Cipher.seq_number)
         seq = seq.rjust(iv_len, b'\x00')
         print('iv: ', iv.hex())
         print('seq:', seq.hex())
         res = b''.join(map(lambda x: bytearray([x[0] ^ x[1]]), zip(iv, seq)))
         print("res:", res.hex())
-        Chacha20Poly1305.seq_number += 1
+        Cipher.seq_number += 1
         return res
 
 
