@@ -323,35 +323,52 @@ def server_cmd(argv):
     # >>> Application Data <<<
     print("=== Application Data ===")
 
-    Cipher.Cipher.seq_number = 0
-
     import time
 
-    for i in range(16):
+    server_seq_num = 1
+    client_seq_num = 3
 
-        print()
-        print("----------------- %s ------------------" % i)
-        print()
+    Cipher.Cipher.seq_number = server_seq_num
+    server_seq_num += 1
 
-        data = server_conn.recv_msg()
-        recved_app_data = TLSCiphertext.restore(data,
-                crypto=client_app_data_crypto,
-                mode=ContentType.application_data)
-        print("* [recv]")
-        print(recved_app_data)
-        print(str(recved_app_data.raw))
+    test_data = TLSPlaintext(
+        type=ContentType.handshake,
+        fragment=Data(b'AAAA'))
+    test_data_cipher = TLSCiphertext.create(test_data,
+        crypto=server_app_data_crypto)
+    server_conn.send_msg(test_data_cipher.to_bytes())
+    print("* [send]")
+    print(hexdump(test_data_cipher.to_bytes()))
 
-        Cipher.Cipher.seq_number -= 1
-
-        test_data = TLSPlaintext(
-            type=ContentType.handshake,
-            fragment=Data(recved_app_data.raw))
-        test_data_cipher = TLSCiphertext.create(test_data,
-            crypto=server_app_data_crypto)
-        server_conn.send_msg(test_data_cipher.to_bytes())
-        print("* [send]")
-        print(hexdump(test_data_cipher.to_bytes()))
-
-        time.sleep(1)
+    # for i in range(16):
+    #
+    #     print()
+    #     print("----------------- %s ------------------" % i)
+    #     print()
+    #
+    #     Cipher.Cipher.seq_number = server_seq_num
+    #     server_seq_num += 1
+    #
+    #     data = server_conn.recv_msg()
+    #     recved_app_data = TLSCiphertext.restore(data,
+    #             crypto=client_app_data_crypto,
+    #             mode=ContentType.application_data)
+    #     print("* [recv]")
+    #     print(recved_app_data)
+    #     print(str(recved_app_data.raw))
+    #
+    #     Cipher.Cipher.seq_number = client_seq_num
+    #     client_seq_num += 1
+    #
+    #     test_data = TLSPlaintext(
+    #         type=ContentType.handshake,
+    #         fragment=Data(recved_app_data.raw))
+    #     test_data_cipher = TLSCiphertext.create(test_data,
+    #         crypto=server_app_data_crypto)
+    #     server_conn.send_msg(test_data_cipher.to_bytes())
+    #     print("* [send]")
+    #     print(hexdump(test_data_cipher.to_bytes()))
+    #
+    #     time.sleep(1)
 
     print("Done.")
