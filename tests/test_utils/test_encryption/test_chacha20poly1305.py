@@ -169,4 +169,3 @@ class Chacha20Poly1305Test(unittest.TestCase):
 
         self.assertEqual(len(c), len(expected_c))
         self.assertEqual(c, expected_c)
-        
