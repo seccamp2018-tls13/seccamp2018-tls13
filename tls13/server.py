@@ -10,7 +10,7 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     SignatureScheme, SignatureSchemeList, \
     Certificate, CertificateEntry, CertificateVerify, Finished, Hash, \
     TLSInnerPlaintext, TLSCiphertext, Data, \
-    EncryptedExtensions
+    EncryptedExtensions, TLSRawtext
 from .protocol import recordlayer
 
 # Crypto
@@ -306,30 +306,52 @@ def server_cmd(argv):
     if len(data) == 7: # TODO: Alertのとき
         print(TLSPlaintext.from_bytes(data))
         raise RuntimeError("Alert!")
-    data = data[6:] # change cipher spec (14 03 03 00 01 01) を取り除く
+    trimed_data = data[6:] # change cipher spec (14 03 03 00 01 01) を取り除く
     print("remove: change cipher spec")
-    print(hexdump(data))
+    print(hexdump(trimed_data))
 
-    # recved_finished = TLSPlaintext.from_bytes(data)
-    Cipher.Cipher.seq_number = 0
-    recved_finished = TLSCiphertext.restore(data, crypto=c_traffic_crypto)
-    # messages.append(recved_finished.fragment)
-    messages += recved_finished.fragment.to_bytes()
+    # # recved_finished = TLSPlaintext.from_bytes(data)
+    # Cipher.Cipher.seq_number = 0
+    # recved_finished = TLSCiphertext.restore(trimed_data, crypto=c_traffic_crypto)
+    # # messages.append(recved_finished.fragment)
+    # messages += recved_finished.fragment.to_bytes()
+    # print(recved_finished)
+    # assert isinstance(recved_finished.fragment.msg, Finished)
+    recved_finished = TLSRawtext.from_bytes(trimed_data)
     print(recved_finished)
-    assert isinstance(recved_finished.fragment.msg, Finished)
 
     # >>> Application Data <<<
     print("=== Application Data ===")
 
     Cipher.Cipher.seq_number = 0
 
-    test_data = TLSPlaintext(
-        type=ContentType.handshake,
-        fragment=Data(b'AAAAAAAA'))
-    test_data_cipher = TLSCiphertext.create(test_data, crypto=app_data_crypto)
-    server_conn.send_msg(test_data_cipher.to_bytes())
+    import time
 
-    data = server_conn.recv_msg()
-    recved_app_data = TLSCiphertext.restore(data, crypto=app_data_crypto)
+    for i in range(16):
 
-    print(recved_app_data)
+        print()
+        print("----------------- %s ------------------" % i)
+        print()
+
+        data = server_conn.recv_msg()
+        recved_app_data = TLSCiphertext.restore(data,
+                crypto=client_app_data_crypto,
+                mode=ContentType.application_data)
+        print("* [recv]")
+        print(recved_app_data)
+        print(str(recved_app_data.raw))
+
+        Cipher.Cipher.seq_number -= 1
+
+        test_data = TLSPlaintext(
+            type=ContentType.handshake,
+            fragment=Data(recved_app_data.raw))
+        test_data_cipher = TLSCiphertext.create(test_data,
+            crypto=server_app_data_crypto)
+        server_conn.send_msg(test_data_cipher.to_bytes())
+        print("* [send]")
+        print(hexdump(test_data_cipher.to_bytes()))
+
+        time.sleep(1)
+
+    print("Done.")

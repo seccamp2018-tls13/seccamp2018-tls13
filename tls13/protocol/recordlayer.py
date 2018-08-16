@@ -4,13 +4,14 @@
 
 __all__ = [
     'ContentType', 'TLSPlaintext', 'TLSInnerPlaintext', 'TLSCiphertext',
-    'Data',
+    'Data', 'TLSRawtext',
 ]
 
 import collections
 
 from .keyexchange.version import ProtocolVersion
 from .alert import Alert
+from ..utils import hexdump
 from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
 from ..utils.codec import Reader
 from ..utils.repr import make_format
@@ -70,12 +71,15 @@ class TLSPlaintext(Struct):
         reader = Reader(data)
         type                  = reader.get(Uint8)
         legacy_record_version = reader.get(Uint16)
-        fragment              = reader.get(bytes, length_t=Uint16)
-        length = Uint16(len(fragment))
+        # fragment              = reader.get(bytes, length_t=Uint16)
+        # length = Uint16(len(fragment))
+        length                = reader.get(Uint16)
+        fragment              = reader.get(bytes)
 
         if mode:
             type = mode # e.g. mode=ContentType.handshake
 
+        print("type:", type, ContentType.labels[type])
         if type == ContentType.handshake:
             return cls(type=type, fragment=Handshake.from_bytes(fragment))
         elif type == ContentType.application_data:
@@ -221,7 +225,7 @@ class TLSCiphertext(Struct):
         return app_data_cipher
 
     @classmethod
-    def restore(cls, data, crypto, mode=None) -> (TLSPlaintext, bytes):
+    def restore(cls, data, crypto, mode=None) -> TLSPlaintext:
         recved_app_data_cipher = TLSCiphertext.from_bytes(data)
 
         # additional_data =
@@ -242,10 +246,47 @@ class TLSCiphertext(Struct):
             crypto.aead_decrypt(aad, recved_app_data_cipher.encrypted_record)
         if recved_app_data_inner_bytes is None:
             raise RuntimeError('aead_decrypt Error')
-        print("restore after:", recved_app_data_inner_bytes.hex())
+        # print("restore after:", recved_app_data_inner_bytes.hex())
+        print("restore after:")
+        print(hexdump(recved_app_data_inner_bytes))
+        if mode == ContentType.application_data:
+            content, type, zeros = \
+                TLSInnerPlaintext.split_pad(recved_app_data_inner_bytes)
+            print("content, type, zeros: ", content, type, zeros)
+            return TLSRawtext(raw=content)
+
         recved_app_data_inner = \
             TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
+        print("recved_app_data_inner.content:")
+        print(recved_app_data_inner.content.hex())
         recved_app_data = \
             TLSPlaintext.from_bytes(recved_app_data_inner.content, mode=mode)
 
         return recved_app_data
+
+class TLSRawtext(Struct):
+    """
+    struct {
+      ContentType opaque_type = application_data; /* 23 */
+      ProtocolVersion legacy_record_version = 0x0303; /* TLS v1.2 */
+      uint16 length;
+      opaque raw[TLSCiphertext.length];
+    } TLSCiphertext;
+    """
+    def __init__(self, **kwargs):
+        self.struct = Members(self, [
+            Member(ContentType, 'opaque_type'),
+            Member(ProtocolVersion, 'legacy_record_version'),
+            Member(bytes, 'raw', length_t=Uint16),
+        ])
+        self.struct.set_default('opaque_type', ContentType.application_data)
+        self.struct.set_default('legacy_record_version', ProtocolVersion.TLS12)
+        self.struct.set_args(**kwargs)
+
+    @classmethod
+    def from_bytes(cls, data):
+        reader = Reader(data)
+        opaque_type           = reader.get(Uint8)
+        legacy_record_version = reader.get(Uint16)
+        raw                   = reader.get(bytes, length_t=Uint16)
+        return cls(raw=raw)
