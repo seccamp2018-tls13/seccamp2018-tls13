@@ -8,6 +8,14 @@
 
 - Python3
 - PyCrypto (pip install pycrypto)
+- PyCryptodome (pip install pycryptodome)
+- cryptography (pip install cryptography)
+
+Install all requirements 
+
+```
+pip install -r requirements.txt
+```
 
 
 ## Usage
