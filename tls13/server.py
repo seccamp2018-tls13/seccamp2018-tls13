@@ -224,14 +224,14 @@ def server_cmd(argv):
     from Crypto.Hash import SHA256
     from Crypto.PublicKey import RSA
     key = RSA.importKey(open('.ssh/server.key').read())
-    if SignatureScheme.rsa_pkcs1_sha256 in client_signature_scheme_list:
-        server_signature_scheme = SignatureScheme.rsa_pkcs1_sha256
-        from Crypto.Signature import PKCS1_v1_5 as pkcs1_15
+    if SignatureScheme.rsa_pss_pss_sha256 in client_signature_scheme_list:
+        server_signature_scheme = SignatureScheme.rsa_pss_pss_sha256
+        from Crypto.Signature import PKCS1_PSS
         message = b'\x20' * 64 + b'TLS 1.3, server CertificateVerify' + b'\x00' + cryptomath.transcript_hash(messages, hash_algo)
         print("message:")
         print(hexdump(message))
         h = SHA256.new(message)
-        certificate_signature = pkcs1_15.new(key).sign(h)
+        certificate_signature = PKCS1_PSS.new(key).sign(h)
     else:
         raise NotImplementedError()
 
