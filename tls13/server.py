@@ -22,6 +22,8 @@ from .utils.encryption import Cipher
 
 from .utils import cryptomath, hexdump, hexstr
 
+from .utils.type import Uint16, Uint32
+
 def server_cmd(argv):
     print("server_cmd({})".format(", ".join(argv)))
 
@@ -273,6 +275,7 @@ def server_cmd(argv):
 
     print("=== Finished ===")
     print(finished)
+    print(hexdump(finished.to_bytes()))
     # server_conn.send_msg(finished.to_bytes())
     finished_cipher = TLSCiphertext.create(finished, crypto=s_traffic_crypto)
     server_conn.send_msg(finished_cipher.to_bytes())
@@ -322,38 +325,65 @@ def server_cmd(argv):
     recved_finished = TLSRawtext.from_bytes(trimed_data)
     print(recved_finished)
 
+    from .protocol.ticket import NewSessionTicket
+    # dummy
+    new_session_ticket = TLSPlaintext(
+        type=ContentType.handshake,
+        fragment=Handshake(
+            msg_type=HandshakeType.new_session_ticket,
+            msg=NewSessionTicket(
+                ticket_lifetime=Uint32(0),
+                ticket_age_add=Uint32(0),
+                ticket_nonce=b'nonce',
+                ticket=b'foobar'
+                )))
+
+    Cipher.Cipher.seq_number = 0
+
+    print("=== NewSessionTicket ===")
+    print(new_session_ticket)
+    # server_conn.send_msg(new_session_ticket.to_bytes())
+    new_session_ticket_cipher = TLSCiphertext.create(
+            new_session_ticket, crypto=server_app_data_crypto)
+    server_conn.send_msg(new_session_ticket_cipher.to_bytes())
+    # messages.append(new_session_ticket.fragment)
+    messages += new_session_ticket.fragment.to_bytes()
+
     # >>> Application Data <<<
     print("=== Application Data ===")
 
-    server_seq_num = 0 # 3
-    client_seq_num = 0
-
-    for i in range(100):
-
-        Cipher.Cipher.seq_number = client_seq_num
-        client_seq_num += 1
-
-        data = server_conn.recv_msg()
-        recved_app_data = TLSCiphertext.restore(data,
-                crypto=client_app_data_crypto,
-                mode=ContentType.application_data)
-        print("* [recv]")
-        print(recved_app_data)
-        print(str(recved_app_data.raw))
-
-    # time.sleep(1)
+    # server_seq_num = 0 # 3
+    # client_seq_num = 0
     #
-    # Cipher.Cipher.seq_number = server_seq_num
-    # server_seq_num += 1
+    # for i in range(100):
     #
-    # test_data = TLSPlaintext(
-    #     type=ContentType.handshake,
-    #     fragment=Data(b'AAAA'))
-    # test_data_cipher = TLSCiphertext.create(test_data,
-    #     crypto=server_app_data_crypto)
-    # server_conn.send_msg(test_data_cipher.to_bytes())
-    # print("* [send]")
-    # print(hexdump(test_data_cipher.to_bytes()))
+    #     Cipher.Cipher.seq_number = client_seq_num
+    #     client_seq_num += 1
+    #
+    #     data = server_conn.recv_msg()
+    #     recved_app_data = TLSCiphertext.restore(data,
+    #             crypto=client_app_data_crypto,
+    #             mode=ContentType.application_data)
+    #     print("* [recv]")
+    #     print(recved_app_data)
+    #     print(str(recved_app_data.raw))
+
+    server_seq_num = 1 # 3
+    client_seq_num = 1
+
+    time.sleep(1)
+
+    Cipher.Cipher.seq_number = server_seq_num
+    server_seq_num += 1
+
+    test_data = TLSPlaintext(
+        type=ContentType.application_data,
+        fragment=Data(b'AAAA\n'))
+    test_data_cipher = TLSCiphertext.create(test_data,
+        crypto=server_app_data_crypto)
+    server_conn.send_msg(test_data_cipher.to_bytes())
+    print("* [send]")
+    print(hexdump(test_data_cipher.to_bytes()))
 
     # for i in range(16):
     #
