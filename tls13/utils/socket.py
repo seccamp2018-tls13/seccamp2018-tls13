@@ -26,9 +26,9 @@ class ClientConnection:
 
 
 class ServerConnection:
-    def __init__(self, host=HOST, port=PORT, socket=None):
-        if socket:
-            self.sock = socket
+    def __init__(self, host=HOST, port=PORT, _socket=None):
+        if _socket:
+            self.sock = _socket
         else:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             # prevent "Address already in use" error

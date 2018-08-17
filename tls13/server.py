@@ -420,7 +420,29 @@ def server_cmd(argv):
     # http_server.socket = wrap_socket(http_server.sock)
     # http_server.serve_forever()
 
+    from .utils.http_parser import parser
+
+    server_conn = socket.ServerConnection()
     server = TLSServer(server_conn)
+
     while True:
         data = server.recv()
+
+        try:
+            params = parser.parse(data.decode())
+            filename = params['request_url']
+            print("filename:", filename)
+        except Exception as e:
+            print(e)
+            data = b'HTTP/1.1 404 Not Found\r\n\r\n'
+            server.send(data)
+            break
+
+        try:
+            # TODO: insecure!
+            with open(filename, 'r') as f:
+                data = f.read().encode()
+        except FileNotFoundError as e:
+            data = b'HTTP/1.1 404 Not Found\r\n\r\n'
+
         server.send(data)
