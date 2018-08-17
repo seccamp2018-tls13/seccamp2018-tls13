@@ -171,9 +171,10 @@ class Chacha20Poly1305(Cipher):
             accumulator = ((Ci + accumulator) % p ) * r % p
             print("[+] Ci, ACC :", hex(Ci), hex(accumulator))
 
-        print("[+] ACC + S :", hex(accumulator + s))
-        print("[+] (ACC + S) % p :", hex(((accumulator + s) % p) % 2**128))
-        accumulator = ((accumulator + s) % p) % 2**128
+        print("[+] ACC + S :\t\t", hex(accumulator + s)[2:])
+        accumulator = (accumulator + s) % 2**128
+        print("[+] TAG(REVERSED) :\t ", long_to_bytes(accumulator).hex())
+        print("[+] TAG :\t\t ", long_to_bytes(accumulator)[::-1].hex())
         return long_to_bytes(accumulator)[::-1]
 
 
