@@ -145,6 +145,20 @@ class Chacha20Poly1305Test(unittest.TestCase):
         self.assertEqual(s, expected_s)
         self.assertEqual(r, expected_r)
 
+    def test_vector_for_POLY1305_key_generation3(self):
+        key = binascii.unhexlify(
+            '00000000000000000000000000000000' + \
+            '00000000000000000000000000000001')
+        nonce = binascii.unhexlify(
+            '000000000000000000000002')
+        polychacha = Chacha20Poly1305(key, nonce)
+        s, r = polychacha.poly1305_key_gen(make_array(nonce, 4, to_int=True))
+        expected_r = 0xecfa254f845f647473d3cb140da9e876
+        expected_s = 0x06cb33066c447b87bc2666dde3fbb739
+
+        self.assertEqual(s, expected_s)
+        self.assertEqual(r, expected_r)
+
     # https://tools.ietf.org/html/rfc7539#section-2.8.2
     def test_Vector_for_AEAD_CHACHA20_POLY1305(self):
         plaintext = \
@@ -410,3 +424,17 @@ class Chacha20Poly1305Test(unittest.TestCase):
             72 65 73 73 2e 2f e2 80 9d
         """.split()))
         self.assertEqual(decrypt_text, expectd_plain)
+
+    def test_vector_aead(self):
+        r = 0x02000000000000000000000000000000
+        s = 0x0
+        otk = (s, r)
+        message = binascii.unhexlify(
+            'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
+
+        polychacha = Chacha20Poly1305(key=b'\x00'*32, nonce=b'\x00'*12)
+        tag = polychacha.poly1305_mac(message, otk)
+        expected_tag = binascii.unhexlify(
+            '03')
+
+        self.assertEqual(tag, expected_tag)
