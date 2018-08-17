@@ -375,7 +375,17 @@ def server_cmd(argv):
         print(recved_app_data)
         print(str(recved_app_data.raw))
 
-        tmp = recved_app_data.raw
+        # echo
+        #tmp = recved_app_data.raw
+        # html
+        # "GET /index.html HTTP/1.1"
+        # content = str(recved_app_data.raw)
+        # first_line = content.split("\n")[0]
+        # method, path, version = first_line.split()
+
+        tmp = b'HTTP/1.1 200 OK\r\n' + \
+            b'Content-Type: text/html\r\n\r\n' + \
+            b'<html>Hello!</html>\r\n'
 
         test_data = TLSPlaintext(
             type=ContentType.application_data,
