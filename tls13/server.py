@@ -352,68 +352,39 @@ def server_cmd(argv):
     # >>> Application Data <<<
     print("=== Application Data ===")
 
-    # server_seq_num = 0 # 3
-    # client_seq_num = 0
-    #
-    # for i in range(100):
-    #
-    #     Cipher.Cipher.seq_number = client_seq_num
-    #     client_seq_num += 1
-    #
-    #     data = server_conn.recv_msg()
-    #     recved_app_data = TLSCiphertext.restore(data,
-    #             crypto=client_app_data_crypto,
-    #             mode=ContentType.application_data)
-    #     print("* [recv]")
-    #     print(recved_app_data)
-    #     print(str(recved_app_data.raw))
+    seq_number = 0
+    Cipher.Cipher.seq_number = 0
 
-    server_seq_num = 1 # 3
-    client_seq_num = 1
+    for i in range(100):
+        print()
+        print("----------------- %s ------------------" % i)
+        print()
 
-    time.sleep(1)
+        Cipher.Cipher.seq_number = seq_number
+        seq_number += 1
 
-    Cipher.Cipher.seq_number = server_seq_num
-    server_seq_num += 1
+        data = server_conn.recv_msg()
+        if len(data) == 0:
+            break
+        print("* [recv] raw")
+        print(hexdump(data))
+        recved_app_data = TLSCiphertext.restore(data,
+                crypto=client_app_data_crypto,
+                mode=ContentType.application_data)
+        print("* [recv] app_data")
+        print(recved_app_data)
+        print(str(recved_app_data.raw))
 
-    test_data = TLSPlaintext(
-        type=ContentType.application_data,
-        fragment=Data(b'AAAA\n'))
-    test_data_cipher = TLSCiphertext.create(test_data,
-        crypto=server_app_data_crypto)
-    server_conn.send_msg(test_data_cipher.to_bytes())
-    print("* [send]")
-    print(hexdump(test_data_cipher.to_bytes()))
+        tmp = recved_app_data.raw
 
-    # for i in range(16):
-    #
-    #     print()
-    #     print("----------------- %s ------------------" % i)
-    #     print()
-    #
-    #     Cipher.Cipher.seq_number = client_seq_num
-    #     client_seq_num += 1
-    #
-    #     data = server_conn.recv_msg()
-    #     recved_app_data = TLSCiphertext.restore(data,
-    #             crypto=client_app_data_crypto,
-    #             mode=ContentType.application_data)
-    #     print("* [recv]")
-    #     print(recved_app_data)
-    #     print(str(recved_app_data.raw))
-    #
-    #     Cipher.Cipher.seq_number = server_seq_num
-    #     server_seq_num += 1
-    #
-    #     test_data = TLSPlaintext(
-    #         type=ContentType.handshake,
-    #         fragment=Data(recved_app_data.raw))
-    #     test_data_cipher = TLSCiphertext.create(test_data,
-    #         crypto=server_app_data_crypto)
-    #     server_conn.send_msg(test_data_cipher.to_bytes())
-    #     print("* [send]")
-    #     print(hexdump(test_data_cipher.to_bytes()))
-    #
-    #     time.sleep(1)
+        test_data = TLSPlaintext(
+            type=ContentType.application_data,
+            fragment=Data(tmp))
+        test_data_cipher = TLSCiphertext.create(test_data,
+            crypto=server_app_data_crypto)
+        server_conn.send_msg(test_data_cipher.to_bytes())
+        print("* [send]")
+        print(hexdump(test_data_cipher.to_bytes()))
+
 
     print("Done.")
