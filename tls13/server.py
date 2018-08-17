@@ -30,6 +30,7 @@ class TLSServer:
 
         messages = bytearray(0)
 
+        # <<< ClientHello <<<
         data = server_conn.recv_msg()
         recved_clienthello = TLSPlaintext.from_bytes(data)
         # messages.append(recved_clienthello.fragment)
@@ -365,6 +366,7 @@ class TLSServer:
             data = self.server_conn.recv_msg()
             if len(data) != 0:
                 break
+            time.sleep(0.5)
 
         print("* [recv] raw")
         print(hexdump(data))
@@ -407,8 +409,16 @@ class TLSServer:
 def server_cmd(argv):
     print("server_cmd({})".format(", ".join(argv)))
 
-    # <<< ClientHello <<<
-    server_conn = socket.ServerConnection()
+    # from http.server import HTTPServer, SimpleHTTPRequestHandler
+    # http_server = HTTPServer(('localhost', 50007), SimpleHTTPRequestHandler)
+    #
+    # def wrap_socket(sock):
+    #     server_conn = socket.ServerConnection(socket=http_server.socket)
+    #     tls_server = TLSServer(server_conn)
+    #     return tls_server.my_socket()
+    #
+    # http_server.socket = wrap_socket(http_server.sock)
+    # http_server.serve_forever()
 
     server = TLSServer(server_conn)
     while True:
