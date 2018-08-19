@@ -84,7 +84,7 @@ class Chacha20Poly1305(Cipher):
         #encrypted_message = bytearray(0)
         encrypted_message = b''
         for j in range(0, math.floor(len(plaintext)//64)):
-            _, key_stream = chacha20(b'\x00'*64, self.key, nonce, cnt=counter+j)
+            key_stream = chacha20( self.key, nonce, cnt=counter+j)
             block = plaintext[(j*64):(j*64+64)]
             key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
 
@@ -97,7 +97,7 @@ class Chacha20Poly1305(Cipher):
 
         if len(plaintext) % 64 != 0:
             j = math.floor(len(plaintext)//64)
-            _, key_stream = chacha20(b'\x00'*64, self.key, nonce, cnt=counter+j)
+            key_stream = chacha20(self.key, nonce, cnt=counter+j)
             key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
             block = plaintext[(j*64):len(plaintext)]
 
@@ -112,7 +112,7 @@ class Chacha20Poly1305(Cipher):
         #decrypted_message = bytearray(0)
         decrypted_message = b''
         for j in range(0, math.floor(len(ciphertext)//64)):
-            _, key_stream = chacha20(b'\x00'*64, self.key, nonce, cnt=counter+j)
+            key_stream = chacha20(self.key, nonce, cnt=counter+j)
             block = ciphertext[(j*64):(j*64+64)]
             key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
 
@@ -125,7 +125,7 @@ class Chacha20Poly1305(Cipher):
 
         if len(ciphertext) % 64 != 0:
             j = math.floor(len(ciphertext)//64)
-            _, key_stream = chacha20(b'\x00'*64, self.key, nonce, cnt=counter+j)
+            key_stream = chacha20(self.key, nonce, cnt=counter+j)
             key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
             block = ciphertext[(j*64):len(ciphertext)]
 
@@ -179,7 +179,7 @@ class Chacha20Poly1305(Cipher):
 
 
     def poly1305_key_gen(self, nonce):
-        _, state = chacha20(b"\x00"*16, self.key, nonce, cnt=0)
+        state = chacha20(self.key, nonce, cnt=0)
         r = state[0:4]
         s = state[4:8]
 

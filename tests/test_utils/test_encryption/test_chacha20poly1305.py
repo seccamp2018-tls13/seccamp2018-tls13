@@ -90,7 +90,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
 
         plain_blocks = [0x0] * 16
 
-        c, state = chacha20(plain_blocks, key, nonce, cnt=1)
+        state = chacha20(key, nonce, cnt=1)
 
         expected = [
             0xe4e7f110, 0x15593bd1, 0x1fdd0f50, 0xc47120a3,

@@ -2,19 +2,6 @@ import binascii
 import random
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 
-def poly1305(coefs, s, r):
-    """
-        chacha20のカウンタ0でのstateの下位32 [byte]のうち
-        s : 上位 16 [byte]
-        r : 下位 16 [byte]
-    """
-    MOD = 2**130 - 5
-    x = 0
-    for i, Ci in enumerate(coefs[::-1], 1):
-        x += (Ci % MOD)*pow(r, i, MOD) % MOD
-
-    return (x + s) & 0xffffffffffffffffffffffffffffffff
-
 def plus(x, y):
     return (x + y) & 0xffffffff
     #return (x + y) % 2^32
@@ -31,7 +18,7 @@ def QuarterRound(a, b, c, d):
     c = plus(c, d); b ^= c; b = lrotate(b, 7)
     return a, b, c, d
 
-def chacha20(text, key, nonce, cnt=0):
+def chacha20(key, nonce, cnt=0):
     """
         const : 4 [byte] * 4 [block]
         key   : 4 [byte] * 8 [block]
@@ -61,17 +48,14 @@ def chacha20(text, key, nonce, cnt=0):
         state[2], state[7], state[8], state[13] = QuarterRound(state[2], state[7], state[8], state[13])
         state[3], state[4], state[9], state[14] = QuarterRound(state[3], state[4], state[9], state[14])
 
-    results = [0]*16
     state = list(map(lambda x: plus(x[0], x[1]), zip(state, state_orig)))
     # print("="*16)
     # print(b''.join(map(lambda x: long_to_bytes(x)[::-1].ljust(4, b'\x00'), text)).hex())
-    for i in range(16):
-        results[i] = text[i] ^ state[i]
 
     # print(b''.join(map(lambda x: long_to_bytes(x)[::-1].ljust(4, b'\x00'), results)).hex())
     # print("="*16)
 
-    return results, state
+    return state
 
 # NOTE : chacha20の引数textは暗号化するメッセージを64bytesごとに区切ったもの(足りない部分は0パディング)
 #        呼び出し側で区切ってあげる?
