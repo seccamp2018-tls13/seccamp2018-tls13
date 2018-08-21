@@ -1,7 +1,7 @@
 import re
 
 def parse(request_message):
-    pattern = r'(GET|POST) /(.*) HTTP/([1-2]\.[1-2])\r\n'
+    pattern = r'(GET|POST) /(.*) HTTP/([1-2]\.[1-2])\r?\n'
 
     http_method = None
     request_url = None
