@@ -433,6 +433,7 @@ def server_cmd(argv):
             filename = params['request_url']
             print("filename:", filename)
         except Exception as e:
+            print("[-] invalid request")
             print(e)
             data = b'HTTP/1.1 404 Not Found\r\n\r\n'
             server.send(data)
@@ -443,6 +444,7 @@ def server_cmd(argv):
             with open(filename, 'r') as f:
                 data = f.read().encode()
         except FileNotFoundError as e:
+            print("[-] file not found: %s" % filename)
             data = b'HTTP/1.1 404 Not Found\r\n\r\n'
 
         server.send(data)
