@@ -352,16 +352,8 @@ class TLSServer:
         # messages.append(new_session_ticket.fragment)
         messages += new_session_ticket.fragment.to_bytes()
 
-        #
-        self.seq_number = 0
-        Cipher.Cipher.seq_number = 0
-
-
 
     def recv(self):
-        Cipher.Cipher.seq_number = self.seq_number
-        self.seq_number += 1
-
         while True:
             data = self.server_conn.recv_msg()
             if len(data) != 0:

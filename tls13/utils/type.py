@@ -41,7 +41,7 @@ class Uint:
         return hash((self.value,))
 
     def __eq__(self, other):
-        return self.value == other.value
+        return hasattr(other, 'value') and self.value == other.value
 
     @staticmethod
     def size(size):

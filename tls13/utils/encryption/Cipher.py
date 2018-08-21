@@ -27,9 +27,10 @@ class Cipher:
 
     seq_number = 0
 
-    def __init__(self, key):
-        self.key = key
-        # self.key_size
+    def __init__(self, key, nonce):
+        self.key_raw = key
+        self.nonce_raw = nonce
+        self.seq_number = 0
 
     def encrypt(self, plaintext):
         assert len(plaintext) % 16 == 0
@@ -62,7 +63,6 @@ class Cipher:
 
 
 class Chacha20Poly1305(Cipher):
-    # seq_number = 0
     key_size = 32
     nonce_size = 12
     # keyとnonceをHKDFで生成するときに
@@ -70,11 +70,11 @@ class Chacha20Poly1305(Cipher):
     # のようにできるようにしておく
 
     def __init__(self, key, nonce):
-        #super(Chacha20Poly1305, self).__init__(key)
-        self.key = make_array(key, 4, to_int=True)      # 32 [bytes] = 4 [bytes] * 8 [block]
-        self.iv = make_array(nonce, 4, to_int=True)  # 12 [bytes] = 4 [bytes] * 3 [block]
-        self.key_raw = key
-        self.nonce_raw = nonce
+        super(Chacha20Poly1305, self).__init__(key, nonce)
+        # self.key: 32 [bytes] = 4 [bytes] * 8 [block]
+        # self.iv:  12 [bytes] = 4 [bytes] * 3 [block]
+        self.key = make_array(key, 4, to_int=True)
+        self.iv = make_array(nonce, 4, to_int=True)
 
     def encrypt(self, plaintext, nonce):
         print("[+] key", self.key_raw.hex(), self.key)
@@ -269,18 +269,19 @@ class Chacha20Poly1305(Cipher):
         return self.decrypt(ciphertext, nonce)
 
     def get_nonce(self):
-        print("seq_number:", Cipher.seq_number)
+        print("seq_number:", self.seq_number)
         # res = self.iv
         iv = b''.join(map(lambda x: struct.pack("<I", x), self.iv))
 
         iv_len = len(iv)
-        seq = long_to_bytes(Cipher.seq_number)
+        seq = long_to_bytes(self.seq_number)
         seq = seq.rjust(iv_len, b'\x00')
         print('iv: ', iv.hex())
         print('seq:', seq.hex())
         res = b''.join(map(lambda x: bytearray([x[0] ^ x[1]]), zip(iv, seq)))
         print("res:", res.hex())
-        Cipher.seq_number += 1
+
+        self.seq_number += 1
         return res
 
 

@@ -79,7 +79,7 @@ class TLSPlaintext(Struct):
         if mode:
             type = mode # e.g. mode=ContentType.handshake
 
-        print("type:", type, ContentType.labels[type])
+        print("[+] type:", type, ContentType.labels[type])
         if type == ContentType.handshake:
             return cls(type=type, fragment=Handshake.from_bytes(fragment))
         elif type == ContentType.application_data:
@@ -206,12 +206,12 @@ class TLSCiphertext(Struct):
         # additional_data =
         #   TLSCiphertext.opaque_type || .legacy_record_version || .length
         length = len(crypto.encrypt(app_data_inner.to_bytes(), nonce=crypto.iv)) + 16
-        print(length)
+        print("[+] length:", length)
         aad = b'\x17\x03\x03' + Uint16(length).to_bytes()
-        print('AAD:', aad.hex())
+        print('[+] AAD:', aad.hex())
 
         encrypted_record = crypto.aead_encrypt(aad, app_data_inner.to_bytes())
-        print('encrypted_record:')
+        print('[+] encrypted_record:')
         print(encrypted_record.hex())
         app_data_cipher = TLSCiphertext(encrypted_record=encrypted_record)
         return app_data_cipher
@@ -219,27 +219,30 @@ class TLSCiphertext(Struct):
     @classmethod
     def restore(cls, data, crypto, mode=None) -> TLSPlaintext:
         recved_app_data_cipher = TLSCiphertext.from_bytes(data)
+        # print("[+] recved_app_data_cipher:")
+        # print(recved_app_data_cipher)
 
         # additional_data =
         #   TLSCiphertext.opaque_type || .legacy_record_version || .length
         length = recved_app_data_cipher.length.value
-        print(length)
+        print("[+] length:", length)
         aad = b'\x17\x03\x03' + Uint16(length).to_bytes()
-        print('AAD:', aad.hex())
+        print('[+] AAD:', aad.hex())
         # print('encrypted_record:', recved_app_data_cipher.encrypted_record.hex())
 
         # length から Alert かどうか判断する
         if length == 2:
+            print("[-] Alert!")
             print(TLSPlaintext.from_bytes(data))
             raise RuntimeError("Alert!")
 
-        print("restore before:", recved_app_data_cipher.encrypted_record.hex())
+        print("[+] restore before:", recved_app_data_cipher.encrypted_record.hex())
         recved_app_data_inner_bytes = \
             crypto.aead_decrypt(aad, recved_app_data_cipher.encrypted_record)
         if recved_app_data_inner_bytes is None:
             raise RuntimeError('aead_decrypt Error')
         # print("restore after:", recved_app_data_inner_bytes.hex())
-        print("restore after:")
+        print("[+] restore after:")
         print(hexdump(recved_app_data_inner_bytes))
         if mode == ContentType.application_data:
             content, type, zeros = \
@@ -249,7 +252,7 @@ class TLSCiphertext(Struct):
 
         recved_app_data_inner = \
             TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
-        print("recved_app_data_inner.content:")
+        print("[+] recved_app_data_inner.content:")
         print(recved_app_data_inner.content.hex())
         recved_app_data = \
             TLSPlaintext.from_bytes(recved_app_data_inner.content, mode=mode)
