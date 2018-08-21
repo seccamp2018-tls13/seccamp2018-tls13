@@ -33,13 +33,10 @@ class TLSServer:
         # <<< ClientHello <<<
         data = server_conn.recv_msg()
         recved_clienthello = TLSPlaintext.from_bytes(data)
-        # messages.append(recved_clienthello.fragment)
         # TLSPlaintext.fragment のバイト列を得るために
         # len(ContentType + ProtocolVersion + length) == 5 より後ろのバイト列を取る
         messages += data[5:]
-        # print("ClientHello: " + recved_clienthello.to_bytes().hex())
         print(recved_clienthello)
-        # hash_data = data[5:]
 
         # >>> ServerHello >>>
 
@@ -111,9 +108,7 @@ class TLSServer:
         # ServerHello が入っている TLSPlaintext
         print(serverhello)
         server_conn.send_msg(serverhello.to_bytes())
-        # messages.append(serverhello.fragment)
         messages += serverhello.fragment.to_bytes()
-        # hash_data += serverhello.fragment.to_bytes()
 
         # -- HKDF ---
 
@@ -184,12 +179,9 @@ class TLSServer:
                 msg=EncryptedExtensions(extensions=[]) ))
 
         print(encrypted_extensions)
-        # server_conn.send_msg(encrypted_extensions.to_bytes())
         encrypted_extensions_cipher = \
             TLSCiphertext.create(encrypted_extensions, crypto=s_traffic_crypto)
         server_conn.send_msg(encrypted_extensions_cipher.to_bytes())
-
-        # messages.append(encrypted_extensions.fragment)
         messages += encrypted_extensions.fragment.to_bytes()
 
         # >>> server Certificate >>>
@@ -211,13 +203,9 @@ class TLSServer:
 
         print("=== Certificate ===")
         print(certificate)
-        # server_conn.send_msg(certificate.to_bytes())
         certificate_cipher = TLSCiphertext.create(certificate, crypto=s_traffic_crypto)
         server_conn.send_msg(certificate_cipher.to_bytes())
-
-        # messages.append(certificate.fragment)
         messages += certificate.fragment.to_bytes()
-
 
         # >>> CertificateVerify >>>
 
@@ -253,12 +241,8 @@ class TLSServer:
         # messages.append(cert_verify.fragment)
         messages += cert_verify.fragment.to_bytes()
 
-        # import time
-        # time.sleep(3)
-        # 0/0
-
-
         # >>> Finished >>>
+
         # server_handshake_traffic_secret を使って finished_key を作成する
         hash_algo = CipherSuite.get_hash_algo_name(cipher_suite)
         hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
@@ -276,10 +260,8 @@ class TLSServer:
         print("=== Finished ===")
         print(finished)
         print(hexdump(finished.to_bytes()))
-        # server_conn.send_msg(finished.to_bytes())
         finished_cipher = TLSCiphertext.create(finished, crypto=s_traffic_crypto)
         server_conn.send_msg(finished_cipher.to_bytes())
-        # messages.append(finished.fragment)
         messages += finished.fragment.to_bytes()
 
         client_application_traffic_secret = \
@@ -311,9 +293,11 @@ class TLSServer:
         hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
         data = server_conn.recv_msg()
         print(hexdump(data))
-        if len(data) == 7: # TODO: Alertのとき
+        if len(data) == 7: # Alertのとき
             print(TLSPlaintext.from_bytes(data))
             raise RuntimeError("Alert!")
+        # TODO: 複数のメッセージ（例えば ChangeCipherSpec + Finished）が
+        #       同時に送られて来たときの処理が必要
         trimed_data = data[6:] # change cipher spec (14 03 03 00 01 01) を取り除く
         print("remove: change cipher spec")
         print(hexdump(trimed_data))
@@ -345,11 +329,9 @@ class TLSServer:
 
         print("=== NewSessionTicket ===")
         print(new_session_ticket)
-        # server_conn.send_msg(new_session_ticket.to_bytes())
         new_session_ticket_cipher = TLSCiphertext.create(
                 new_session_ticket, crypto=server_app_data_crypto)
         server_conn.send_msg(new_session_ticket_cipher.to_bytes())
-        # messages.append(new_session_ticket.fragment)
         messages += new_session_ticket.fragment.to_bytes()
 
 
@@ -372,18 +354,6 @@ class TLSServer:
         return recved_app_data.raw
 
     def send(self, send_bytes):
-        # echo
-        #tmp = recved_app_data.raw
-        # html
-        # "GET /index.html HTTP/1.1"
-        # content = str(recved_app_data.raw)
-        # first_line = content.split("\n")[0]
-        # method, path, version = first_line.split()
-
-        tmp = b'HTTP/1.1 200 OK\r\n' + \
-            b'Content-Type: text/html\r\n\r\n' + \
-            b'<html>Hello!</html>\r\n'
-
         tmp = send_bytes
 
         test_data = TLSPlaintext(
