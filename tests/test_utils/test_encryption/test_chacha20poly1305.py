@@ -176,7 +176,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
             90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f
         '''.split()))
         nonce = binascii.unhexlify('070000004041424344454647')
-        
+
         polychacha = Chacha20Poly1305(key, nonce)
         nonce = make_array(nonce, 4, to_int=True)
         s, r = polychacha.poly1305_key_gen(nonce)
@@ -190,7 +190,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
             a4 ad ed 51 29 6e 08 fe a9 e2 b5 a7 36 ee 62 d6
             3d be a4 5e 8c a9 67 12 82 fa fb 69 da 92 72 8b
             1a 71 de 0a 9e 06 0b 29 05 d6 a5 b6 7e cd 3b 36
-            92 dd bd 7f 2d 77 8b 8c 98 03 ae e3 28 09 1b 58 
+            92 dd bd 7f 2d 77 8b 8c 98 03 ae e3 28 09 1b 58
             fa b3 24 e4 fa d6 75 94 55 85 80 8b 48 31 d7 bc
             3f f4 de f0 8e 4b 7a 9d e5 76 d2 65 86 ce c6 4b
             61 16
@@ -198,7 +198,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
 
         self.assertEqual(len(c), len(expected_c))
         self.assertEqual(c, expected_c)
-        
+
     # https://tools.ietf.org/html/rfc7539#section-2.4.2
     def test_vector_for_chacha20(self):
         plaintext = \
@@ -210,7 +210,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
         b'the future, suns' + \
         b'creen would be i' + \
         b't.'
- 
+
         key = binascii.unhexlify(
             '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')
         nonce = binascii.unhexlify(
@@ -313,7 +313,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
         polychacha = Chacha20Poly1305(key=b'\x00'*32, nonce=b'\x00'*12)
         tag = polychacha.poly1305_mac(text, otk)
         expected_tag = binascii.unhexlify(
-            'f3477e7cd95417af89a6b8794c310cf0') 
+            'f3477e7cd95417af89a6b8794c310cf0')
         self.assertEqual(tag, expected_tag)
 
     def test_vector_poly4(self):
@@ -335,7 +335,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
         polychacha = Chacha20Poly1305(key=b'\x00'*32, nonce=b'\x00'*12)
         tag = polychacha.poly1305_mac(text, otk)
         expected_tag = binascii.unhexlify(
-            '4541669a7eaaee61e708dc7cbcc5eb62') 
+            '4541669a7eaaee61e708dc7cbcc5eb62')
         self.assertEqual(tag, expected_tag)
 
     def test_chacha_poly_aead_final(self):
@@ -376,7 +376,7 @@ class Chacha20Poly1305Test(unittest.TestCase):
             a6 ad 5c b4 02 2b 02 70 9b 00 00 00 00 00 00 00
             0c 00 00 00 00 00 00 00 09 01 00 00 00 00 00 00
         """.split()))
-        tag = polychacha.poly1305_mac(message, otk) 
+        tag = polychacha.poly1305_mac(message, otk)
         expected_tag = binascii.unhexlify(
             'eead9d67890cbb22392336fea1851f38')
         self.assertEqual(tag, expected_tag)
