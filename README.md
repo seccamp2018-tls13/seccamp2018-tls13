@@ -11,7 +11,7 @@
 - PyCryptodome (pip install pycryptodome)
 - cryptography (pip install cryptography)
 
-Install all requirements 
+Install all requirements
 
 ```
 pip install -r requirements.txt
@@ -30,4 +30,18 @@ pip install -r requirements.txt
 
 ```
 ./main.py client
+```
+
+---
+
+openssl で TLS 1.3 サーバ
+
+```
+~/local/bin/openssl s_server -accept 50007 -cert ./.ssh/server.crt -key ./.ssh/server.key -tls1_3 -state -debug
+```
+
+openssl で TLS 1.3 クライアント
+
+```
+~/local/bin/openssl s_client -connect localhost:50007 -tls1_3 -state -debug
 ```
