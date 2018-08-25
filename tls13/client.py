@@ -107,8 +107,13 @@ def client_cmd(argv):
     #       これらを別々にしてから TLSPlaintext.from_bytes に渡す処理が必要
     data = client_conn.recv_msg()
     recved_serverhello = TLSPlaintext.from_bytes(data)
-    messages += data[5:]
+    messages += data[5:len(recved_serverhello)]
     print(recved_serverhello)
+    remain_data = data[len(recved_serverhello):]
+
+    print("remove: change cipher spec")
+    tmp = remain_data[6:]
+    remain_data = tmp
 
     # パラメータの決定
     server_cipher_suite = recved_serverhello.cipher_suite
@@ -191,16 +196,22 @@ def client_cmd(argv):
     app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
 
     # <<< EncryptedExtensions <<<
-    data = client_conn.recv_msg()
+    if len(remain_data) > 0:
+        data = remain_data
+    else:
+        data = client_conn.recv_msg()
+    # TODO: ここで aead_decrypt Error が発生する
     recved_encrypted_extensions = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:]
+    messages += data[5:len(recved_encrypted_extensions)]
     print(recved_encrypted_extensions)
+    remain_data = data[len(recved_encrypted_extensions):]
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
     recved_certificate = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
+    # TODO: data[5:len(recved_certificate)] で切り取る
     messages += data[5:]
     print(recved_certificate)
 
