@@ -26,7 +26,7 @@ class SignatureScheme(Type):
     # ECDSA algorithms
     ecdsa_secp256r1_sha256 = Uint16(0x0403)
     ecdsa_secp384r1_sha384 = Uint16(0x0503)
-    ecdsa_secp521r1_sha512 = Uint16(0x0603)
+    ecdsa_secp512r1_sha512 = Uint16(0x0603)
 
     # RSASSA-PSS algorithms with public key OID rsaEncryption
     rsa_pss_rsae_sha256 = Uint16(0x0804)

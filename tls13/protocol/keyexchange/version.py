@@ -21,6 +21,7 @@ class ProtocolVersion(Type):
     TLS11 = Uint16(0x0302)
     TLS12 = Uint16(0x0303)
     TLS13 = Uint16(0x0304)
+    TLS13_DRAFT26 = Uint16(0x7f1a)
     _size = 2
 
 

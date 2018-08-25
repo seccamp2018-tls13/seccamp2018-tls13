@@ -12,6 +12,8 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     TLSInnerPlaintext, TLSCiphertext, Data
 
 # Crypto
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
+    X25519PublicKey
 from .utils.encryption.ffdhe import FFDHE
 from .utils.encryption import Cipher
 
@@ -26,13 +28,28 @@ def client_cmd(argv):
 
     ffdhe2048 = FFDHE(NamedGroup.ffdhe2048)
     ffdhe2048_key_exchange = ffdhe2048.gen_public_key()
-    # ffdhe3072 = FFDHE(NamedGroup.ffdhe3072)
-    # ffdhe3078_key_exchange = ffdhe3072.gen_public_key()
+    x25519 = X25519PrivateKey.generate()
+    x25519_key_exchange = x25519.public_key().public_bytes()
 
-    versions = [ ProtocolVersion.TLS13 ]
-    named_group_list = [ NamedGroup.ffdhe2048 ]
-    supported_signature_algorithms = [ SignatureScheme.rsa_pkcs1_sha256 ]
+    versions = [ ProtocolVersion.TLS13, ProtocolVersion.TLS13_DRAFT26 ]
+    named_group_list = [ NamedGroup.x25519, NamedGroup.ffdhe2048 ]
+    supported_signature_algorithms = [
+        SignatureScheme.rsa_pss_pss_sha256,
+        SignatureScheme.rsa_pss_pss_sha384,
+        SignatureScheme.rsa_pss_pss_sha512,
+        SignatureScheme.rsa_pss_rsae_sha256,
+        SignatureScheme.rsa_pss_rsae_sha384,
+        SignatureScheme.rsa_pss_rsae_sha512,
+        SignatureScheme.ecdsa_secp256r1_sha256,
+        SignatureScheme.ecdsa_secp384r1_sha384,
+        SignatureScheme.ecdsa_secp512r1_sha512,
+        SignatureScheme.ed25519,
+        SignatureScheme.ed448,
+    ]
     client_shares = [
+        KeyShareEntry(
+            group=NamedGroup.x25519,
+            key_exchange=x25519_key_exchange),
         KeyShareEntry(
             group=NamedGroup.ffdhe2048,
             key_exchange=ffdhe2048_key_exchange),
@@ -84,13 +101,11 @@ def client_cmd(argv):
     # ClientHello が入っている TLSPlaintext
     print(clienthello)
     client_conn.send_msg(clienthello.to_bytes())
-    # messages.append(clienthello.fragment)
     messages += clienthello.fragment.to_bytes()
 
     # <<< ServerHello <<<
     data = client_conn.recv_msg()
     recved_serverhello = TLSPlaintext.from_bytes(data)
-    # messages.append(recved_serverhello.fragment)
     messages += data[5:]
     print(recved_serverhello)
 
@@ -110,11 +125,10 @@ def client_cmd(argv):
 
     # shared_key の作成
     if server_key_share_group == NamedGroup.ffdhe2048:
-        client_key_share_key_exchange = ffdhe2048_key_exchange
         shared_key = ffdhe2048.gen_shared_key(server_pub_key)
-    elif server_key_share_group == NamedGroup.ffdge3072:
-        pass # shared_key = ffdge3072.gen_shared_key(server_pub_key)
-        raise NotImplementedError()
+    elif server_key_share_group == NamedGroup.x25519:
+        shared_key = x25519.exchange(
+            X25519PublicKey.from_public_bytes(server_pub_key))
     else:
         raise NotImplementedError()
 
@@ -176,23 +190,23 @@ def client_cmd(argv):
     app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
 
     # <<< EncryptedExtensions <<<
-    # TODO:
+    data = client_conn.recv_msg()
+    recved_encrypted_extensions = TLSCiphertext.restore(data,
+            crypto=s_traffic_crypto, mode=ContentType.handshake)
+    messages += data[5:]
+    print(recved_encrypted_extensions)
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
-    # recved_certificate = TLSPlaintext.from_bytes(data)
     recved_certificate = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    # messages.append(recved_certificate.fragment)
     messages += data[5:]
     print(recved_certificate)
 
     # <<< server CertificateVerify <<<
     data = client_conn.recv_msg()
-    # recved_cert_verify = TLSPlaintext.from_bytes(data)
     recved_cert_verify = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    # messages.append(recved_cert_verify.fragment)
     messages += data[5:]
     print(recved_cert_verify)
 
@@ -200,10 +214,8 @@ def client_cmd(argv):
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     Hash.set_size(hash_size)
     data = client_conn.recv_msg()
-    # recved_finished = TLSPlaintext.from_bytes(data)
     recved_finished = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    # messages.append(recved_finished.fragment)
     messages += data[5:]
     print(recved_finished)
     assert isinstance(recved_finished.fragment.msg, Finished)
