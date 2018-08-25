@@ -55,7 +55,6 @@ def client_cmd(argv):
             key_exchange=ffdhe2048_key_exchange),
     ]
     cipher_suites = [
-        CipherSuite.TLS_AES_128_GCM_SHA256,
         CipherSuite.TLS_CHACHA20_POLY1305_SHA256,
     ]
 
@@ -104,6 +103,8 @@ def client_cmd(argv):
     messages += clienthello.fragment.to_bytes()
 
     # <<< ServerHello <<<
+    # TODO: ServerHello + ChangeCipherSpec + ApplicationData... が送られて来たときに、
+    #       これらを別々にしてから TLSPlaintext.from_bytes に渡す処理が必要
     data = client_conn.recv_msg()
     recved_serverhello = TLSPlaintext.from_bytes(data)
     messages += data[5:]

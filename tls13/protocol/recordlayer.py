@@ -71,10 +71,10 @@ class TLSPlaintext(Struct):
         reader = Reader(data)
         type                  = reader.get(Uint8)
         legacy_record_version = reader.get(Uint16)
-        # fragment              = reader.get(bytes, length_t=Uint16)
-        # length = Uint16(len(fragment))
-        length                = reader.get(Uint16)
-        fragment              = reader.get(bytes)
+        fragment              = reader.get(bytes, length_t=Uint16)
+        length = Uint16(len(fragment))
+        # length                = reader.get(Uint16)
+        # fragment              = reader.get(bytes)
 
         if mode:
             type = mode # e.g. mode=ContentType.handshake
