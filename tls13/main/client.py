@@ -143,6 +143,8 @@ def client_cmd(argv):
 
     # -- HKDF ---
 
+    # print("messages = ")
+    # print(hexdump(messages))
     print("messages hash = " + cryptomath.secureHash(messages, 'sha256').hex())
     print()
 
@@ -154,20 +156,29 @@ def client_cmd(argv):
     psk    = bytearray(secret_size)
     # early secret
     secret = cryptomath.HKDF_extract(secret, psk, hash_algo)
+    print('early secret =', secret.hex())
     # handshake secret
     secret = cryptomath.derive_secret(secret, b"derived", b"")
+    print('derive_secret =', secret.hex())
     secret = cryptomath.HKDF_extract(secret, shared_key, hash_algo)
+    print('handshake secret =', secret.hex())
     client_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"c hs traffic", messages)
+    print('client_handshake_traffic_secret =', client_handshake_traffic_secret.hex())
     server_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"s hs traffic", messages)
+    print('server_handshake_traffic_secret =', server_handshake_traffic_secret.hex())
     # master secret
     secret = cryptomath.derive_secret(secret, b"derived", b"")
+    print('derive_secret =', secret.hex())
     secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
+    print('master secret =', secret.hex())
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
     server_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"s ap traffic", messages)
+    print('client_application_traffic_secret =', client_application_traffic_secret.hex())
+    print('server_application_traffic_secret =', server_application_traffic_secret.hex())
 
     if cipher_suite == CipherSuite.TLS_CHACHA20_POLY1305_SHA256:
         cipher_class = Cipher.Chacha20Poly1305
@@ -177,17 +188,14 @@ def client_cmd(argv):
         raise NotImplementedError()
 
     server_write_key, server_write_iv = \
-        cryptomath.gen_key_and_iv(server_application_traffic_secret,
+        cryptomath.gen_key_and_iv(server_handshake_traffic_secret,
                                   key_size, nonce_size, hash_algo)
     s_traffic_crypto = cipher_class(key=server_write_key, nonce=server_write_iv)
 
     client_write_key, client_write_iv = \
-        cryptomath.gen_key_and_iv(client_application_traffic_secret,
+        cryptomath.gen_key_and_iv(client_handshake_traffic_secret,
                                   key_size, nonce_size, hash_algo)
     c_traffic_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
-
-    client_write_key, client_write_iv = \
-        cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
 
     print('server_write_key =', server_write_key.hex())
     print('server_write_iv =', server_write_iv.hex())

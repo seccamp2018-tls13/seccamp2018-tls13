@@ -116,6 +116,8 @@ class TLSServer:
         secret = bytearray(secret_size)
         psk    = bytearray(secret_size)
 
+        # print("messages = ")
+        # print(hexdump(messages))
         print("messages hash = " + cryptomath.secureHash(messages, 'sha256').hex())
         print()
 
