@@ -14,7 +14,7 @@ def truncate(string, len_max):
     else:
         return string
 
-# 順序付き辞書を引数として取り、__repr__のための文字列を生成する
+# 順序付き辞書を引数として取り、__repr__のために文字列を生成する
 # 使い方：
 #
 #     props = collections.OrderedDict(
