@@ -209,7 +209,8 @@ def client_cmd(argv):
         data = remain_data
     else:
         data = client_conn.recv_msg()
-    # TODO: ここで aead_decrypt Error が発生する
+    print(hexdump(data))
+    # TODO: ここで tls13.metastruct.codec.ReaderParseError が発生する
     recved_encrypted_extensions = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
     messages += data[5:len(recved_encrypted_extensions)]

@@ -39,6 +39,12 @@ class EncryptedExtensions(Struct):
             Member(Listof(Extension), 'extensions', length_t=Uint16),
         ])
 
+    @classmethod
+    def from_bytes(cls, data):
+        print("hello!")
+        # TODO: read data and return list of extensions
+        pass
+
 
 class CertificateRequest:
     pass

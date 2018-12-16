@@ -180,10 +180,14 @@ class TLSServer:
                 msg=EncryptedExtensions(extensions=[]) ))
 
         print(encrypted_extensions)
+        print(hexdump(encrypted_extensions.to_bytes()))
         encrypted_extensions_cipher = \
             TLSCiphertext.create(encrypted_extensions, crypto=s_traffic_crypto)
         server_conn.send_msg(encrypted_extensions_cipher.to_bytes())
         messages += encrypted_extensions.fragment.to_bytes()
+
+        import sys
+        sys.exit(0)
 
         # >>> server Certificate >>>
 
