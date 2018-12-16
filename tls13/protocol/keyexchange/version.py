@@ -10,7 +10,7 @@ from ..handshake import HandshakeType
 from ...utils.type import Uint8, Uint16, Type
 from ...utils.codec import Reader, Writer
 from ...utils.repr import make_format
-from ...utils.struct import Struct, Members, Member, Listof
+from ...utils.metastruct import Struct, Members, Member, Listof
 
 
 @Type.add_labels_and_values

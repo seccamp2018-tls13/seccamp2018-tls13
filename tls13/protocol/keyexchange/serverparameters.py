@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 from .messages import Extension
-from ...utils.struct import Struct, Members, Member, Listof
+from ...utils.metastruct import Struct, Members, Member, Listof
 from ...utils.type import Uint16
 
 

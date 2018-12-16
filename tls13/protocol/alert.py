@@ -8,7 +8,7 @@ __all__ = [
 
 from ..utils.type import Uint8, Type
 from ..utils.codec import Reader
-from ..utils.struct import Struct, Members, Member
+from ..utils.metastruct import Struct, Members, Member
 
 
 @Type.add_labels_and_values

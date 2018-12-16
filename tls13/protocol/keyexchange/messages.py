@@ -18,7 +18,7 @@ from .supportedgroups import NamedGroup
 from .version import ProtocolVersion
 from ..ciphersuite import CipherSuite
 from ...utils import hexstr, make_format, Uint8, Uint16, Type, Reader, Writer
-from ...utils.struct import Struct, Members, Member, Listof
+from ...utils.metastruct import Struct, Members, Member, Listof
 
 
 def find(lst, cond):

@@ -27,7 +27,7 @@ def truncate(string, len_max):
 #     print(make_format(self, props))
 #
 def make_format(obj, props):
-    from .struct import Struct # 循環参照の回避のため、ここでimportする
+    from .metastruct import Struct # 循環参照の回避のため、ここでimportする
 
     repr_str = ""
     repr_str += "%s:\n" % obj.__class__.__name__

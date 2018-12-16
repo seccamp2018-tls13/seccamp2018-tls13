@@ -196,6 +196,11 @@ class Listof:
         return "Listof({})".format(self.subtype)
 
 
+class Empty(Struct):
+    def __init__(self):
+        self.struct = Members([])
+
+
 class StructAssert:
     @staticmethod
     def my_assert(member, value):
