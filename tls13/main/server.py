@@ -1,9 +1,9 @@
 
 import time
 import secrets
-from .utils import connection
+from ..utils import connection
 
-from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
+from ..protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     CipherSuite, ServerHello, KeyShareEntry, KeyShareServerHello, \
     Extension, ExtensionType, \
     ProtocolVersion, SupportedVersions, \
@@ -12,17 +12,17 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     Certificate, CertificateEntry, CertificateVerify, Finished, Hash, \
     TLSInnerPlaintext, TLSCiphertext, Data, \
     EncryptedExtensions, TLSRawtext
-from .protocol import recordlayer
+from ..protocol import recordlayer
 
 # Crypto
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
     X25519PublicKey
-from .utils.encryption.ffdhe import FFDHE
-from .utils.encryption import Cipher
+from ..utils.encryption.ffdhe import FFDHE
+from ..utils.encryption import Cipher
 
-from .utils import cryptomath, hexdump, hexstr
+from ..utils import cryptomath, hexdump, hexstr
 
-from .utils.type import Uint16, Uint32
+from ..utils.type import Uint16, Uint32
 
 class TLSServer:
     def __init__(self, server_conn):
@@ -312,7 +312,7 @@ class TLSServer:
         recved_finished = TLSRawtext.from_bytes(trimed_data)
         print(recved_finished)
 
-        from .protocol.ticket import NewSessionTicket
+        from ..protocol.ticket import NewSessionTicket
         # dummy
         new_session_ticket = TLSPlaintext(
             type=ContentType.handshake,
@@ -382,7 +382,7 @@ def server_cmd(argv):
     # http_server.socket = wrap_socket(http_server.sock)
     # http_server.serve_forever()
 
-    from .utils.http_parser import parser
+    from ..utils.http_parser import parser
 
     server_conn = connection.ServerConnection()
     server = TLSServer(server_conn)

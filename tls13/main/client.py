@@ -1,8 +1,8 @@
 
 import secrets
-from .utils import connection
+from ..utils import connection
 
-from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
+from ..protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     CipherSuite, ClientHello, Extension, ExtensionType, \
     KeyShareEntry, KeyShareClientHello, \
     ProtocolVersion, SupportedVersions, \
@@ -14,10 +14,10 @@ from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
 # Crypto
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
     X25519PublicKey
-from .utils.encryption.ffdhe import FFDHE
-from .utils.encryption import Cipher
+from ..utils.encryption.ffdhe import FFDHE
+from ..utils.encryption import Cipher
 
-from .utils import cryptomath, hexdump, hexstr, Uint16
+from ..utils import cryptomath, hexdump, hexstr, Uint16
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
