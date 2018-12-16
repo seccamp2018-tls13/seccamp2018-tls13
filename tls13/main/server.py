@@ -381,7 +381,7 @@ def server_cmd(argv):
     # http_server.socket = wrap_socket(http_server.sock)
     # http_server.serve_forever()
 
-    from ..utils.http_parser import parser
+    from ..utils import http_parser
 
     server_conn = connection.ServerConnection()
     server = TLSServer(server_conn)
