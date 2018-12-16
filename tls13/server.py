@@ -1,7 +1,7 @@
 
 import time
 import secrets
-from .utils import socket
+from .utils import connection
 
 from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     CipherSuite, ServerHello, KeyShareEntry, KeyShareServerHello, \
@@ -384,7 +384,7 @@ def server_cmd(argv):
 
     from .utils.http_parser import parser
 
-    server_conn = socket.ServerConnection()
+    server_conn = connection.ServerConnection()
     server = TLSServer(server_conn)
 
     while True:

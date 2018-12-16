@@ -85,7 +85,7 @@ def dump(binary, size=2, sep=' '):
 def dumpgen(data):
     '''
     Generator that produces strings:
-    '00000000: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................'
+    00000000: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
     '''
     generator = chunks(data, 16)
     for addr, d in enumerate(generator):

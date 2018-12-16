@@ -1,6 +1,6 @@
 
 import secrets
-from .utils import socket
+from .utils import connection
 
 from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
     CipherSuite, ClientHello, Extension, ExtensionType, \
@@ -96,7 +96,7 @@ def client_cmd(argv):
 
     # Server に ClientHello のバイト列を送信する
     print("[INFO] Connecting to server...")
-    client_conn = socket.ClientConnection()
+    client_conn = connection.ClientConnection()
     # ClientHello が入っている TLSPlaintext
     print(clienthello)
     client_conn.send_msg(clienthello.to_bytes())
