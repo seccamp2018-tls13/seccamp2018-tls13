@@ -34,7 +34,7 @@ class HasExtension:
     Mixin class HasExtension implements common operation about extension.
     """
     def get_extension(self, extension_type):
-        assert extension_type in ExtensionType.values
+        assert extension_type in ExtensionType.values()
         ext = find(self.extensions, lambda ext: ext.extension_type == extension_type)
         return getattr(ext, 'extension_data', None)
 
@@ -234,7 +234,7 @@ class Extension(Struct):
         return (ExtClass, kwargs)
 
 
-@Type.add_labels_and_values
+# @Type.add_labels_and_values
 class ExtensionType(Type):
     """
     enum { ... } ExtensionType
@@ -326,7 +326,7 @@ class KeyShareClientHello(Struct):
         return [client_share.group for client_share in self.client_shares]
 
     def get_key_exchange(self, group):
-        assert group in NamedGroup.values
+        assert group in NamedGroup.values()
         cs = find(self.client_shares, lambda cs: cs.group == group)
         return getattr(cs, 'key_exchange', None)
 
@@ -339,7 +339,7 @@ class KeyShareHelloRetryRequest(Struct):
     """
     def __init__(self, selected_group):
         self.selected_group = selected_group
-        assert self.selected_group in NamedGroup.values
+        assert self.selected_group in NamedGroup.values()
 
 
 class KeyShareServerHello(Struct):
@@ -377,7 +377,7 @@ class UncompressedPointRepresentation:
     """
 
 
-@Type.add_labels_and_values
+# @Type.add_labels_and_values
 class PskKeyExchangeMode(Type):
     """
     enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;

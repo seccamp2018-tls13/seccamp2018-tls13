@@ -208,7 +208,7 @@ class StructAssert:
             return StructAssert.assert_listof(member, value)
 
         if issubclass(member.type, Type):
-            if not value in member.type.values:
+            if not value in member.type.values():
                 raise RuntimeError('value "{}" is not in "{}"' \
                                    .format(member.name, member.type))
 

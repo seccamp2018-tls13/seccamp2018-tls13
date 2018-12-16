@@ -51,7 +51,8 @@ def make_format(obj, props):
             if prop_type == list: repr_str += "\n"
         elif issubclass(prop_type, Type):
             # TLSの定数のとき => 定数名を付けて表示
-            const_name = prop_type.labels[item]
+            # const_name = prop_type.labels[item]
+            const_name = prop_type.label(item)
             repr_str += "|%s: %s == %s\n" % (prop, item, const_name)
         elif issubclass(prop_type, Uint):
             # Uintのとき => 10進数に変換したものを付けて表示

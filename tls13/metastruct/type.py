@@ -75,17 +75,32 @@ class Uint32(Uint):
 
 
 class Type:
-    @staticmethod
-    def add_labels_and_values(cls):
-        """
-        TLSで使われる定数群（enum）に labels と values というフィールドを追加する．
-        例えば HandshakeType に labels が追加されると次のように定数から定数名を取得できる．
-            HandshakeType.labels[Uint16(1)] # => 'client_hello'
-        また， HandshakeType に values が追加されると次のように
-        ある値が定数群の中に含まれているか確認することができる．
-            self.msg_type in HandshakeType.values # => True or False
-        """
-        UintN = Uint.get_type(cls._size)
-        cls.labels = dict((v,k) for k,v in cls.__dict__.items())
-        cls.values = set(v for k,v in cls.__dict__.items() if type(v) == UintN)
-        return cls
+    # @staticmethod
+    # def add_labels_and_values(cls):
+    #     """
+    #     TLSで使われる定数群（enum）に labels と values というフィールドを追加する．
+    #     例えば HandshakeType に labels が追加されると次のように定数から定数名を取得できる．
+    #         HandshakeType.labels[Uint16(1)] # => 'client_hello'
+    #     また， HandshakeType に values が追加されると次のように
+    #     ある値が定数群の中に含まれているか確認することができる．
+    #         self.msg_type in HandshakeType.values # => True or False
+    #     """
+    #     UintN = Uint.get_type(cls._size)
+    #     cls.labels = dict((v,k) for k,v in cls.__dict__.items())
+    #     cls.values = set(v for k,v in cls.__dict__.items() if type(v) == UintN)
+    #     return cls
+
+    @classmethod
+    def label(cls, value):
+        if not hasattr(cls, '_labels'):
+            cls._labels = dict((v,k) for k,v in cls.__dict__.items()
+                                     if not k.startswith('_'))
+        return cls._labels[value]
+
+    @classmethod
+    def values(cls):
+        if not hasattr(cls, '_values'):
+            UintN = Uint.get_type(cls._size)
+            cls._values = set(v for k,v in cls.__dict__.items()
+                                if type(v) == UintN)
+        return cls._values

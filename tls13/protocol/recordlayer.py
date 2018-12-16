@@ -13,7 +13,7 @@ from .keyexchange.version import ProtocolVersion
 from .alert import Alert
 from ..metastruct import *
 
-@Type.add_labels_and_values
+# @Type.add_labels_and_values
 class ContentType(Type):
     """
     enum { ... } ContentType
@@ -74,7 +74,7 @@ class TLSPlaintext(Struct):
         if mode:
             type = mode # e.g. mode=ContentType.handshake
 
-        print("[+] type:", type, ContentType.labels[type])
+        print("[+] type:", type, ContentType.label(type))
         if type == ContentType.handshake:
             return cls(type=type, fragment=Handshake.from_bytes(fragment))
         elif type == ContentType.application_data:

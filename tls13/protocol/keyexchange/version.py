@@ -9,7 +9,7 @@ import collections
 from ..handshake import HandshakeType
 from ...metastruct import *
 
-@Type.add_labels_and_values
+# @Type.add_labels_and_values
 class ProtocolVersion(Type):
     # TLSバージョン
     SSL3  = Uint16(0x0300)

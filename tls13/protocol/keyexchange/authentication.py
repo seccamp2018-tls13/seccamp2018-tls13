@@ -13,7 +13,7 @@ from .messages import Extension
 from .signature import SignatureScheme
 from ...metastruct import *
 
-@Type.add_labels_and_values
+# @Type.add_labels_and_values
 class CertificateType(Type):
     # 証明書の種類
     """

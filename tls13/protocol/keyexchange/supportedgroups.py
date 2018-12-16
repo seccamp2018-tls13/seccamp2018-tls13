@@ -8,7 +8,7 @@ import collections
 
 from ...metastruct import *
 
-@Type.add_labels_and_values
+# @Type.add_labels_and_values
 class NamedGroup(Type):
     # 鍵交換のグループ
     """

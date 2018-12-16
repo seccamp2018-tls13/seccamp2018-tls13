@@ -8,7 +8,7 @@ import collections
 
 from ..metastruct import *
 
-@Type.add_labels_and_values
+# @Type.add_labels_and_values
 class HandshakeType(Type):
     """
     enum { ... } HandshakeType
@@ -63,7 +63,7 @@ class Handshake(Struct):
         self.struct.set_default('length', Uint24(len(kwargs['msg'] or b'')))
         self.struct.set_args(**kwargs)
 
-        assert self.msg_type in HandshakeType.values
+        assert self.msg_type in HandshakeType.values()
 
     @classmethod
     def from_bytes(cls, data):
