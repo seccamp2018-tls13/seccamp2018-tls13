@@ -17,7 +17,8 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
 from ..utils.encryption.ffdhe import FFDHE
 from ..utils.encryption import Cipher
 
-from ..utils import cryptomath, hexdump, hexstr, Uint16
+from ..metastruct import *
+from ..utils import cryptomath
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))

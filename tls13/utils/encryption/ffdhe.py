@@ -11,7 +11,7 @@
 # Secret keys (ServerSecretKey, ClientSecretKey) also will be [2, ..., p-2]
 
 from .get_modulus_ffdhe import *
-from ...utils.type import Uint16
+from ...metastruct import *
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 
 from ..cryptomath import getRandomNumber

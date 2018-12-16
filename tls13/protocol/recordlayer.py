@@ -11,12 +11,7 @@ import collections
 
 from .keyexchange.version import ProtocolVersion
 from .alert import Alert
-from ..utils import hexdump
-from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
-from ..utils.codec import Reader
-from ..utils.repr import make_format
-from ..utils.metastruct import Struct, Members, Member, Listof
-
+from ..metastruct import *
 
 @Type.add_labels_and_values
 class ContentType(Type):

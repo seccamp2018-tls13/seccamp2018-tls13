@@ -20,9 +20,8 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
 from ..utils.encryption.ffdhe import FFDHE
 from ..utils.encryption import Cipher
 
-from ..utils import cryptomath, hexdump, hexstr
-
-from ..utils.type import Uint16, Uint32
+from ..utils import cryptomath
+from ..metastruct import *
 
 class TLSServer:
     def __init__(self, server_conn):

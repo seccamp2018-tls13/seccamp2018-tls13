@@ -3,9 +3,7 @@
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.4
 
 from .keyexchange.messages import Extension
-from ..utils.metastruct import Struct, Members, Member, Listof
-from ..utils.type import Uint8, Uint16, Uint32
-
+from ..metastruct import *
 
 class NewSessionTicket(Struct):
     """

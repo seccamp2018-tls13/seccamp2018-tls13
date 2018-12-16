@@ -6,11 +6,7 @@ __all__ = ['SignatureScheme', 'SignatureSchemeList']
 
 import collections
 
-from ...utils.type import Uint16, Type
-from ...utils.codec import Reader, Writer
-from ...utils.repr import make_format
-from ...utils.metastruct import Struct, Members, Member, Listof
-
+from ...metastruct import *
 
 @Type.add_labels_and_values
 class SignatureScheme(Type):

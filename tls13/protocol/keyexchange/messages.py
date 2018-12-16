@@ -17,9 +17,7 @@ import collections
 from .supportedgroups import NamedGroup
 from .version import ProtocolVersion
 from ..ciphersuite import CipherSuite
-from ...utils import hexstr, make_format, Uint8, Uint16, Type, Reader, Writer
-from ...utils.metastruct import Struct, Members, Member, Listof
-
+from ...metastruct import *
 
 def find(lst, cond):
     assert isinstance(lst, collections.Iterable)
@@ -352,7 +350,7 @@ class KeyShareServerHello(Struct):
     """
     def __init__(self, server_share):
         self.server_share = server_share
-        assert type(self.server_share) == KeyShareEntry
+        assert isinstance(self.server_share, KeyShareEntry)
 
         self.struct = Members(self, [
             Member(KeyShareEntry, 'server_share'),

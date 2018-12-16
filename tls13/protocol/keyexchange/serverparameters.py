@@ -8,9 +8,7 @@ __all__ = [
 ]
 
 from .messages import Extension
-from ...utils.metastruct import Struct, Members, Member, Listof
-from ...utils.type import Uint16
-
+from ...metastruct import *
 
 class CertificateAuthoritiesExtension:
     pass

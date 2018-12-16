@@ -6,10 +6,7 @@ __all__ = [
     'AlertLevel', 'AlertDescription', 'Alert',
 ]
 
-from ..utils.type import Uint8, Type
-from ..utils.codec import Reader
-from ..utils.metastruct import Struct, Members, Member
-
+from ..metastruct import *
 
 @Type.add_labels_and_values
 class AlertLevel(Type):

@@ -7,8 +7,7 @@ __all__ = [
 ]
 
 import hashlib
-from ..utils.type import Uint16, Type
-
+from ..metastruct import *
 
 @Type.add_labels_and_values
 class CipherSuite(Type):
