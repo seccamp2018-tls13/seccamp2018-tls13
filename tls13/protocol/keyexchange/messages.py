@@ -13,7 +13,6 @@ __all__ = [
 import sys
 import secrets
 import collections
-
 from .supportedgroups import NamedGroup
 from .version import ProtocolVersion
 from ..ciphersuite import CipherSuite
@@ -234,7 +233,6 @@ class Extension(Struct):
         return (ExtClass, kwargs)
 
 
-# @Type.add_labels_and_values
 class ExtensionType(Type):
     """
     enum { ... } ExtensionType
@@ -377,7 +375,6 @@ class UncompressedPointRepresentation:
     """
 
 
-# @Type.add_labels_and_values
 class PskKeyExchangeMode(Type):
     """
     enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;

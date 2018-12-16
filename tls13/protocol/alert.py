@@ -8,7 +8,6 @@ __all__ = [
 
 from ..metastruct import *
 
-# @Type.add_labels_and_values
 class AlertLevel(Type):
     # 警告レベル
     """
@@ -19,7 +18,6 @@ class AlertLevel(Type):
     _size = 1 # byte
 
 
-# @Type.add_labels_and_values
 class AlertDescription(Type):
     # 警告の説明
     """

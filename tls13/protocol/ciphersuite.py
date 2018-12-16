@@ -9,7 +9,6 @@ __all__ = [
 import hashlib
 from ..metastruct import *
 
-# @Type.add_labels_and_values
 class CipherSuite(Type):
     TLS_AES_128_GCM_SHA256       = Uint16(0x1301)
     TLS_AES_256_GCM_SHA384       = Uint16(0x1302)

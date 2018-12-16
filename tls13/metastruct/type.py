@@ -1,7 +1,6 @@
 
 __all__ = ['Uint', 'Uint8', 'Uint16', 'Uint24', 'Uint32', 'Type']
 
-
 from struct import pack
 
 class Uint:
@@ -20,15 +19,8 @@ class Uint:
     def __int__(self):
         return self.value
 
-    # HACK:
-    # このクラスのインスタンスは以下の2つの場面で使われる：
-    #   - 定数からラベル名の取得：ContentType.labels[Uint8(22)]  #=> 'handshake'
-    #   - 定数との比較：ContentType.handshake == Uint8(22)     #=> True
-    # 2番目のために __eq__ メソッドを実装すると，1番目で辞書使用時の型エラーの
-    # 「TypeError: unhashable type: Uint8」
-    # が発生するので，__hash__ メソッドを作ってエラーを回避する．
     def __hash__(self):
-        return hash((self.value,))
+        return hash((self.value,)) # 辞書型の値はイミュータブルにしないといけない
 
     def __eq__(self, other):
         return hasattr(other, 'value') and self.value == other.value
@@ -75,20 +67,14 @@ class Uint32(Uint):
 
 
 class Type:
-    # @staticmethod
-    # def add_labels_and_values(cls):
-    #     """
-    #     TLSで使われる定数群（enum）に labels と values というフィールドを追加する．
-    #     例えば HandshakeType に labels が追加されると次のように定数から定数名を取得できる．
-    #         HandshakeType.labels[Uint16(1)] # => 'client_hello'
-    #     また， HandshakeType に values が追加されると次のように
-    #     ある値が定数群の中に含まれているか確認することができる．
-    #         self.msg_type in HandshakeType.values # => True or False
-    #     """
-    #     UintN = Uint.get_type(cls._size)
-    #     cls.labels = dict((v,k) for k,v in cls.__dict__.items())
-    #     cls.values = set(v for k,v in cls.__dict__.items() if type(v) == UintN)
-    #     return cls
+    # 全てのTLSの定数群（enum）はTypeクラスを継承する。
+    #
+    # このクラスはTLSで使われる定数群に label() と values() というメソッドを追加する。
+    # 例えば HandshakeType に label() が追加されると次のように定数から定数名を取得できる。
+    #     HandshakeType.label(Uint16(1)) # => 'client_hello'
+    # また、 HandshakeType に values() が追加されると次のように
+    # ある値が定数群の中に含まれているか確認することができる。
+    #     self.msg_type in HandshakeType.values() # => True or False
 
     @classmethod
     def label(cls, value):

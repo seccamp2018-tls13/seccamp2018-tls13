@@ -4,11 +4,8 @@
 
 __all__ = ['HandshakeType', 'Handshake']
 
-import collections
-
 from ..metastruct import *
 
-# @Type.add_labels_and_values
 class HandshakeType(Type):
     """
     enum { ... } HandshakeType
