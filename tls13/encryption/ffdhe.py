@@ -14,7 +14,7 @@ from .get_modulus_ffdhe import *
 from ..metastruct import *
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 
-from ..utils.cryptomath import getRandomNumber
+from ..utils.cryptomath import get_random_number
 
 # FFDHEに使用するMudulus(素数)を取得する関数の定義
 functions = {
@@ -41,7 +41,7 @@ class FFDHE:
         self.g = 2
 
         # private key = [2, p-2]
-        self.my_secret = getRandomNumber(2, self.p)
+        self.my_secret = get_random_number(2, self.p)
 
     def gen_public_key(self):
         public_key = pow(self.g, self.my_secret, self.p)

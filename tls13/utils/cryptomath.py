@@ -2,7 +2,7 @@
 __all__ = [
     'secureHash', 'secureHMAC',
     'HKDF_extract', 'HKDF_expand', 'HKDF_expand_label', 'derive_secret',
-    'transcript_hash', 'getRandomBytes', 'getRandomNumber',
+    'transcript_hash', 'get_random_bytes', 'get_random_number',
 ]
 
 import hmac
@@ -186,18 +186,18 @@ def gen_key_and_iv(secret, key_size, nonce_size, hash_algo='sha256'):
 
 # FFDHEで使用するSecretKeyの生成(乱数)に使用する関数たち
 
-def getRandomBytes(howMany):
+def get_random_bytes(howMany):
     b = bytearray(os.urandom(howMany))
     assert len(b) == howMany
     return b
 
-def getRandomNumber(low, high):
+def get_random_number(low, high):
     assert low <= high
     howManyBits = len(bin(high)[2:])
     howManyBytes = len(long_to_bytes(high))
     lastBits = howManyBits % 8
     while True:
-        randomBytes = getRandomBytes(howManyBytes)
+        randomBytes = get_random_bytes(howManyBytes)
         if lastBits != 0:
             randomBytes[0] = randomBytes[0] % (1 << lastBits)
         n = bytes_to_long(randomBytes)
