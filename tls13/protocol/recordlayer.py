@@ -176,6 +176,7 @@ class TLSCiphertext(Struct):
 
     @classmethod
     def restore(cls, data, crypto, mode=None) -> TLSPlaintext:
+        from .handshake import Handshake
         recved_app_data_cipher = TLSCiphertext.from_bytes(data)
         # print("[+] recved_app_data_cipher:")
         # print(recved_app_data_cipher)
@@ -216,10 +217,15 @@ class TLSCiphertext(Struct):
         # この時点ではTLSInnerPlaintextのバイト列しかないので、
         # TLSPlaintext を作るには handshake の 0x16 とバージョンの 0x0303 と
         # fragment の長さから再構築する必要がある
-        recved_app_data = \
-            TLSPlaintext.from_bytes(recved_app_data_inner.content, mode=mode)
+        # recved_app_data = \
+        #     TLSPlaintext.from_bytes(recved_app_data_inner.content, mode=mode)
+        # return recved_app_data
 
-        return recved_app_data
+        recved_data = TLSPlaintext(
+            type=ContentType.handshake,
+            fragment=Handshake.from_bytes(recved_app_data_inner.content))
+        return recved_data
+
 
 class TLSRawtext(Struct):
     """

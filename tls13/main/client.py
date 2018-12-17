@@ -20,6 +20,13 @@ from ..encryption import Cipher
 from ..metastruct import *
 from ..utils import cryptomath
 
+
+# TODO: グローバル変数作るならこんな感じ
+class Global:
+    connect_side = "client"
+    current_mode = ContentType.handshake
+
+
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
 
