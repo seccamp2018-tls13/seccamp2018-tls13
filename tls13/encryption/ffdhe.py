@@ -11,10 +11,10 @@
 # Secret keys (ServerSecretKey, ClientSecretKey) also will be [2, ..., p-2]
 
 from .get_modulus_ffdhe import *
-from ...metastruct import *
+from ..metastruct import *
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 
-from ..cryptomath import getRandomNumber
+from ..utils.cryptomath import getRandomNumber
 
 # FFDHEに使用するMudulus(素数)を取得する関数の定義
 functions = {

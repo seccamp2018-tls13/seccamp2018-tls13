@@ -14,8 +14,8 @@ from ..protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
 # Crypto
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
     X25519PublicKey
-from ..utils.encryption.ffdhe import FFDHE
-from ..utils.encryption import Cipher
+from ..encryption.ffdhe import FFDHE
+from ..encryption import Cipher
 
 from ..metastruct import *
 from ..utils import cryptomath

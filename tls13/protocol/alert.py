@@ -2,9 +2,7 @@
 # B.2.  Alert Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.2
 
-__all__ = [
-    'AlertLevel', 'AlertDescription', 'Alert',
-]
+__all__ = ['AlertLevel', 'AlertDescription', 'Alert']
 
 from ..metastruct import *
 
