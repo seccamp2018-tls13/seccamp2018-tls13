@@ -217,7 +217,6 @@ def client_cmd(argv):
     else:
         data = client_conn.recv_msg()
     print(hexdump(data))
-    # TODO: ここで tls13.metastruct.codec.ReaderParseError が発生する
     recved_encrypted_extensions = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
     messages += data[5:len(recved_encrypted_extensions)]
@@ -226,6 +225,10 @@ def client_cmd(argv):
 
     # <<< server Certificate <<<
     data = client_conn.recv_msg()
+    # TODO: ここで aead_decrypt Error が発生する
+    # 原因は seq_number が client と server で異なるため
+    # server側では Certificate のバイト列を送ったのに、
+    # client側では正しく受け取れていない？
     recved_certificate = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
     # TODO: data[5:len(recved_certificate)] で切り取る
