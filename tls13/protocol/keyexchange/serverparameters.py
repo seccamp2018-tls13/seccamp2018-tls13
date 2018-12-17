@@ -41,9 +41,19 @@ class EncryptedExtensions(Struct):
 
     @classmethod
     def from_bytes(cls, data):
-        print("hello!")
+        print("hello!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        raise NotImplementedError("must implement in near future!")
         # TODO: read data and return list of extensions
         pass
+        # reader = Reader(data)
+        #
+        # extensions = Extension.get_list_from_bytes(
+        #     reader.get_rest(),
+        #     msg_type=HandshakeType.server_hello)
+        #
+        # return cls(extensions=extensions)
+
+
 
 
 class CertificateRequest:

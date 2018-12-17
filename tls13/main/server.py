@@ -154,8 +154,6 @@ class TLSServer:
         else:
             raise NotImplementedError()
 
-        # recordlayer.seq_number
-
         server_write_key, server_write_iv = \
             cryptomath.gen_key_and_iv(server_handshake_traffic_secret,
                                       key_size, nonce_size, hash_algo)
@@ -183,6 +181,8 @@ class TLSServer:
         print(hexdump(encrypted_extensions.to_bytes()))
         encrypted_extensions_cipher = \
             TLSCiphertext.create(encrypted_extensions, crypto=s_traffic_crypto)
+        print(encrypted_extensions_cipher)
+        print(hexdump(encrypted_extensions_cipher.to_bytes()))
         server_conn.send_msg(encrypted_extensions_cipher.to_bytes())
         messages += encrypted_extensions.fragment.to_bytes()
 
@@ -396,7 +396,7 @@ def server_cmd(argv):
         data = server.recv()
 
         try:
-            params = parser.parse(data.decode())
+            params = http_parser.parse(data.decode())
             filename = params['request_url']
             print("filename:", filename)
         except Exception as e:

@@ -225,8 +225,8 @@ class Extension(Struct):
 
         else:
             output = 'Extension: unknown extension: %s' % extension_type
-            if extension_type in ExtensionType.labels:
-                output += ' == %s' % ExtensionType.labels[extension_type]
+            if extension_type in ExtensionType.labels():
+                output += ' == %s' % ExtensionType.label(extension_type)
             print(output, file=sys.stdout)
             return (None, None)
 

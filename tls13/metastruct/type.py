@@ -78,10 +78,14 @@ class Type:
 
     @classmethod
     def label(cls, value):
+        return cls.labels()[value]
+
+    @classmethod
+    def labels(cls):
         if not hasattr(cls, '_labels'):
             cls._labels = dict((v,k) for k,v in cls.__dict__.items()
                                      if not k.startswith('_'))
-        return cls._labels[value]
+        return cls._labels
 
     @classmethod
     def values(cls):
