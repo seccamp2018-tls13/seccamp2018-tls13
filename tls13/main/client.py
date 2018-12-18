@@ -212,28 +212,39 @@ def client_cmd(argv):
     app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
 
     # <<< EncryptedExtensions <<<
+    print("=== EncryptedExtensions ===")
     if len(remain_data) > 0:
         data = remain_data
     else:
         data = client_conn.recv_msg()
     print(hexdump(data))
+    datalen = len(TLSCiphertext.from_bytes(data))
     recved_encrypted_extensions = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:len(recved_encrypted_extensions)]
+    messages += data[5:datalen]
     print(recved_encrypted_extensions)
-    remain_data = data[len(recved_encrypted_extensions):]
+    remain_data = data[datalen:]
+    # TODO:
+    # len(recved_encrypted_extensions) と TLSCiphertext のときの len は異なるので、
+    # 今の切り取り方 [5:len(recved_encrypted_extensions)] ではダメ
 
     # <<< server Certificate <<<
-    data = client_conn.recv_msg()
-    # TODO: ここで aead_decrypt Error が発生する
-    # 原因は seq_number が client と server で異なるため
-    # server側では Certificate のバイト列を送ったのに、
-    # client側では正しく受け取れていない？
+    print("=== server Certificate ===")
+    if len(remain_data) > 0:
+        data = remain_data
+    else:
+        data = client_conn.recv_msg()
+    # data = client_conn.recv_msg()
+    print(hexdump(data))
+    datalen = len(TLSCiphertext.from_bytes(data))
     recved_certificate = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    # TODO: data[5:len(recved_certificate)] で切り取る
-    messages += data[5:]
+    messages += data[5:datalen]
     print(recved_certificate)
+    remain_data = data[datalen:]
+
+    import sys
+    sys.exit(0)
 
     # <<< server CertificateVerify <<<
     data = client_conn.recv_msg()
