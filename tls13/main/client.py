@@ -255,19 +255,24 @@ def client_cmd(argv):
     print(recved_cert_verify)
     remain_data = data[datalen:]
 
-    import sys
-    sys.exit(0)
-
     # <<< recv Finished <<<
+    print("=== recv Finished ===")
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     Hash.set_size(hash_size)
-    data = client_conn.recv_msg()
+    if len(remain_data) > 0:
+        data = remain_data
+    else:
+        data = client_conn.recv_msg()
+    datalen = len(TLSCiphertext.from_bytes(data))
     recved_finished = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:]
+    messages += data[5:datalen]
     print(recved_finished)
+    remain_data = data[datalen:]
     assert isinstance(recved_finished.fragment.msg, Finished)
 
+    import sys
+    sys.exit(0)
 
     # >>> Finished >>>
     # client_handshake_traffic_secret を使って finished_key を作成する
