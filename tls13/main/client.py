@@ -234,7 +234,6 @@ def client_cmd(argv):
         data = remain_data
     else:
         data = client_conn.recv_msg()
-    # data = client_conn.recv_msg()
     print(hexdump(data))
     datalen = len(TLSCiphertext.from_bytes(data))
     recved_certificate = TLSCiphertext.restore(data,
@@ -243,15 +242,21 @@ def client_cmd(argv):
     print(recved_certificate)
     remain_data = data[datalen:]
 
-    import sys
-    sys.exit(0)
-
     # <<< server CertificateVerify <<<
-    data = client_conn.recv_msg()
+    print("=== CertificateVerify ===")
+    if len(remain_data) > 0:
+        data = remain_data
+    else:
+        data = client_conn.recv_msg()
+    datalen = len(TLSCiphertext.from_bytes(data))
     recved_cert_verify = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:]
+    messages += data[5:datalen]
     print(recved_cert_verify)
+    remain_data = data[datalen:]
+
+    import sys
+    sys.exit(0)
 
     # <<< recv Finished <<<
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)

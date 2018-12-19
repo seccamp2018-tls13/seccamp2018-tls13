@@ -211,9 +211,6 @@ class TLSServer:
         server_conn.send_msg(certificate_cipher.to_bytes())
         messages += certificate.fragment.to_bytes()
 
-        import sys
-        sys.exit(0)
-
         # >>> CertificateVerify >>>
 
         # デジタル署名アルゴリズム
@@ -247,6 +244,9 @@ class TLSServer:
         server_conn.send_msg(cert_verify_cipher.to_bytes())
         # messages.append(cert_verify.fragment)
         messages += cert_verify.fragment.to_bytes()
+
+        import sys
+        sys.exit(0)
 
         # >>> Finished >>>
 
