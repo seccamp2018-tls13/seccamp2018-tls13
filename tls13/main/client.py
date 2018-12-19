@@ -290,7 +290,7 @@ def client_cmd(argv):
     print("=== Application Data ===")
 
     app_data_cipher = \
-        TLSCiphertext.create(Data(b'GET /index.html\n'), crypto=app_data_crypto)
+        TLSCiphertext.create(Data(b'GET /index.html HTTP/1.1\n'), crypto=app_data_crypto)
     print(app_data_cipher)
 
     client_conn.send_msg(app_data_cipher.to_bytes())
