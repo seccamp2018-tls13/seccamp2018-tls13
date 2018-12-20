@@ -268,9 +268,7 @@ class TLSServer:
         server_conn.send_msg(finished_cipher.to_bytes())
         messages += finished.fragment.to_bytes()
 
-        import sys
-        sys.exit(0)
-
+        print(hexdump(messages))
         client_application_traffic_secret = \
             cryptomath.derive_secret(secret, b"c ap traffic", messages)
         server_application_traffic_secret = \
@@ -298,6 +296,8 @@ class TLSServer:
         print('client_app_write_key =', client_app_write_key.hex())
         print('client_app_write_iv =', client_app_write_iv.hex())
 
+        import sys
+        sys.exit(0)
 
         # <<< recv Finished <<<
         print("=== recv Finished ===")

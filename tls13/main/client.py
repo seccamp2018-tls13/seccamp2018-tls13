@@ -209,8 +209,6 @@ def client_cmd(argv):
     print('client_write_key =', client_write_key.hex())
     print('client_write_iv =', client_write_iv.hex())
 
-    app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
-
     # <<< EncryptedExtensions <<<
     print("=== EncryptedExtensions ===")
     if len(remain_data) > 0:
@@ -270,6 +268,33 @@ def client_cmd(argv):
     print(recved_finished)
     remain_data = data[datalen:]
     assert isinstance(recved_finished.fragment.msg, Finished)
+
+    # TODO:（原因調査）この時点で messages の値が違うので、Hashの値が異なる
+    # Certificateの情報が違っているように見える
+    print(hexdump(messages))
+    client_application_traffic_secret = \
+        cryptomath.derive_secret(secret, b"c ap traffic", messages)
+    server_application_traffic_secret = \
+        cryptomath.derive_secret(secret, b"s ap traffic", messages)
+
+    server_app_write_key, server_app_write_iv = \
+        cryptomath.gen_key_and_iv(server_application_traffic_secret,
+                key_size, nonce_size, hash_algo)
+    server_app_data_crypto = cipher_class(
+            key=server_app_write_key, nonce=server_app_write_iv)
+    client_app_write_key, client_app_write_iv = \
+        cryptomath.gen_key_and_iv(client_application_traffic_secret,
+                key_size, nonce_size, hash_algo)
+    client_app_data_crypto = cipher_class(
+            key=client_app_write_key, nonce=client_app_write_iv)
+
+    print('client_application_traffic_secret =', client_application_traffic_secret.hex())
+    print('server_application_traffic_secret =', server_application_traffic_secret.hex())
+    print('server_app_write_key =', server_app_write_key.hex())
+    print('server_app_write_iv =', server_app_write_iv.hex())
+
+    print('client_app_write_key =', client_app_write_key.hex())
+    print('client_app_write_iv =', client_app_write_iv.hex())
 
     import sys
     sys.exit(0)
