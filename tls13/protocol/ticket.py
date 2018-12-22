@@ -2,6 +2,8 @@
 # B.3.4.  Ticket Establishment
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.3.4
 
+__all__ = ['NewSessionTicket']
+
 from .keyexchange.messages import Extension
 from ..metastruct import *
 
