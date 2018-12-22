@@ -323,8 +323,8 @@ class TLSServer:
         recved_finished = TLSRawtext.from_bytes(trimed_data)
         print(recved_finished)
 
-        import sys
-        sys.exit(0)
+        # import sys
+        # sys.exit(0)
 
         from ..protocol.ticket import NewSessionTicket
         # dummy
@@ -336,8 +336,8 @@ class TLSServer:
                     ticket_lifetime=Uint32(0),
                     ticket_age_add=Uint32(0),
                     ticket_nonce=b'nonce',
-                    ticket=b'foobar'
-                    )))
+                    ticket=b'foobar',
+                    extensions=[] )))
 
         Cipher.Cipher.seq_number = 0
 
