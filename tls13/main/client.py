@@ -219,12 +219,18 @@ def client_cmd(argv):
     datalen = len(TLSCiphertext.from_bytes(data))
     recved_encrypted_extensions = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:datalen]
+    # messages += data[5:datalen]
+    messages += recved_encrypted_extensions.fragment.to_bytes()
     print(recved_encrypted_extensions)
     remain_data = data[datalen:]
     # TODO:
     # len(recved_encrypted_extensions) と TLSCiphertext のときの len は異なるので、
     # 今の切り取り方 [5:len(recved_encrypted_extensions)] ではダメ
+
+    print("===")
+    print(hexdump(messages))
+    import sys
+    sys.exit(0)
 
     # <<< server Certificate <<<
     print("=== server Certificate ===")
@@ -236,9 +242,15 @@ def client_cmd(argv):
     datalen = len(TLSCiphertext.from_bytes(data))
     recved_certificate = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:datalen]
+    # messages += data[5:datalen]
+    messages += recved_certificate.fragment.to_bytes()
     print(recved_certificate)
     remain_data = data[datalen:]
+
+    print("===")
+    print(hexdump(messages))
+    import sys
+    sys.exit(0)
 
     # <<< server CertificateVerify <<<
     print("=== CertificateVerify ===")
