@@ -3,7 +3,7 @@ import unittest
 
 from tls13.protocol.handshake import HandshakeType
 from tls13.protocol.keyexchange.version import *
-from tls13.utils.type import Uint16, Uint
+from tls13.metastruct.type import Uint16, Uint
 from ..common import TypeTestMixin, StructTestMixin
 
 

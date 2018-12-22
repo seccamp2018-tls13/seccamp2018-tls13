@@ -2,7 +2,7 @@
 import unittest
 
 from tls13.protocol import *
-from tls13.utils.encryption.ffdhe import *
+from tls13.encryption.ffdhe import *
 
 class FFDHETest(unittest.TestCase):
 

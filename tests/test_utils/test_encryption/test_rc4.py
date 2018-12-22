@@ -2,7 +2,7 @@
 import unittest
 import binascii
 
-from tls13.utils.encryption.Cipher import RC4
+from tls13.encryption.Cipher import RC4
 
 class RC4Test(unittest.TestCase):
 
@@ -18,7 +18,7 @@ class RC4Test(unittest.TestCase):
         rc4 = RC4(self.key)
         enc = rc4.encrypt(self.plain)
         dec = rc4.decrypt(enc)
-        self.assertEqual(self.plain, dec) 
+        self.assertEqual(self.plain, dec)
 
     def test_enc_dec__diff_keys(self):
         rc4_1 = RC4(self.key)

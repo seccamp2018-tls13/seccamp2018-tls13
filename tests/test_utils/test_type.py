@@ -1,7 +1,7 @@
 
 import unittest
 
-from tls13.utils.type import Uint8, Uint16, Uint24, Uint32
+from tls13.metastruct.type import Uint8, Uint16, Uint24, Uint32
 
 
 class UintTestMixin:

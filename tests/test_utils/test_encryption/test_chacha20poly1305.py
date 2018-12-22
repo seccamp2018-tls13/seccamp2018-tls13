@@ -2,8 +2,8 @@
 import unittest
 import binascii
 
-from tls13.utils.encryption.Cipher import Chacha20Poly1305, make_array
-from tls13.utils.encryption.chacha20poly1305 import chacha20
+from tls13.encryption.Cipher import Chacha20Poly1305, make_array
+from tls13.encryption.chacha20poly1305 import chacha20
 
 class Chacha20Poly1305Test(unittest.TestCase):
 

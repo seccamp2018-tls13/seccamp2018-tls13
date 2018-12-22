@@ -1,8 +1,8 @@
 
 import unittest
 
-from tls13.utils.codec import Reader
-from tls13.utils.type import *
+from tls13.metastruct.codec import Reader
+from tls13.metastruct.type import *
 
 class ReaderTest(unittest.TestCase):
 

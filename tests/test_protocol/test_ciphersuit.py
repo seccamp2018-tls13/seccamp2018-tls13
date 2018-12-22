@@ -1,8 +1,8 @@
 
 import unittest
 
-from tls13.protocol.ciphersuite import *
-from tls13.utils.type import *
+from tls13.protocol import *
+from tls13.metastruct import *
 from .common import TypeTestMixin
 
 

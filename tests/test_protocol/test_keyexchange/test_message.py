@@ -3,7 +3,7 @@ import secrets
 import unittest
 
 from tls13.protocol import *
-from tls13.utils.type import *
+from tls13.metastruct.type import *
 
 from ..common import TypeTestMixin, StructTestMixin
 

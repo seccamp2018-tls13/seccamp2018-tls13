@@ -2,7 +2,7 @@
 import unittest
 
 from tls13.protocol.keyexchange.signature import *
-from tls13.utils.type import *
+from tls13.metastruct.type import *
 from ..common import TypeTestMixin, StructTestMixin
 
 
