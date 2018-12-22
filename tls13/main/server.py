@@ -363,18 +363,16 @@ class TLSServer:
         return recved_app_data.raw
 
     def send(self, send_bytes):
-        tmp = send_bytes
-
-        test_data = TLSPlaintext(
+        app_data = TLSPlaintext(
             type=ContentType.application_data,
-            fragment=Data(tmp))
-        test_data_cipher = TLSCiphertext.create(test_data,
+            fragment=Data(send_bytes))
+        app_data_cipher = TLSCiphertext.create(app_data,
             crypto=self.server_app_data_crypto)
-        self.server_conn.send_msg(test_data_cipher.to_bytes())
+        self.server_conn.send_msg(app_data_cipher.to_bytes())
         print("* [send]")
-        print(hexdump(test_data_cipher.to_bytes()))
+        print(hexdump(app_data_cipher.to_bytes()))
 
-        return len(test_data_cipher)
+        return len(app_data_cipher)
 
 
 def server_cmd(argv):
