@@ -255,11 +255,6 @@ def client_cmd(argv):
     print(recved_cert_verify)
     remain_data = data[datalen:]
 
-    print("===")
-    print(hexdump(messages))
-    import sys
-    sys.exit(0)
-
     # <<< recv Finished <<<
     print("=== recv Finished ===")
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
@@ -271,10 +266,15 @@ def client_cmd(argv):
     datalen = len(TLSCiphertext.from_bytes(data))
     recved_finished = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:datalen]
+    messages += recved_finished.fragment.to_bytes()
     print(recved_finished)
     remain_data = data[datalen:]
     assert isinstance(recved_finished.fragment.msg, Finished)
+
+    print("===")
+    print(hexdump(messages))
+    import sys
+    sys.exit(0)
 
     # TODO:（原因調査）この時点で messages の値が違うので、Hashの値が異なる
     # Certificateの情報が違っているように見える

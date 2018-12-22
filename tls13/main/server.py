@@ -245,11 +245,6 @@ class TLSServer:
         # messages.append(cert_verify.fragment)
         messages += cert_verify.fragment.to_bytes()
 
-        print("===")
-        print(hexdump(messages))
-        import sys
-        sys.exit(0)
-
         # >>> Finished >>>
 
         # server_handshake_traffic_secret を使って finished_key を作成する
@@ -272,6 +267,11 @@ class TLSServer:
         finished_cipher = TLSCiphertext.create(finished, crypto=s_traffic_crypto)
         server_conn.send_msg(finished_cipher.to_bytes())
         messages += finished.fragment.to_bytes()
+
+        print("===")
+        print(hexdump(messages))
+        import sys
+        sys.exit(0)
 
         print(hexdump(messages))
         client_application_traffic_secret = \
