@@ -271,13 +271,6 @@ def client_cmd(argv):
     remain_data = data[datalen:]
     assert isinstance(recved_finished.fragment.msg, Finished)
 
-    print("===")
-    print(hexdump(messages))
-    import sys
-    sys.exit(0)
-
-    # TODO:（原因調査）この時点で messages の値が違うので、Hashの値が異なる
-    # Certificateの情報が違っているように見える
     print(hexdump(messages))
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)

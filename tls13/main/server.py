@@ -268,11 +268,6 @@ class TLSServer:
         server_conn.send_msg(finished_cipher.to_bytes())
         messages += finished.fragment.to_bytes()
 
-        print("===")
-        print(hexdump(messages))
-        import sys
-        sys.exit(0)
-
         print(hexdump(messages))
         client_application_traffic_secret = \
             cryptomath.derive_secret(secret, b"c ap traffic", messages)
