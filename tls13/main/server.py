@@ -1,18 +1,9 @@
 
 import time
 import secrets
-from ..utils import connection
-
-from ..protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
-    CipherSuite, ServerHello, KeyShareEntry, KeyShareServerHello, \
-    Extension, ExtensionType, \
-    ProtocolVersion, SupportedVersions, \
-    NamedGroup, NamedGroupList, \
-    SignatureScheme, SignatureSchemeList, \
-    Certificate, CertificateEntry, CertificateVerify, Finished, Hash, \
-    TLSInnerPlaintext, TLSCiphertext, Data, \
-    EncryptedExtensions, TLSRawtext
-from ..protocol import recordlayer
+from ..utils import connection, cryptomath
+from ..protocol import *
+from ..metastruct import *
 
 # Crypto
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
@@ -20,8 +11,12 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
 from ..encryption.ffdhe import FFDHE
 from ..encryption import Cipher
 
-from ..utils import cryptomath
-from ..metastruct import *
+
+# TODO: グローバル変数作るならこんな感じ
+class Global:
+    connect_side = "server"
+    current_mode = ContentType.handshake
+
 
 class TLSServer:
     def __init__(self, server_conn):
@@ -323,8 +318,8 @@ class TLSServer:
         recved_finished = TLSRawtext.from_bytes(trimed_data)
         print(recved_finished)
 
-        # import sys
-        # sys.exit(0)
+        import sys
+        sys.exit(0)
 
         from ..protocol.ticket import NewSessionTicket
         # dummy
