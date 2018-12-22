@@ -227,11 +227,6 @@ def client_cmd(argv):
     # len(recved_encrypted_extensions) と TLSCiphertext のときの len は異なるので、
     # 今の切り取り方 [5:len(recved_encrypted_extensions)] ではダメ
 
-    print("===")
-    print(hexdump(messages))
-    import sys
-    sys.exit(0)
-
     # <<< server Certificate <<<
     print("=== server Certificate ===")
     if len(remain_data) > 0:
@@ -247,11 +242,6 @@ def client_cmd(argv):
     print(recved_certificate)
     remain_data = data[datalen:]
 
-    print("===")
-    print(hexdump(messages))
-    import sys
-    sys.exit(0)
-
     # <<< server CertificateVerify <<<
     print("=== CertificateVerify ===")
     if len(remain_data) > 0:
@@ -261,9 +251,14 @@ def client_cmd(argv):
     datalen = len(TLSCiphertext.from_bytes(data))
     recved_cert_verify = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:datalen]
+    messages += recved_cert_verify.fragment.to_bytes()
     print(recved_cert_verify)
     remain_data = data[datalen:]
+
+    print("===")
+    print(hexdump(messages))
+    import sys
+    sys.exit(0)
 
     # <<< recv Finished <<<
     print("=== recv Finished ===")

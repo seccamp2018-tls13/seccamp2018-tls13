@@ -186,11 +186,6 @@ class TLSServer:
         server_conn.send_msg(encrypted_extensions_cipher.to_bytes())
         messages += encrypted_extensions.fragment.to_bytes()
 
-        print("===")
-        print(hexdump(messages))
-        import sys
-        sys.exit(0)
-
         # >>> server Certificate >>>
 
         with open('.ssh/server.crt', 'r') as f:
@@ -215,11 +210,6 @@ class TLSServer:
         print(hexdump(certificate_cipher.to_bytes()))
         server_conn.send_msg(certificate_cipher.to_bytes())
         messages += certificate.fragment.to_bytes()
-
-        print("===")
-        print(hexdump(messages))
-        import sys
-        sys.exit(0)
 
         # >>> CertificateVerify >>>
 
@@ -254,6 +244,11 @@ class TLSServer:
         server_conn.send_msg(cert_verify_cipher.to_bytes())
         # messages.append(cert_verify.fragment)
         messages += cert_verify.fragment.to_bytes()
+
+        print("===")
+        print(hexdump(messages))
+        import sys
+        sys.exit(0)
 
         # >>> Finished >>>
 
