@@ -18,6 +18,9 @@ class Connection:
         # TLSPlaintext の最大の大きさが 2^14 byte
         return self.socket.recv(2**14 * 8)
 
+    def close(self):
+        return self.socket.close()
+
 
 class ClientConnection(Connection):
     def __init__(self, host=HOST, port=PORT):
