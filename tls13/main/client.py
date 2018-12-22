@@ -271,7 +271,7 @@ def client_cmd(argv):
     remain_data = data[datalen:]
     assert isinstance(recved_finished.fragment.msg, Finished)
 
-    print(hexdump(messages))
+    # print(hexdump(messages))
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
     server_application_traffic_secret = \
@@ -296,9 +296,6 @@ def client_cmd(argv):
     print('client_app_write_key =', client_app_write_key.hex())
     print('client_app_write_iv =', client_app_write_iv.hex())
 
-    import sys
-    sys.exit(0)
-
     # >>> Finished >>>
     # client_handshake_traffic_secret を使って finished_key を作成する
     hash_algo = CipherSuite.get_hash_algo_name(cipher_suite)
@@ -318,7 +315,10 @@ def client_cmd(argv):
     finished_cipher = TLSCiphertext.create(finished, crypto=c_traffic_crypto)
     client_conn.send_msg(finished_cipher.to_bytes())
     # messages.append(finished.fragment)
-    messages += finished.fragment.to_bytes()
+    # messages += finished.fragment.to_bytes()
+
+    import sys
+    sys.exit(0)
 
 
     # >>> Application Data <<<

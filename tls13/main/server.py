@@ -268,7 +268,7 @@ class TLSServer:
         server_conn.send_msg(finished_cipher.to_bytes())
         messages += finished.fragment.to_bytes()
 
-        print(hexdump(messages))
+        # print(hexdump(messages))
         client_application_traffic_secret = \
             cryptomath.derive_secret(secret, b"c ap traffic", messages)
         server_application_traffic_secret = \
@@ -296,9 +296,6 @@ class TLSServer:
         print('client_app_write_key =', client_app_write_key.hex())
         print('client_app_write_iv =', client_app_write_iv.hex())
 
-        import sys
-        sys.exit(0)
-
         # <<< recv Finished <<<
         print("=== recv Finished ===")
         hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
@@ -309,8 +306,11 @@ class TLSServer:
             raise RuntimeError("Alert!")
         # TODO: 複数のメッセージ（例えば ChangeCipherSpec + Finished）が
         #       同時に送られて来たときの処理が必要
-        trimed_data = data[6:] # change cipher spec (14 03 03 00 01 01) を取り除く
-        print("remove: change cipher spec")
+        if data[6:] == b'\x14\x03\x03\x00\x01\x01':
+            print("remove: change cipher spec")
+            trimed_data = data[6:] # change cipher spec (14 03 03 00 01 01) を取り除く
+        else:
+            trimed_data = data
         print(hexdump(trimed_data))
 
         # # recved_finished = TLSPlaintext.from_bytes(data)
@@ -322,6 +322,9 @@ class TLSServer:
         # assert isinstance(recved_finished.fragment.msg, Finished)
         recved_finished = TLSRawtext.from_bytes(trimed_data)
         print(recved_finished)
+
+        import sys
+        sys.exit(0)
 
         from ..protocol.ticket import NewSessionTicket
         # dummy
