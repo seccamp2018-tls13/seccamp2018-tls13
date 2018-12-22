@@ -8,9 +8,7 @@ __all__ = [
 ]
 
 from .messages import Extension
-from ...utils.struct import Struct, Members, Member, Listof
-from ...utils.type import Uint16
-
+from ...metastruct import *
 
 class CertificateAuthoritiesExtension:
     pass
@@ -40,6 +38,21 @@ class EncryptedExtensions(Struct):
         self.struct = Members(self, [
             Member(Listof(Extension), 'extensions', length_t=Uint16),
         ])
+
+    @classmethod
+    def from_bytes(cls, data):
+        from ..handshake import HandshakeType
+        reader = Reader(data)
+
+        # ServerHelloのExtension構造を流用しただけなので正しく動くか不明。
+        # 現在のところは extension=[] のように空の配列しか入らないので問題なく動く。
+        extensions = Extension.get_list_from_bytes(
+            reader.get_rest(),
+            msg_type=HandshakeType.server_hello)
+
+        return cls(extensions=extensions)
+
+
 
 
 class CertificateRequest:

@@ -13,13 +13,10 @@ __all__ = [
 import sys
 import secrets
 import collections
-
 from .supportedgroups import NamedGroup
 from .version import ProtocolVersion
 from ..ciphersuite import CipherSuite
-from ...utils import hexstr, make_format, Uint8, Uint16, Type, Reader, Writer
-from ...utils.struct import Struct, Members, Member, Listof
-
+from ...metastruct import *
 
 def find(lst, cond):
     assert isinstance(lst, collections.Iterable)
@@ -36,7 +33,7 @@ class HasExtension:
     Mixin class HasExtension implements common operation about extension.
     """
     def get_extension(self, extension_type):
-        assert extension_type in ExtensionType.values
+        assert extension_type in ExtensionType.values()
         ext = find(self.extensions, lambda ext: ext.extension_type == extension_type)
         return getattr(ext, 'extension_data', None)
 
@@ -228,15 +225,14 @@ class Extension(Struct):
 
         else:
             output = 'Extension: unknown extension: %s' % extension_type
-            if extension_type in ExtensionType.labels:
-                output += ' == %s' % ExtensionType.labels[extension_type]
+            if extension_type in ExtensionType.labels():
+                output += ' == %s' % ExtensionType.label(extension_type)
             print(output, file=sys.stdout)
             return (None, None)
 
         return (ExtClass, kwargs)
 
 
-@Type.add_labels_and_values
 class ExtensionType(Type):
     """
     enum { ... } ExtensionType
@@ -328,7 +324,7 @@ class KeyShareClientHello(Struct):
         return [client_share.group for client_share in self.client_shares]
 
     def get_key_exchange(self, group):
-        assert group in NamedGroup.values
+        assert group in NamedGroup.values()
         cs = find(self.client_shares, lambda cs: cs.group == group)
         return getattr(cs, 'key_exchange', None)
 
@@ -341,7 +337,7 @@ class KeyShareHelloRetryRequest(Struct):
     """
     def __init__(self, selected_group):
         self.selected_group = selected_group
-        assert self.selected_group in NamedGroup.values
+        assert self.selected_group in NamedGroup.values()
 
 
 class KeyShareServerHello(Struct):
@@ -352,7 +348,7 @@ class KeyShareServerHello(Struct):
     """
     def __init__(self, server_share):
         self.server_share = server_share
-        assert type(self.server_share) == KeyShareEntry
+        assert isinstance(self.server_share, KeyShareEntry)
 
         self.struct = Members(self, [
             Member(KeyShareEntry, 'server_share'),
@@ -379,7 +375,6 @@ class UncompressedPointRepresentation:
     """
 
 
-@Type.add_labels_and_values
 class PskKeyExchangeMode(Type):
     """
     enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;

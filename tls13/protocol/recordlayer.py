@@ -11,14 +11,9 @@ import collections
 
 from .keyexchange.version import ProtocolVersion
 from .alert import Alert
-from ..utils import hexdump
-from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
-from ..utils.codec import Reader
-from ..utils.repr import make_format
-from ..utils.struct import Struct, Members, Member, Listof
+from ..metastruct import *
 
-
-@Type.add_labels_and_values
+# @Type.add_labels_and_values
 class ContentType(Type):
     """
     enum { ... } ContentType
@@ -73,13 +68,11 @@ class TLSPlaintext(Struct):
         legacy_record_version = reader.get(Uint16)
         fragment              = reader.get(bytes, length_t=Uint16)
         length = Uint16(len(fragment))
-        # length                = reader.get(Uint16)
-        # fragment              = reader.get(bytes)
 
         if mode:
             type = mode # e.g. mode=ContentType.handshake
 
-        print("[+] type:", type, ContentType.labels[type])
+        print("[+] type:", type, ContentType.label(type))
         if type == ContentType.handshake:
             return cls(type=type, fragment=Handshake.from_bytes(fragment))
         elif type == ContentType.application_data:
@@ -88,38 +81,6 @@ class TLSPlaintext(Struct):
             return cls(type=type, fragment=Alert.from_bytes(fragment))
         else:
             raise NotImplementedError()
-
-
-class Data(Struct):
-    # TLSPlaintext.fragment にはTLS構造体や送信するデータなどが入るが Members で、
-    # Member(Struct, 'fragment') と書いているので、Struct しか受け付けないように
-    # なっていて、fragment に送信するデータ（バイト列）を入れるとエラーになる。
-    # そこで、Struct を継承した Data というクラスを作る。
-    # 使い方は：
-    #
-    #   TLSPlaintext(
-    #       type=ContentType.application_data,
-    #       fragment=Data(b'GET /index.html')
-    #   )
-    #
-    def __init__(self, data):
-        self.data = data
-
-    def __repr__(self):
-        return self.data.decode('utf-8')
-
-    def __len__(self):
-        return len(self.data)
-
-    def hex(self):
-        return self.data.hex()
-
-    def to_bytes(self):
-        return self.data
-
-    @classmethod
-    def from_bytes(self, data):
-        return data
 
 
 class TLSInnerPlaintext(Struct):
@@ -157,7 +118,6 @@ class TLSInnerPlaintext(Struct):
     @classmethod
     def create(cls, tlsplaintext, length_of_padding=None):
         if length_of_padding is None:
-            # length_of_padding = 64 - len(tlsplaintext) % 64
             length_of_padding = 16 - len(tlsplaintext.fragment) % 16 - 1
         return cls(
             content=tlsplaintext.fragment.to_bytes(),
@@ -194,8 +154,6 @@ class TLSCiphertext(Struct):
         legacy_record_version = reader.get(Uint16)
         encrypted_record      = reader.get(bytes, length_t=Uint16)
         length = Uint16(len(encrypted_record))
-        # length                = reader.get(Uint16)
-        # encrypted_record      = reader.get(bytes)
         return cls(length=length, encrypted_record=encrypted_record)
 
     @classmethod
@@ -218,6 +176,7 @@ class TLSCiphertext(Struct):
 
     @classmethod
     def restore(cls, data, crypto, mode=None) -> TLSPlaintext:
+        from .handshake import Handshake
         recved_app_data_cipher = TLSCiphertext.from_bytes(data)
         # print("[+] recved_app_data_cipher:")
         # print(recved_app_data_cipher)
@@ -254,10 +213,19 @@ class TLSCiphertext(Struct):
             TLSInnerPlaintext.from_bytes(recved_app_data_inner_bytes)
         print("[+] recved_app_data_inner.content:")
         print(recved_app_data_inner.content.hex())
-        recved_app_data = \
-            TLSPlaintext.from_bytes(recved_app_data_inner.content, mode=mode)
+        # TODO:
+        # この時点ではTLSInnerPlaintextのバイト列しかないので、
+        # TLSPlaintext を作るには handshake の 0x16 とバージョンの 0x0303 と
+        # fragment の長さから再構築する必要がある
+        # recved_app_data = \
+        #     TLSPlaintext.from_bytes(recved_app_data_inner.content, mode=mode)
+        # return recved_app_data
 
-        return recved_app_data
+        recved_data = TLSPlaintext(
+            type=ContentType.handshake,
+            fragment=Handshake.from_bytes(recved_app_data_inner.content))
+        return recved_data
+
 
 class TLSRawtext(Struct):
     """
@@ -285,3 +253,35 @@ class TLSRawtext(Struct):
         legacy_record_version = reader.get(Uint16)
         raw                   = reader.get(bytes, length_t=Uint16)
         return cls(raw=raw)
+
+
+class Data(Struct):
+    # TLSPlaintext.fragment にはTLS構造体や送信するデータなどが入るが Members で、
+    # Member(Struct, 'fragment') と書いているので、Struct しか受け付けないように
+    # なっていて、fragment に送信するデータ（バイト列）を入れるとエラーになる。
+    # そこで、Struct を継承した Data というクラスを作る。
+    # 使い方は：
+    #
+    #   TLSPlaintext(
+    #       type=ContentType.application_data,
+    #       fragment=Data(b'GET /index.html')
+    #   )
+    #
+    def __init__(self, data):
+        self.data = data
+
+    def __repr__(self):
+        return self.data.decode('utf-8')
+
+    def __len__(self):
+        return len(self.data)
+
+    def hex(self):
+        return self.data.hex()
+
+    def to_bytes(self):
+        return self.data
+
+    @classmethod
+    def from_bytes(self, data):
+        return data

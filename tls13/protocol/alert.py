@@ -2,16 +2,10 @@
 # B.2.  Alert Messages
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.2
 
-__all__ = [
-    'AlertLevel', 'AlertDescription', 'Alert',
-]
+__all__ = ['AlertLevel', 'AlertDescription', 'Alert']
 
-from ..utils.type import Uint8, Type
-from ..utils.codec import Reader
-from ..utils.struct import Struct, Members, Member
+from ..metastruct import *
 
-
-@Type.add_labels_and_values
 class AlertLevel(Type):
     # 警告レベル
     """
@@ -22,7 +16,6 @@ class AlertLevel(Type):
     _size = 1 # byte
 
 
-@Type.add_labels_and_values
 class AlertDescription(Type):
     # 警告の説明
     """

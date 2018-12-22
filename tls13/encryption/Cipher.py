@@ -88,8 +88,8 @@ class Chacha20Poly1305(Cipher):
             block = plaintext[(j*64):(j*64+64)]
             key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
 
-            print("[+] block :", block)
-            print("[+] key_stream :", key_stream)
+            # print("[+] block :", block)
+            # print("[+] key_stream :", key_stream)
 
             # encrypted_message +=  block ^ key_stream
             encrypted_message += bytes([
@@ -116,8 +116,8 @@ class Chacha20Poly1305(Cipher):
             block = ciphertext[(j*64):(j*64+64)]
             key_stream = b''.join(map(lambda x:struct.pack('I', x), key_stream))
 
-            print("[+] block :", block)
-            print("[+] key_stream :", key_stream)
+            # print("[+] block :", block)
+            # print("[+] key_stream :", key_stream)
 
             # decrypted_message +=  block ^ key_stream
             decrypted_message += bytes([
@@ -162,19 +162,19 @@ class Chacha20Poly1305(Cipher):
         r = cramp(r)
         s = le_num(s)
 
-        print("[+] Poly1305 r :", hex(r))
-        print("[+] Poly1305 s :", hex(s))
+        # print("[+] Poly1305 r :", hex(r))
+        # print("[+] Poly1305 s :", hex(s))
 
         p = 2**130 - 5
         accumulator = 0
         for i, Ci in enumerate(coefs_messages, 1):
             accumulator = ((Ci + accumulator) % p ) * r % p
-            print("[+] Ci, ACC :", hex(Ci), hex(accumulator))
+            # print("[+] Ci, ACC :", hex(Ci), hex(accumulator))
 
-        print("[+] ACC + S :\t\t", hex(accumulator + s)[2:])
+        # print("[+] ACC + S :\t\t", hex(accumulator + s)[2:])
         accumulator = (accumulator + s) % 2**128
-        print("[+] TAG(REVERSED) :\t ", long_to_bytes(accumulator).hex())
-        print("[+] TAG :\t\t ", long_to_bytes(accumulator)[::-1].hex())
+        # print("[+] TAG(REVERSED) :\t ", long_to_bytes(accumulator).hex())
+        # print("[+] TAG :\t\t ", long_to_bytes(accumulator)[::-1].hex())
         return long_to_bytes(accumulator)[::-1]
 
 

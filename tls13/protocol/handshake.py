@@ -4,15 +4,8 @@
 
 __all__ = ['HandshakeType', 'Handshake']
 
-import collections
+from ..metastruct import *
 
-from ..utils.type import Uint8, Uint16, Uint24, Uint32, Type
-from ..utils.codec import Reader
-from ..utils.repr import make_format
-from ..utils.struct import Struct, Members, Member, Listof
-
-
-@Type.add_labels_and_values
 class HandshakeType(Type):
     """
     enum { ... } HandshakeType
@@ -67,11 +60,12 @@ class Handshake(Struct):
         self.struct.set_default('length', Uint24(len(kwargs['msg'] or b'')))
         self.struct.set_args(**kwargs)
 
-        assert self.msg_type in HandshakeType.values
+        assert self.msg_type in HandshakeType.values()
 
     @classmethod
     def from_bytes(cls, data):
         from .keyexchange.messages import ClientHello, ServerHello
+        from .keyexchange.serverparameters import EncryptedExtensions
         from .keyexchange.authentication import Certificate, CertificateVerify,\
             Finished
         reader = Reader(data)
@@ -82,11 +76,12 @@ class Handshake(Struct):
         assert length.value == len(msg)
 
         from_bytes_mapper = {
-            HandshakeType.client_hello      : ClientHello.from_bytes,
-            HandshakeType.server_hello      : ServerHello.from_bytes,
-            HandshakeType.certificate       : Certificate.from_bytes,
-            HandshakeType.certificate_verify: CertificateVerify.from_bytes,
-            HandshakeType.finished          : Finished.from_bytes,
+            HandshakeType.client_hello         : ClientHello.from_bytes,
+            HandshakeType.server_hello         : ServerHello.from_bytes,
+            HandshakeType.encrypted_extensions : EncryptedExtensions.from_bytes,
+            HandshakeType.certificate          : Certificate.from_bytes,
+            HandshakeType.certificate_verify   : CertificateVerify.from_bytes,
+            HandshakeType.finished             : Finished.from_bytes,
         }
 
         if not msg_type in from_bytes_mapper.keys():

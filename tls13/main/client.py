@@ -1,23 +1,21 @@
 
 import secrets
-from .utils import socket
-
-from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
-    CipherSuite, ClientHello, Extension, ExtensionType, \
-    KeyShareEntry, KeyShareClientHello, \
-    ProtocolVersion, SupportedVersions, \
-    NamedGroup, NamedGroupList, \
-    SignatureScheme, SignatureSchemeList, \
-    Finished, Hash, \
-    TLSInnerPlaintext, TLSCiphertext, Data
+from ..utils import connection, cryptomath
+from ..protocol import *
+from ..metastruct import *
 
 # Crypto
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
     X25519PublicKey
-from .utils.encryption.ffdhe import FFDHE
-from .utils.encryption import Cipher
+from ..encryption.ffdhe import FFDHE
+from ..encryption import Cipher
 
-from .utils import cryptomath, hexdump, hexstr, Uint16
+
+# TODO: グローバル変数作るならこんな感じ
+class Global:
+    connect_side = "client"
+    current_mode = ContentType.handshake
+
 
 def client_cmd(argv):
     print("client_cmd({})".format(", ".join(argv)))
@@ -96,7 +94,7 @@ def client_cmd(argv):
 
     # Server に ClientHello のバイト列を送信する
     print("[INFO] Connecting to server...")
-    client_conn = socket.ClientConnection()
+    client_conn = connection.ClientConnection()
     # ClientHello が入っている TLSPlaintext
     print(clienthello)
     client_conn.send_msg(clienthello.to_bytes())
@@ -142,6 +140,8 @@ def client_cmd(argv):
 
     # -- HKDF ---
 
+    # print("messages = ")
+    # print(hexdump(messages))
     print("messages hash = " + cryptomath.secureHash(messages, 'sha256').hex())
     print()
 
@@ -153,20 +153,29 @@ def client_cmd(argv):
     psk    = bytearray(secret_size)
     # early secret
     secret = cryptomath.HKDF_extract(secret, psk, hash_algo)
+    print('early secret =', secret.hex())
     # handshake secret
     secret = cryptomath.derive_secret(secret, b"derived", b"")
+    print('derive_secret =', secret.hex())
     secret = cryptomath.HKDF_extract(secret, shared_key, hash_algo)
+    print('handshake secret =', secret.hex())
     client_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"c hs traffic", messages)
+    print('client_handshake_traffic_secret =', client_handshake_traffic_secret.hex())
     server_handshake_traffic_secret = \
         cryptomath.derive_secret(secret, b"s hs traffic", messages)
+    print('server_handshake_traffic_secret =', server_handshake_traffic_secret.hex())
     # master secret
     secret = cryptomath.derive_secret(secret, b"derived", b"")
+    print('derive_secret =', secret.hex())
     secret = cryptomath.HKDF_extract(secret, bytearray(secret_size), hash_algo)
+    print('master secret =', secret.hex())
     client_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"c ap traffic", messages)
     server_application_traffic_secret = \
         cryptomath.derive_secret(secret, b"s ap traffic", messages)
+    print('client_application_traffic_secret =', client_application_traffic_secret.hex())
+    print('server_application_traffic_secret =', server_application_traffic_secret.hex())
 
     if cipher_suite == CipherSuite.TLS_CHACHA20_POLY1305_SHA256:
         cipher_class = Cipher.Chacha20Poly1305
@@ -176,62 +185,109 @@ def client_cmd(argv):
         raise NotImplementedError()
 
     server_write_key, server_write_iv = \
-        cryptomath.gen_key_and_iv(server_application_traffic_secret,
+        cryptomath.gen_key_and_iv(server_handshake_traffic_secret,
                                   key_size, nonce_size, hash_algo)
     s_traffic_crypto = cipher_class(key=server_write_key, nonce=server_write_iv)
 
     client_write_key, client_write_iv = \
-        cryptomath.gen_key_and_iv(client_application_traffic_secret,
+        cryptomath.gen_key_and_iv(client_handshake_traffic_secret,
                                   key_size, nonce_size, hash_algo)
     c_traffic_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
-
-    client_write_key, client_write_iv = \
-        cryptomath.gen_key_and_iv(secret, key_size, nonce_size, hash_algo)
 
     print('server_write_key =', server_write_key.hex())
     print('server_write_iv =', server_write_iv.hex())
     print('client_write_key =', client_write_key.hex())
     print('client_write_iv =', client_write_iv.hex())
 
-    app_data_crypto = cipher_class(key=client_write_key, nonce=client_write_iv)
-
     # <<< EncryptedExtensions <<<
+    print("=== EncryptedExtensions ===")
     if len(remain_data) > 0:
         data = remain_data
     else:
         data = client_conn.recv_msg()
-    # TODO: ここで aead_decrypt Error が発生する
+    print(hexdump(data))
+    datalen = len(TLSCiphertext.from_bytes(data))
     recved_encrypted_extensions = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:len(recved_encrypted_extensions)]
+    # messages += data[5:datalen]
+    messages += recved_encrypted_extensions.fragment.to_bytes()
     print(recved_encrypted_extensions)
-    remain_data = data[len(recved_encrypted_extensions):]
+    remain_data = data[datalen:]
+    # TODO:
+    # len(recved_encrypted_extensions) と TLSCiphertext のときの len は異なるので、
+    # 今の切り取り方 [5:len(recved_encrypted_extensions)] ではダメ
 
     # <<< server Certificate <<<
-    data = client_conn.recv_msg()
+    print("=== server Certificate ===")
+    if len(remain_data) > 0:
+        data = remain_data
+    else:
+        data = client_conn.recv_msg()
+    print(hexdump(data))
+    datalen = len(TLSCiphertext.from_bytes(data))
     recved_certificate = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    # TODO: data[5:len(recved_certificate)] で切り取る
-    messages += data[5:]
+    # messages += data[5:datalen]
+    messages += recved_certificate.fragment.to_bytes()
     print(recved_certificate)
+    remain_data = data[datalen:]
 
     # <<< server CertificateVerify <<<
-    data = client_conn.recv_msg()
+    print("=== CertificateVerify ===")
+    if len(remain_data) > 0:
+        data = remain_data
+    else:
+        data = client_conn.recv_msg()
+    datalen = len(TLSCiphertext.from_bytes(data))
     recved_cert_verify = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:]
+    messages += recved_cert_verify.fragment.to_bytes()
     print(recved_cert_verify)
+    remain_data = data[datalen:]
 
     # <<< recv Finished <<<
+    print("=== recv Finished ===")
     hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
     Hash.set_size(hash_size)
-    data = client_conn.recv_msg()
+    if len(remain_data) > 0:
+        data = remain_data
+    else:
+        data = client_conn.recv_msg()
+    datalen = len(TLSCiphertext.from_bytes(data))
     recved_finished = TLSCiphertext.restore(data,
             crypto=s_traffic_crypto, mode=ContentType.handshake)
-    messages += data[5:]
+    messages += recved_finished.fragment.to_bytes()
     print(recved_finished)
+    remain_data = data[datalen:]
     assert isinstance(recved_finished.fragment.msg, Finished)
 
+    # print(hexdump(messages))
+    client_application_traffic_secret = \
+        cryptomath.derive_secret(secret, b"c ap traffic", messages)
+    server_application_traffic_secret = \
+        cryptomath.derive_secret(secret, b"s ap traffic", messages)
+
+    server_app_write_key, server_app_write_iv = \
+        cryptomath.gen_key_and_iv(server_application_traffic_secret,
+                key_size, nonce_size, hash_algo)
+    server_app_data_crypto = cipher_class(
+            key=server_app_write_key, nonce=server_app_write_iv)
+    client_app_write_key, client_app_write_iv = \
+        cryptomath.gen_key_and_iv(client_application_traffic_secret,
+                key_size, nonce_size, hash_algo)
+    client_app_data_crypto = cipher_class(
+            key=client_app_write_key, nonce=client_app_write_iv)
+
+    print('client_application_traffic_secret =', client_application_traffic_secret.hex())
+    print('server_application_traffic_secret =', server_application_traffic_secret.hex())
+    print('server_app_write_key =', server_app_write_key.hex())
+    print('server_app_write_iv =', server_app_write_iv.hex())
+
+    print('client_app_write_key =', client_app_write_key.hex())
+    print('client_app_write_iv =', client_app_write_iv.hex())
+
+    # import sys
+    # sys.exit(0)
 
     # >>> Finished >>>
     # client_handshake_traffic_secret を使って finished_key を作成する
@@ -252,14 +308,28 @@ def client_cmd(argv):
     finished_cipher = TLSCiphertext.create(finished, crypto=c_traffic_crypto)
     client_conn.send_msg(finished_cipher.to_bytes())
     # messages.append(finished.fragment)
-    messages += finished.fragment.to_bytes()
+    # messages += finished.fragment.to_bytes()
 
+    # <<< recv NewSessionTicket <<<
+    data = client_conn.recv_msg()
+    # TODO: 受け取って復号化するときにシークエンス番号をインクリメントする
+    server_app_data_crypto.get_nonce() # Nonceを取得する時に seq_number += 1 される
 
     # >>> Application Data <<<
     print("=== Application Data ===")
 
-    app_data_cipher = \
-        TLSCiphertext.create(Data(b'GET /index.html\n'), crypto=app_data_crypto)
-    print(app_data_cipher)
-
+    app_data = TLSPlaintext(
+        type=ContentType.application_data,
+        fragment=Data(b'GET /html/index.html HTTP/1.1\n'))
+    app_data_cipher = TLSCiphertext.create(app_data,
+        crypto=client_app_data_crypto)
     client_conn.send_msg(app_data_cipher.to_bytes())
+
+    # recv response
+    data = client_conn.recv_msg()
+    recved_app_data = TLSCiphertext.restore(data,
+        crypto=server_app_data_crypto,
+        mode=ContentType.application_data)
+
+    print(recved_app_data)
+    print(hexdump(recved_app_data.to_bytes()))

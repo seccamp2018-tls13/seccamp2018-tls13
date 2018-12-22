@@ -10,17 +10,16 @@ from .repr import make_format
 # 構造体を表すためのクラス群
 # 使い方：
 #
-# class ClientHello(Struct):
-#
-#     def __init__(self, ...):
-#         self.struct = Members([
-#             Member(ProtocolVersion, 'legacy_version'),
-#             Member(bytes, 'random'),
-#             Member(bytes, 'legacy_session_id', length_t=Uint8),
-#             Member(Listof(CipherSuite), 'cipher_suites', length_t=Uint16),
-#             Member(Listof(Uint8), 'legacy_compression_methods', length_t=Uint16),
-#             Member(Listof(Extension), 'extensions', length_t=Uint16),
-#         ])
+#     class ClientHello(Struct):
+#         def __init__(self, ...):
+#             self.struct = Members([
+#                 Member(ProtocolVersion, 'legacy_version'),
+#                 Member(bytes, 'random'),
+#                 Member(bytes, 'legacy_session_id', length_t=Uint8),
+#                 Member(Listof(CipherSuite), 'cipher_suites', length_t=Uint16),
+#                 Member(Listof(Uint8), 'legacy_compression_methods', length_t=Uint16),
+#                 Member(Listof(Extension), 'extensions', length_t=Uint16),
+#             ])
 #
 
 # 全てのTLSの構造体はStructクラスを継承して、フィールドに self.struct を定義する。
@@ -43,7 +42,7 @@ class Members:
         self.members = members
         self.members_default = {}
 
-    # __init__のための引数をフィールドに設定するメソッド
+    # __init__のために引数をフィールドに設定するメソッド
     # 例えば次のように書くと、引数に与えられた extension_type と extension_data を
     # self のフィールドの設定する。
     #
@@ -88,7 +87,7 @@ class Members:
             return type()
         return None
 
-    # __repr__のための順序付き辞書を返すメソッド
+    # __repr__のために順序付き辞書を返すメソッド
     #
     #     props = collections.OrderedDict(
     #         legacy_version=ProtocolVersion,
@@ -108,7 +107,7 @@ class Members:
 
         return props
 
-    # __len__のためのバイト列にしたときの長さを返すメソッド
+    # __len__のためにバイト列にしたときの長さを返すメソッド
     #
     #     return len(self.legacy_version) + len(self.random) + \
     #            1 + len(self.legacy_session_id) + \
@@ -128,7 +127,7 @@ class Members:
 
         return length
 
-    # to_bytesのためのバイト列を作る処理
+    # to_bytesのためにバイト列を作る処理
     #
     #     writer = Writer()
     #     writer.add_bytes(self.legacy_version)
@@ -154,7 +153,7 @@ class Members:
 
         return writer.bytes
 
-    # from_bytesのためのバイト列から構造体のフィールドを得る処理
+    # from_bytesのためにバイト列から構造体のフィールドを得る処理
     #
     #     reader = Reader(data)
     #     type                  = reader.get(Uint8)
@@ -197,6 +196,11 @@ class Listof:
         return "Listof({})".format(self.subtype)
 
 
+class Empty(Struct):
+    def __init__(self):
+        self.struct = Members([])
+
+
 class StructAssert:
     @staticmethod
     def my_assert(member, value):
@@ -204,7 +208,7 @@ class StructAssert:
             return StructAssert.assert_listof(member, value)
 
         if issubclass(member.type, Type):
-            if not value in member.type.values:
+            if not value in member.type.values():
                 raise RuntimeError('value "{}" is not in "{}"' \
                                    .format(member.name, member.type))
 

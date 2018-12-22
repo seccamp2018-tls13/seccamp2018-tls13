@@ -4,15 +4,8 @@
 
 __all__ = ['NamedGroup', 'NamedGroupList']
 
-import collections
+from ...metastruct import *
 
-from ...utils.type import Uint16, Type
-from ...utils.codec import Reader, Writer
-from ...utils.repr import make_format
-from ...utils.struct import Struct, Members, Member, Listof
-
-
-@Type.add_labels_and_values
 class NamedGroup(Type):
     # 鍵交換のグループ
     """

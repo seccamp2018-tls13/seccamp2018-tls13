@@ -8,16 +8,10 @@ __all__ = [
 ]
 
 import collections
-
 from .messages import Extension
 from .signature import SignatureScheme
-from ...utils.codec import Reader, Writer
-from ...utils.type import Uint8, Uint16, Uint24, Type
-from ...utils.repr import make_format
-from ...utils.struct import Struct, Members, Member, Listof
+from ...metastruct import *
 
-
-@Type.add_labels_and_values
 class CertificateType(Type):
     # 証明書の種類
     """

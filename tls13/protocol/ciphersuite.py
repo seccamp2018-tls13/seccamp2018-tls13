@@ -2,15 +2,11 @@
 # B.4.  Cipher Suites
 # https://tools.ietf.org/html/draft-ietf-tls-tls13-26#appendix-B.4
 
-__all__ = [
-    'CipherSuite',
-]
+__all__ = ['CipherSuite']
 
 import hashlib
-from ..utils.type import Uint16, Type
+from ..metastruct import *
 
-
-@Type.add_labels_and_values
 class CipherSuite(Type):
     TLS_AES_128_GCM_SHA256       = Uint16(0x1301)
     TLS_AES_256_GCM_SHA384       = Uint16(0x1302)

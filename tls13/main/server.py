@@ -1,28 +1,22 @@
 
 import time
 import secrets
-from .utils import socket
-
-from .protocol import TLSPlaintext, ContentType, Handshake, HandshakeType, \
-    CipherSuite, ServerHello, KeyShareEntry, KeyShareServerHello, \
-    Extension, ExtensionType, \
-    ProtocolVersion, SupportedVersions, \
-    NamedGroup, NamedGroupList, \
-    SignatureScheme, SignatureSchemeList, \
-    Certificate, CertificateEntry, CertificateVerify, Finished, Hash, \
-    TLSInnerPlaintext, TLSCiphertext, Data, \
-    EncryptedExtensions, TLSRawtext
-from .protocol import recordlayer
+from ..utils import connection, cryptomath, http_parser
+from ..protocol import *
+from ..metastruct import *
 
 # Crypto
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, \
     X25519PublicKey
-from .utils.encryption.ffdhe import FFDHE
-from .utils.encryption import Cipher
+from ..encryption.ffdhe import FFDHE
+from ..encryption import Cipher
 
-from .utils import cryptomath, hexdump, hexstr
 
-from .utils.type import Uint16, Uint32
+# TODO: グローバル変数作るならこんな感じ
+class Global:
+    connect_side = "server"
+    current_mode = ContentType.handshake
+
 
 class TLSServer:
     def __init__(self, server_conn):
@@ -117,6 +111,8 @@ class TLSServer:
         secret = bytearray(secret_size)
         psk    = bytearray(secret_size)
 
+        # print("messages = ")
+        # print(hexdump(messages))
         print("messages hash = " + cryptomath.secureHash(messages, 'sha256').hex())
         print()
 
@@ -153,8 +149,6 @@ class TLSServer:
         else:
             raise NotImplementedError()
 
-        # recordlayer.seq_number
-
         server_write_key, server_write_iv = \
             cryptomath.gen_key_and_iv(server_handshake_traffic_secret,
                                       key_size, nonce_size, hash_algo)
@@ -179,8 +173,11 @@ class TLSServer:
                 msg=EncryptedExtensions(extensions=[]) ))
 
         print(encrypted_extensions)
+        print(hexdump(encrypted_extensions.to_bytes()))
         encrypted_extensions_cipher = \
             TLSCiphertext.create(encrypted_extensions, crypto=s_traffic_crypto)
+        print(encrypted_extensions_cipher)
+        print(hexdump(encrypted_extensions_cipher.to_bytes()))
         server_conn.send_msg(encrypted_extensions_cipher.to_bytes())
         messages += encrypted_extensions.fragment.to_bytes()
 
@@ -203,7 +200,9 @@ class TLSServer:
 
         print("=== Certificate ===")
         print(certificate)
+        print(hexdump(certificate.to_bytes()))
         certificate_cipher = TLSCiphertext.create(certificate, crypto=s_traffic_crypto)
+        print(hexdump(certificate_cipher.to_bytes()))
         server_conn.send_msg(certificate_cipher.to_bytes())
         messages += certificate.fragment.to_bytes()
 
@@ -264,17 +263,22 @@ class TLSServer:
         server_conn.send_msg(finished_cipher.to_bytes())
         messages += finished.fragment.to_bytes()
 
+        # print(hexdump(messages))
         client_application_traffic_secret = \
             cryptomath.derive_secret(secret, b"c ap traffic", messages)
         server_application_traffic_secret = \
             cryptomath.derive_secret(secret, b"s ap traffic", messages)
 
         server_app_write_key, server_app_write_iv = \
-            cryptomath.gen_key_and_iv(server_application_traffic_secret, key_size, nonce_size, hash_algo)
-        server_app_data_crypto = cipher_class(key=server_app_write_key, nonce=server_app_write_iv)
+            cryptomath.gen_key_and_iv(server_application_traffic_secret,
+                    key_size, nonce_size, hash_algo)
+        server_app_data_crypto = cipher_class(
+                key=server_app_write_key, nonce=server_app_write_iv)
         client_app_write_key, client_app_write_iv = \
-            cryptomath.gen_key_and_iv(client_application_traffic_secret, key_size, nonce_size, hash_algo)
-        client_app_data_crypto = cipher_class(key=client_app_write_key, nonce=client_app_write_iv)
+            cryptomath.gen_key_and_iv(client_application_traffic_secret,
+                    key_size, nonce_size, hash_algo)
+        client_app_data_crypto = cipher_class(
+                key=client_app_write_key, nonce=client_app_write_iv)
 
         self.server_app_data_crypto = server_app_data_crypto
         self.client_app_data_crypto = client_app_data_crypto
@@ -287,6 +291,8 @@ class TLSServer:
         print('client_app_write_key =', client_app_write_key.hex())
         print('client_app_write_iv =', client_app_write_iv.hex())
 
+        # import sys
+        # sys.exit(0)
 
         # <<< recv Finished <<<
         print("=== recv Finished ===")
@@ -298,8 +304,11 @@ class TLSServer:
             raise RuntimeError("Alert!")
         # TODO: 複数のメッセージ（例えば ChangeCipherSpec + Finished）が
         #       同時に送られて来たときの処理が必要
-        trimed_data = data[6:] # change cipher spec (14 03 03 00 01 01) を取り除く
-        print("remove: change cipher spec")
+        if data[6:] == b'\x14\x03\x03\x00\x01\x01':
+            print("remove: change cipher spec")
+            trimed_data = data[6:] # change cipher spec (14 03 03 00 01 01) を取り除く
+        else:
+            trimed_data = data
         print(hexdump(trimed_data))
 
         # # recved_finished = TLSPlaintext.from_bytes(data)
@@ -312,7 +321,7 @@ class TLSServer:
         recved_finished = TLSRawtext.from_bytes(trimed_data)
         print(recved_finished)
 
-        from .protocol.ticket import NewSessionTicket
+        from ..protocol.ticket import NewSessionTicket
         # dummy
         new_session_ticket = TLSPlaintext(
             type=ContentType.handshake,
@@ -322,8 +331,8 @@ class TLSServer:
                     ticket_lifetime=Uint32(0),
                     ticket_age_add=Uint32(0),
                     ticket_nonce=b'nonce',
-                    ticket=b'foobar'
-                    )))
+                    ticket=b'foobar',
+                    extensions=[] )))
 
         Cipher.Cipher.seq_number = 0
 
@@ -332,7 +341,7 @@ class TLSServer:
         new_session_ticket_cipher = TLSCiphertext.create(
                 new_session_ticket, crypto=server_app_data_crypto)
         server_conn.send_msg(new_session_ticket_cipher.to_bytes())
-        messages += new_session_ticket.fragment.to_bytes()
+        # messages += new_session_ticket.fragment.to_bytes()
 
 
     def recv(self):
@@ -354,18 +363,16 @@ class TLSServer:
         return recved_app_data.raw
 
     def send(self, send_bytes):
-        tmp = send_bytes
-
-        test_data = TLSPlaintext(
+        app_data = TLSPlaintext(
             type=ContentType.application_data,
-            fragment=Data(tmp))
-        test_data_cipher = TLSCiphertext.create(test_data,
+            fragment=Data(send_bytes))
+        app_data_cipher = TLSCiphertext.create(app_data,
             crypto=self.server_app_data_crypto)
-        self.server_conn.send_msg(test_data_cipher.to_bytes())
+        self.server_conn.send_msg(app_data_cipher.to_bytes())
         print("* [send]")
-        print(hexdump(test_data_cipher.to_bytes()))
+        print(hexdump(app_data_cipher.to_bytes()))
 
-        return len(test_data_cipher)
+        return len(app_data_cipher)
 
 
 def server_cmd(argv):
@@ -382,31 +389,29 @@ def server_cmd(argv):
     # http_server.socket = wrap_socket(http_server.sock)
     # http_server.serve_forever()
 
-    from .utils.http_parser import parser
-
-    server_conn = socket.ServerConnection()
+    server_conn = connection.ServerConnection()
     server = TLSServer(server_conn)
 
-    while True:
-        data = server.recv()
+    # while True:
+    data = server.recv()
 
-        try:
-            params = parser.parse(data.decode())
-            filename = params['request_url']
-            print("filename:", filename)
-        except Exception as e:
-            print("[-] invalid request")
-            print(e)
-            data = b'HTTP/1.1 404 Not Found\r\n\r\n'
-            server.send(data)
-            break
-
-        try:
-            # TODO: insecure!
-            with open(filename, 'r') as f:
-                data = f.read().encode()
-        except FileNotFoundError as e:
-            print("[-] file not found: %s" % filename)
-            data = b'HTTP/1.1 404 Not Found\r\n\r\n'
-
+    try:
+        params = http_parser.parse(data.decode())
+        filename = params['request_url']
+        print("filename:", filename)
+    except Exception as e:
+        print("[-] invalid request")
+        print(e)
+        data = b'HTTP/1.1 404 Not Found\r\n\r\n'
         server.send(data)
+        return
+
+    try:
+        # TODO: insecure!
+        with open(filename, 'r') as f:
+            data = f.read().encode()
+    except FileNotFoundError as e:
+        print("[-] file not found: %s" % filename)
+        data = b'HTTP/1.1 404 Not Found\r\n\r\n'
+
+    server.send(data)

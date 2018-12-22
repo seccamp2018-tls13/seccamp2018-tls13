@@ -19,7 +19,7 @@ class Reader:
         self.index = 0
 
     def get(self, type, length_t=None) -> int or Uint:
-        from .struct import Listof, Struct
+        from .metastruct import Listof, Struct
 
         if isinstance(type, int):
             return self.get_int(type)

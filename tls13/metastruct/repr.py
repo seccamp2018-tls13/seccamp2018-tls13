@@ -14,7 +14,7 @@ def truncate(string, len_max):
     else:
         return string
 
-# 順序付き辞書を引数として取り、__repr__のための文字列を生成する
+# 順序付き辞書を引数として取り、__repr__のために文字列を生成する
 # 使い方：
 #
 #     props = collections.OrderedDict(
@@ -27,7 +27,7 @@ def truncate(string, len_max):
 #     print(make_format(self, props))
 #
 def make_format(obj, props):
-    from .struct import Struct # 循環参照の回避のため、ここでimportする
+    from .metastruct import Struct # 循環参照の回避のため、ここでimportする
 
     repr_str = ""
     repr_str += "%s:\n" % obj.__class__.__name__
@@ -51,7 +51,7 @@ def make_format(obj, props):
             if prop_type == list: repr_str += "\n"
         elif issubclass(prop_type, Type):
             # TLSの定数のとき => 定数名を付けて表示
-            const_name = prop_type.labels[item]
+            const_name = prop_type.label(item)
             repr_str += "|%s: %s == %s\n" % (prop, item, const_name)
         elif issubclass(prop_type, Uint):
             # Uintのとき => 10進数に変換したものを付けて表示
@@ -85,7 +85,7 @@ def dump(binary, size=2, sep=' '):
 def dumpgen(data):
     '''
     Generator that produces strings:
-    '00000000: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................'
+    00000000: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................
     '''
     generator = chunks(data, 16)
     for addr, d in enumerate(generator):

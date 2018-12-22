@@ -2,8 +2,8 @@
 
 import sys
 
-from tls13.client import client_cmd
-from tls13.server import server_cmd
+from tls13.main.client import client_cmd
+from tls13.main.server import server_cmd
 
 def usage():
     print("Usage: {} <client|server> ...".format(sys.argv[0]))
