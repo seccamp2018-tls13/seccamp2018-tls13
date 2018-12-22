@@ -45,3 +45,11 @@ openssl で TLS 1.3 クライアント
 ```
 ~/local/bin/openssl s_client -connect localhost:50007 -tls1_3 -state -debug
 ```
+
+---
+
+curl で TLS 1.3 アクセス
+
+```
+LD_LIBRARY_PATH=$HOME/local/lib ~/local/bin/curl -v --tlsv1.3 -k https://localhost:50007/html/index.html
+```
