@@ -392,26 +392,26 @@ def server_cmd(argv):
     server_conn = connection.ServerConnection()
     server = TLSServer(server_conn)
 
-    while True:
-        data = server.recv()
+    # while True:
+    data = server.recv()
 
-        try:
-            params = http_parser.parse(data.decode())
-            filename = params['request_url']
-            print("filename:", filename)
-        except Exception as e:
-            print("[-] invalid request")
-            print(e)
-            data = b'HTTP/1.1 404 Not Found\r\n\r\n'
-            server.send(data)
-            break
-
-        try:
-            # TODO: insecure!
-            with open(filename, 'r') as f:
-                data = f.read().encode()
-        except FileNotFoundError as e:
-            print("[-] file not found: %s" % filename)
-            data = b'HTTP/1.1 404 Not Found\r\n\r\n'
-
+    try:
+        params = http_parser.parse(data.decode())
+        filename = params['request_url']
+        print("filename:", filename)
+    except Exception as e:
+        print("[-] invalid request")
+        print(e)
+        data = b'HTTP/1.1 404 Not Found\r\n\r\n'
         server.send(data)
+        return
+
+    try:
+        # TODO: insecure!
+        with open(filename, 'r') as f:
+            data = f.read().encode()
+    except FileNotFoundError as e:
+        print("[-] file not found: %s" % filename)
+        data = b'HTTP/1.1 404 Not Found\r\n\r\n'
+
+    server.send(data)
