@@ -15,9 +15,8 @@ class Connection:
         self.socket.sendall(byte_str)
 
     def recv_msg(self):
-        # NOTE: ハードウェアおよびネットワークの現実に最大限マッチするように、
-        #       bufsize の値は比較的小さい2の累乗、たとえば 4096、にすべきです。
-        return self.socket.recv(2**14) # TLSPlaintext の最大の大きさが 2^14 byte
+        # TLSPlaintext の最大の大きさが 2^14 byte
+        return self.socket.recv(2**14 * 8)
 
 
 class ClientConnection(Connection):
