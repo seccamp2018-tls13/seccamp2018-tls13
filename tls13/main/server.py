@@ -1,7 +1,7 @@
 
 import time
 import secrets
-from ..utils import connection, cryptomath
+from ..utils import connection, cryptomath, http_parser
 from ..protocol import *
 from ..metastruct import *
 
@@ -291,6 +291,9 @@ class TLSServer:
         print('client_app_write_key =', client_app_write_key.hex())
         print('client_app_write_iv =', client_app_write_iv.hex())
 
+        # import sys
+        # sys.exit(0)
+
         # <<< recv Finished <<<
         print("=== recv Finished ===")
         hash_size = CipherSuite.get_hash_algo_size(cipher_suite)
@@ -318,9 +321,6 @@ class TLSServer:
         recved_finished = TLSRawtext.from_bytes(trimed_data)
         print(recved_finished)
 
-        import sys
-        sys.exit(0)
-
         from ..protocol.ticket import NewSessionTicket
         # dummy
         new_session_ticket = TLSPlaintext(
@@ -341,7 +341,7 @@ class TLSServer:
         new_session_ticket_cipher = TLSCiphertext.create(
                 new_session_ticket, crypto=server_app_data_crypto)
         server_conn.send_msg(new_session_ticket_cipher.to_bytes())
-        messages += new_session_ticket.fragment.to_bytes()
+        # messages += new_session_ticket.fragment.to_bytes()
 
 
     def recv(self):
@@ -390,8 +390,6 @@ def server_cmd(argv):
     #
     # http_server.socket = wrap_socket(http_server.sock)
     # http_server.serve_forever()
-
-    from ..utils import http_parser
 
     server_conn = connection.ServerConnection()
     server = TLSServer(server_conn)

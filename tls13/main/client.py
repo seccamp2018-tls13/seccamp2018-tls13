@@ -286,6 +286,9 @@ def client_cmd(argv):
     print('client_app_write_key =', client_app_write_key.hex())
     print('client_app_write_iv =', client_app_write_iv.hex())
 
+    # import sys
+    # sys.exit(0)
+
     # >>> Finished >>>
     # client_handshake_traffic_secret を使って finished_key を作成する
     hash_algo = CipherSuite.get_hash_algo_name(cipher_suite)
@@ -307,15 +310,26 @@ def client_cmd(argv):
     # messages.append(finished.fragment)
     # messages += finished.fragment.to_bytes()
 
-    import sys
-    sys.exit(0)
-
+    # <<< recv NewSessionTicket <<<
+    data = client_conn.recv_msg()
+    # TODO: 受け取って復号化するときにシークエンス番号をインクリメントする
+    server_app_data_crypto.get_nonce() # Nonceを取得する時に seq_number += 1 される
 
     # >>> Application Data <<<
     print("=== Application Data ===")
 
-    app_data_cipher = \
-        TLSCiphertext.create(Data(b'GET /index.html HTTP/1.1\n'), crypto=app_data_crypto)
-    print(app_data_cipher)
-
+    app_data = TLSPlaintext(
+        type=ContentType.application_data,
+        fragment=Data(b'GET /html/index.html HTTP/1.1\n'))
+    app_data_cipher = TLSCiphertext.create(app_data,
+        crypto=client_app_data_crypto)
     client_conn.send_msg(app_data_cipher.to_bytes())
+
+    # recv response
+    data = client_conn.recv_msg()
+    recved_app_data = TLSCiphertext.restore(data,
+        crypto=server_app_data_crypto,
+        mode=ContentType.application_data)
+
+    print(recved_app_data)
+    print(hexdump(recved_app_data.to_bytes()))
